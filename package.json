@@ -12,17 +12,64 @@
   "activationEvents": ["onStartupFinished"],
   "main": "./out/extension.js",
   "contributes": {
-    "commands": [
+  "commands": [
+    {
+      "command": "pokemonCompanion.resetProgress",
+      "title": "Pokémon Companion: Reiniciar progreso"
+    },
+    {
+      "command": "pokemonCompanion.forceEncounter",
+      "title": "Pokémon Companion: Forzar encuentro (pruebas)"
+    },
+    {
+      "command": "pokemonCompanion.openShop",
+      "title": "Pokémon Companion: Abrir tienda"
+    },
+    {
+      "command": "pokemonCompanion.sellDuplicate",
+      "title": "Vender un repetido",
+      "icon": "$(tag)"
+    }
+  ],
+  "menus": {
+    "commandPalette": [
       {
-        "command": "pokemonCompanion.resetProgress",
-        "title": "Pokémon Companion: Reiniciar progreso"
+        "command": "pokemonCompanion.sellDuplicate",
+        "when": "false"
+      }
+    ],
+    "view/item/context": [
+      {
+        "command": "pokemonCompanion.sellDuplicate",
+        "when": "view == pokemonCompanion.backpack && viewItem == duplicatePokemon",
+        "group": "inline"
       },
       {
-        "command": "pokemonCompanion.forceEncounter",
-        "title": "Pokémon Companion: Forzar encuentro (pruebas)"
+        "command": "pokemonCompanion.sellDuplicate",
+        "when": "view == pokemonCompanion.backpack && viewItem == duplicatePokemon",
+        "group": "1_sell"
       }
     ]
   },
+  "viewsContainers": {
+    "activitybar": [
+      {
+        "id": "pokemonCompanion",
+        "title": "Pokémon Companion",
+        "icon": "media/backpack.svg"
+      }
+    ]
+  },
+  "views": {
+    "pokemonCompanion": [
+      {
+        "id": "pokemonCompanion.backpack",
+        "name": "Mochila",
+        "icon": "media/backpack.svg"
+      }
+    ]
+  }
+},
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",

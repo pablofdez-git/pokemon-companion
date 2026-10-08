@@ -3,6 +3,7 @@ import { StateManager } from '../data/state';
 import { PokemonData } from '../data/pokeapi';
 import { BALLS, BallType } from '../game/items';
 import { catchProbability, pokemonFlees, tryCatch } from '../game/encounter';
+import { rewardForCapture } from '../game/economy';
 
 const ENCOUNTER_TIMEOUT_MS = 45_000;
 const FLEE_LABEL = 'Huir';
@@ -62,10 +63,10 @@ export async function runEncounter(
 
     const probability = catchProbability(pokemon.captureRate, ball);
     if (tryCatch(probability)) {
-      await state.update((s) => {
-        s.captured.push(pokemon.id);
-      });
-      vscode.window.showInformationMessage(`¡Has capturado a ${pokemon.name}!`);
+      const coins = await rewardForCapture(state, pokemon);
+      vscode.window.showInformationMessage(
+        `¡Has capturado a ${pokemon.name}! +${coins} 🪙`
+      );
       return 'captured';
     }
 
