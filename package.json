@@ -16,6 +16,10 @@
       {
         "command": "pokemonCompanion.resetProgress",
         "title": "Pokémon Companion: Reiniciar progreso"
+      },
+      {
+        "command": "pokemonCompanion.forceEncounter",
+        "title": "Pokémon Companion: Forzar encuentro (pruebas)"
       }
     ]
   },
