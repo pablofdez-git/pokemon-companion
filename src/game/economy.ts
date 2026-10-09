@@ -1,5 +1,6 @@
 import { StateManager } from '../data/state';
 import { PokemonData } from '../data/pokeapi';
+import { GENERATIONS, Generation, unlockedAfterCaptures } from './generations';
 
 // Ajusta estos valores a tu gusto para equilibrar el juego
 export const MIN_CHARS_TO_REWARD = 20; // por debajo de esto, no hay moneda
@@ -44,12 +45,19 @@ export function sellPrice(captureRate: number = DEFAULT_CAPTURE_RATE): number {
   return Math.max(1, Math.round(captureReward(captureRate) * SELL_PRICE_FACTOR));
 }
 
-// Registra la captura y paga la recompensa en una sola actualización
+export interface CaptureResult {
+  coins: number;
+  newGenerations: Generation[]; // generaciones que ha desbloqueado esta captura
+}
+
+// Registra la captura, paga la recompensa y comprueba si desbloquea una generación
 export async function rewardForCapture(
   state: StateManager,
   pokemon: PokemonData
-): Promise<number> {
+): Promise<CaptureResult> {
   const coins = captureReward(pokemon.captureRate);
+  let newGenerations: Generation[] = [];
+
   await state.update((s) => {
     s.captured.push({
       id: pokemon.id,
@@ -58,6 +66,17 @@ export async function rewardForCapture(
       captureRate: pokemon.captureRate,
     });
     s.coins += coins;
+
+    const before = s.generationsUnlocked;
+    const after = unlockedAfterCaptures(
+      before,
+      s.captured.map((c) => c.id)
+    );
+    s.generationsUnlocked = after;
+    newGenerations = GENERATIONS.filter(
+      (g) => g.number > before && g.number <= after
+    );
   });
-  return coins;
+
+  return { coins, newGenerations };
 }

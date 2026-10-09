@@ -117,10 +117,25 @@ export async function runEncounter(
     throwNumber += 1;
 
     if (tryCatch(catchProbability(pokemon.captureRate, ball, ctx))) {
-      const coins = await rewardForCapture(state, pokemon);
+      const { coins, newGenerations } = await rewardForCapture(state, pokemon);
       vscode.window.showInformationMessage(
         `¡Has capturado a ${pokemon.name}! +${coins} 🪙`
       );
+
+      for (const generation of newGenerations) {
+        void vscode.window
+          .showInformationMessage(
+            `🎉 ¡Has desbloqueado la generación ${generation.number} (${generation.name})! Ya pueden aparecer Pokémon del #${generation.firstId} al #${generation.lastId}.`,
+            'Ver mochila'
+          )
+          .then((choice) => {
+            if (choice === 'Ver mochila') {
+              void vscode.commands.executeCommand(
+                'pokemonCompanion.backpack.focus'
+              );
+            }
+          });
+      }
       return 'captured';
     }
 

@@ -11,6 +11,7 @@ export interface GameState {
   coins: number;
   balls: Record<string, number>;
   captured: CapturedPokemon[];
+  generationsUnlocked: number;
 }
 
 const KEY = 'pokemonCompanion.state';
@@ -19,6 +20,7 @@ const DEFAULT_STATE: GameState = {
   coins: 0,
   balls: { pokeball: 5 },
   captured: [],
+  generationsUnlocked: 1,
 };
 
 export class StateManager {
@@ -34,6 +36,8 @@ export class StateManager {
     const state: GameState = JSON.parse(JSON.stringify(saved ?? DEFAULT_STATE));
     // Descarta capturas guardadas con el formato antiguo (solo ids)
     state.captured = state.captured.filter((c) => typeof c === 'object');
+    // Partidas anteriores a las generaciones no tienen este campo
+    state.generationsUnlocked = state.generationsUnlocked ?? 1;
     return state;
   }
 

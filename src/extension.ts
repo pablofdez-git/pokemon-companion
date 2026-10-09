@@ -4,6 +4,7 @@ import { fetchPokemon } from './data/pokeapi';
 import { rewardForSave } from './game/economy';
 import { sellDuplicate } from './game/shop';
 import { grantTestItems } from './debug/grant';
+import { maxPokemonId } from './game/generations';
 import {
   EncounterGate,
   randomPokemonId,
@@ -32,7 +33,8 @@ export function activate(context: vscode.ExtensionContext) {
 
     gate.start();
     try {
-      const pokemon = await fetchPokemon(randomPokemonId());
+      const maxId = maxPokemonId(state.get().generationsUnlocked);
+      const pokemon = await fetchPokemon(randomPokemonId(maxId));
       await runEncounter(state, pokemon);
     } catch (error) {
       console.error('Error en el encuentro:', error);

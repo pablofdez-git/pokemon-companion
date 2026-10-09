@@ -1,9 +1,12 @@
 import * as vscode from 'vscode';
 import { CapturedPokemon, StateManager } from '../data/state';
 import { sellPrice } from '../game/economy';
-import { MAX_POKEMON_ID } from '../game/encounter';
+import {
+  GenerationProgress,
+  generationProgress,
+  maxPokemonId,
+} from '../game/generations';
 import { BALLS, BallType, ballSpriteUrl } from '../game/items';
-
 
 type Section = 'balls' | 'pokemon';
 
@@ -76,6 +79,29 @@ function ballTooltip(ball: BallType, count: number): vscode.MarkdownString {
   return tooltip;
 }
 
+// Línea de progreso hacia la siguiente generación
+function progressItem(progress: GenerationProgress): BackpackItem {
+  const None = vscode.TreeItemCollapsibleState.None;
+
+  if (!progress.next || progress.required === null || progress.remaining === null) {
+    const done = new BackpackItem('Todas las generaciones desbloqueadas', None);
+    done.iconPath = new vscode.ThemeIcon('check');
+    return done;
+  }
+
+  const item = new BackpackItem(
+    `Siguiente: Gen ${progress.next.number} · ${progress.next.name}`,
+    None
+  );
+  item.description = `faltan ${progress.remaining} (${Math.min(
+    progress.distinct,
+    progress.required
+  )}/${progress.required})`;
+  item.iconPath = new vscode.ThemeIcon('lock');
+  item.tooltip = `Captura ${progress.required} Pokémon distintos para desbloquear la generación ${progress.next.number}. Los repetidos no cuentan.`;
+  return item;
+}
+
 export class BackpackProvider
   implements vscode.TreeDataProvider<BackpackItem>, vscode.Disposable
 {
@@ -92,17 +118,21 @@ export class BackpackProvider
   }
 
   getChildren(element?: BackpackItem): BackpackItem[] {
-    const { balls, captured } = this.state.get();
+    const { balls, captured, generationsUnlocked } = this.state.get();
     const None = vscode.TreeItemCollapsibleState.None;
     const Expanded = vscode.TreeItemCollapsibleState.Expanded;
 
-    // Raíz: las dos secciones
+    // Raíz: progreso de generaciones y las dos secciones
     if (!element) {
-      const groups = groupCaptured(captured);
+      const progress = generationProgress(
+        generationsUnlocked,
+        captured.map((c) => c.id)
+      );
       return [
+        progressItem(progress),
         new BackpackItem('Pokéballs', Expanded, 'balls'),
         new BackpackItem(
-          `Pokémon capturados (${groups.length}/${MAX_POKEMON_ID})`,
+          `Pokémon capturados (${progress.distinct}/${maxPokemonId(generationsUnlocked)})`,
           Expanded,
           'pokemon'
         ),
