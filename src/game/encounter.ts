@@ -4,7 +4,7 @@ import { BallType } from './items';
 export const ENCOUNTER_CHANCE = 0.25;              // 15% por guardado con recompensa   0.15
 export const ENCOUNTER_COOLDOWN_MS = 60 * 1000; // mínimo 2 min entre encuentros
 export const FLEE_CHANCE_AFTER_FAIL = 0.3;         // 30% de huir tras un fallo
-export const MAX_POKEMON_ID = 10;                 // solo primera generación 151
+export const MAX_POKEMON_ID = 151;                 // solo primera generación 151
 
 export function rollEncounter(): boolean {
   return Math.random() < ENCOUNTER_CHANCE;

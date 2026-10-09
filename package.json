@@ -29,6 +29,10 @@
       "command": "pokemonCompanion.sellDuplicate",
       "title": "Vender un repetido",
       "icon": "$(tag)"
+    },
+    {
+      "command": "pokemonCompanion.debugGrant",
+      "title": "Pokémon Companion: Regalo de pruebas (borrar al terminar)"
     }
   ],
   "menus": {

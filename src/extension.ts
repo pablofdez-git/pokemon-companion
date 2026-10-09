@@ -3,6 +3,7 @@ import { StateManager } from './data/state';
 import { fetchPokemon } from './data/pokeapi';
 import { rewardForSave } from './game/economy';
 import { sellDuplicate } from './game/shop';
+import { grantTestItems } from './debug/grant';
 import {
   EncounterGate,
   randomPokemonId,
@@ -51,6 +52,10 @@ export function activate(context: vscode.ExtensionContext) {
     tracker,
 
     vscode.window.registerTreeDataProvider('pokemonCompanion.backpack', backpack),
+
+    vscode.commands.registerCommand('pokemonCompanion.debugGrant', () =>
+      grantTestItems(state)
+    ),
 
     vscode.workspace.onDidSaveTextDocument(async (document) => {
       const changedChars = tracker.peek(document);
