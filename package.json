@@ -1,7 +1,11 @@
 {
   "name": "pokemon-companion",
-  "displayName": "pokemon-companion",
-  "description": "Captura Pokémon salvajes mientras programas, gana monedas y mejora tu mochila de pokéballs.",
+  "displayName": "Pokémon Companion",
+  "publisher": "pablofdez",
+  "repository": {
+  "type": "git",
+  "url": "https://github.com/pablofdez-git/pokemon-companion.git"
+},
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.138.0"
@@ -32,10 +36,6 @@
         "light": "media/sell-light.svg",
         "dark": "media/sell-dark.svg"
       }
-    },
-    {
-      "command": "pokemonCompanion.debugGrant",
-      "title": "Pokémon Companion: Regalo de pruebas (borrar al terminar)"
     }
   ],
   "menus": {
