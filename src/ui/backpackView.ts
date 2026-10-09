@@ -2,7 +2,8 @@ import * as vscode from 'vscode';
 import { CapturedPokemon, StateManager } from '../data/state';
 import { sellPrice } from '../game/economy';
 import { MAX_POKEMON_ID } from '../game/encounter';
-import { BALLS } from '../game/items';
+import { BALLS, BallType, ballSpriteUrl } from '../game/items';
+
 
 type Section = 'balls' | 'pokemon';
 
@@ -61,6 +62,20 @@ function pokemonTooltip(
   return tooltip;
 }
 
+function ballTooltip(ball: BallType, count: number): vscode.MarkdownString {
+  const tooltip = new vscode.MarkdownString();
+  tooltip.supportHtml = true;
+
+  tooltip.appendMarkdown(`**${ball.name}**\n\n`);
+  tooltip.appendMarkdown(
+    `<img src="${ballSpriteUrl(ball)}" width="90" height="90" alt="${ball.name}">\n\n`
+  );
+  tooltip.appendMarkdown(
+    `${ball.rule}\n\nTienes: ${count} · Precio: ${ball.price} 🪙`
+  );
+  return tooltip;
+}
+
 export class BackpackProvider
   implements vscode.TreeDataProvider<BackpackItem>, vscode.Disposable
 {
@@ -98,6 +113,8 @@ export class BackpackProvider
       return BALLS.map((ball) => {
         const item = new BackpackItem(ball.name, None);
         item.description = `x${balls[ball.id] ?? 0}`;
+        item.iconPath = vscode.Uri.parse(ballSpriteUrl(ball));
+        item.tooltip = ballTooltip(ball, balls[ball.id] ?? 0);
         return item;
       });
     }

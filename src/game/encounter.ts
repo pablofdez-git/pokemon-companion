@@ -1,4 +1,4 @@
-import { BallType } from './items';
+import { BallType, CatchContext } from './items';
 
 // Ajusta estos valores a tu gusto
 export const ENCOUNTER_CHANCE = 0.25;              // 15% por guardado con recompensa   0.15
@@ -14,8 +14,12 @@ export function randomPokemonId(): number {
   return Math.floor(Math.random() * MAX_POKEMON_ID) + 1;
 }
 
-export function catchProbability(captureRate: number, ball: BallType): number {
-  return Math.min(1, (captureRate / 255) * ball.multiplier);
+export function catchProbability(
+  captureRate: number,
+  ball: BallType,
+  ctx: CatchContext
+): number {
+  return Math.min(1, (captureRate / 255) * ball.multiplier(ctx));
 }
 
 export function tryCatch(probability: number): boolean {

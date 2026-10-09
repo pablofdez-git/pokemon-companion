@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { StateManager } from '../data/state';
-import { BALLS, BallType } from '../game/items';
+import { BALLS, BallType, ballSpriteUrl } from '../game/items';
 import { buyBall } from '../game/shop';
 
 interface ShopPick extends vscode.QuickPickItem {
@@ -13,11 +13,8 @@ export async function openShop(state: StateManager): Promise<void> {
   const items: ShopPick[] = BALLS.map((ball) => ({
     label: ball.name,
     description: `${ball.price} 🪙`,
-    detail: `Tienes: ${balls[ball.id] ?? 0} · ${
-      ball.multiplier === Infinity
-        ? 'captura segura'
-        : `captura ×${ball.multiplier}`
-    }`,
+    detail: `Tienes: ${balls[ball.id] ?? 0} · ${ball.rule}`,
+    iconPath: vscode.Uri.parse(ballSpriteUrl(ball)),
     ball,
   }));
 
