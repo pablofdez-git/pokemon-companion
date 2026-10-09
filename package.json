@@ -36,6 +36,10 @@
         "light": "media/sell-light.svg",
         "dark": "media/sell-dark.svg"
       }
+    },
+    {
+      "command": "pokemonCompanion.syncNow",
+      "title": "Pokémon Companion: Sincronizar partida ahora"
     }
   ],
   "menus": {
@@ -75,6 +79,17 @@
         "icon": "media/backpack.svg"
       }
     ]
+  },
+  "configuration": {
+    "title": "Pokémon Companion",
+    "properties": {
+      "pokemonCompanion.syncFolder": {
+        "type": "string",
+        "default": "",
+        "scope": "machine",
+        "markdownDescription": "Carpeta donde guardar la copia de la partida para compartirla entre ordenadores. Si está vacía, se usa la carpeta `PokemonCompanion` dentro del OneDrive de este equipo."
+      }
+    }
   }
 },
   "scripts": {

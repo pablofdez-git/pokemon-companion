@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { StateManager } from './data/state';
+import { SyncService } from './data/syncService';
 import { fetchPokemon } from './data/pokeapi';
 import { rewardForSave } from './game/economy';
 import { sellDuplicate } from './game/shop';
@@ -15,12 +16,16 @@ import { runEncounter } from './ui/encounterView';
 import { openShop } from './ui/shop';
 import { CoinStatusBar } from './ui/statusBar';
 
+let syncService: SyncService | undefined;
+
 export function activate(context: vscode.ExtensionContext) {
   const state = new StateManager(context.globalState);
   const statusBar = new CoinStatusBar(state);
   const backpack = new BackpackProvider(state);
   const tracker = new ActivityTracker();
   const gate = new EncounterGate();
+  const sync = new SyncService(state, context.globalState);
+  syncService = sync;
 
   async function startEncounter(forced: boolean): Promise<void> {
     if (!gate.canStart(forced)) {
@@ -51,9 +56,9 @@ export function activate(context: vscode.ExtensionContext) {
     statusBar,
     backpack,
     tracker,
+    sync,
 
     vscode.window.registerTreeDataProvider('pokemonCompanion.backpack', backpack),
-
 
     vscode.workspace.onDidSaveTextDocument(async (document) => {
       const changedChars = tracker.peek(document);
@@ -74,7 +79,7 @@ export function activate(context: vscode.ExtensionContext) {
       openShop(state)
     ),
 
-        vscode.commands.registerCommand(
+    vscode.commands.registerCommand(
       'pokemonCompanion.sellDuplicate',
       async (item?: { pokemonId?: number }) => {
         if (item?.pokemonId === undefined) {
@@ -96,11 +101,20 @@ export function activate(context: vscode.ExtensionContext) {
       startEncounter(true)
     ),
 
+    vscode.commands.registerCommand('pokemonCompanion.syncNow', () =>
+      sync.syncNow()
+    ),
+
     vscode.commands.registerCommand('pokemonCompanion.resetProgress', async () => {
       await state.reset();
       vscode.window.showInformationMessage('Progreso reiniciado');
     })
   );
+
+  void sync.start();
 }
 
-export function deactivate() {}
+// Al cerrar VS Code, sube lo que quede pendiente
+export function deactivate(): Thenable<void> | undefined {
+  return syncService?.flush();
+}
