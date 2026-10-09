@@ -1,8 +1,15 @@
 import * as vscode from 'vscode';
 
+// Velocidad máxima a la que se cuentan caracteres. Escribir de verdad casi nunca
+// llega a este ritmo, pero pegar o autocompletar en bucle sí, y entonces deja de pagar.
+const REFILL_CHARS_PER_SECOND = 8;
+const BURST_CHARS = 200; // lo que puede contarse de golpe (un pegado, un autocompletado)
+
 export class ActivityTracker implements vscode.Disposable {
   private readonly changedChars = new Map<string, number>();
   private readonly subscription: vscode.Disposable;
+  private allowance = BURST_CHARS;
+  private lastRefill = Date.now();
 
   constructor() {
     this.subscription = vscode.workspace.onDidChangeTextDocument((e) => {
@@ -14,16 +21,43 @@ export class ActivityTracker implements vscode.Disposable {
       if (e.contentChanges.length === 0) {
         return;
       }
+      // Deshacer y rehacer no son trabajo nuevo: así no se puede repetir el truco
+      if (
+        e.reason === vscode.TextDocumentChangeReason.Undo ||
+        e.reason === vscode.TextDocumentChangeReason.Redo
+      ) {
+        return;
+      }
 
-      let total = 0;
+      // Solo cuenta lo que se añade; borrar no da monedas
+      let added = 0;
       for (const change of e.contentChanges) {
-        // Cuenta lo escrito o lo borrado, lo que sea mayor
-        total += Math.max(change.text.length, change.rangeLength);
+        added += change.text.length;
+      }
+
+      const counted = this.takeFromAllowance(added);
+      if (counted <= 0) {
+        return;
       }
 
       const key = e.document.uri.toString();
-      this.changedChars.set(key, (this.changedChars.get(key) ?? 0) + total);
+      this.changedChars.set(key, (this.changedChars.get(key) ?? 0) + counted);
     });
+  }
+
+  // Rellena el depósito según el tiempo pasado y descuenta lo que se cuenta ahora
+  private takeFromAllowance(chars: number): number {
+    const now = Date.now();
+    const elapsedSeconds = (now - this.lastRefill) / 1000;
+    this.lastRefill = now;
+    this.allowance = Math.min(
+      BURST_CHARS,
+      this.allowance + elapsedSeconds * REFILL_CHARS_PER_SECOND
+    );
+
+    const counted = Math.min(chars, this.allowance);
+    this.allowance -= counted;
+    return counted;
   }
 
   // Mira cuántos caracteres hay acumulados sin borrar el contador
