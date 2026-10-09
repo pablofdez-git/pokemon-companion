@@ -28,7 +28,10 @@
     {
       "command": "pokemonCompanion.sellDuplicate",
       "title": "Vender un repetido",
-      "icon": "$(tag)"
+      "icon": {
+        "light": "media/sell-light.svg",
+        "dark": "media/sell-dark.svg"
+      }
     },
     {
       "command": "pokemonCompanion.debugGrant",
