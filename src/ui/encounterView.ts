@@ -3,100 +3,82 @@ import { StateManager } from '../data/state';
 import { PokemonData } from '../data/pokeapi';
 import { rewardForCapture } from '../game/economy';
 import { catchProbability, pokemonFlees, tryCatch } from '../game/encounter';
+import { Generation } from '../game/generations';
 import {
   BALLS,
-  BallType,
   CatchContext,
   ballSpriteUrl,
   describeMultiplier,
 } from '../game/items';
+import { BallOption, EncounterPanel, PokemonView } from './encounterPanel';
 
 const ENCOUNTER_TIMEOUT_MS = 45_000;
-const THROW_LABEL = 'Lanzar Pokéball';
-const FLEE_LABEL = 'Huir';
 
-// Muestra una notificación con botones; si no respondes a tiempo, devuelve undefined
-function askWithTimeout(
-  message: string,
-  options: string[]
-): Promise<string | undefined> {
-  return new Promise((resolve) => {
-    const timer = setTimeout(() => resolve(undefined), ENCOUNTER_TIMEOUT_MS);
-    vscode.window.showInformationMessage(message, ...options).then((choice) => {
-      clearTimeout(timer);
-      resolve(choice);
-    });
-  });
+function toView(pokemon: PokemonData): PokemonView {
+  return { id: pokemon.id, name: pokemon.name, spriteUrl: pokemon.spriteUrl };
 }
 
-interface BallPick extends vscode.QuickPickItem {
-  ball: BallType;
-}
-
-// Lista con tus balls, su efecto en este lanzamiento y la probabilidad estimada
-async function pickBall(
+// Las balls que tienes, con su efecto y su probabilidad en este lanzamiento
+function buildOptions(
   state: StateManager,
   pokemon: PokemonData,
   ctx: CatchContext
-): Promise<BallType | undefined> {
+): BallOption[] {
   const owned = state.get().balls;
-  const items: BallPick[] = [];
+  const options: BallOption[] = [];
 
   for (const ball of BALLS) {
     const count = owned[ball.id] ?? 0;
     if (count === 0) {
       continue;
     }
-    const probability = catchProbability(pokemon.captureRate, ball, ctx);
-    items.push({
-      label: ball.name,
-      description: `x${count} · ${describeMultiplier(ball.multiplier(ctx))}`,
-      detail: `Probabilidad de captura: ${Math.round(probability * 100)}%`,
-      iconPath: vscode.Uri.parse(ballSpriteUrl(ball)),
-      ball,
+    options.push({
+      id: ball.id,
+      name: ball.name,
+      count,
+      multiplier: describeMultiplier(ball.multiplier(ctx)),
+      probability: Math.round(
+        catchProbability(pokemon.captureRate, ball, ctx) * 100
+      ),
+      spriteUrl: ballSpriteUrl(ball),
     });
   }
+  return options;
+}
 
-  // Si dejas la lista abierta, se cierra sola pasado el tiempo
-  const timeout = new vscode.CancellationTokenSource();
-  const timer = setTimeout(() => timeout.cancel(), ENCOUNTER_TIMEOUT_MS);
-  try {
-    const pick = await vscode.window.showQuickPick(
-      items,
-      {
-        title: `${pokemon.name} salvaje · Elige una ball`,
-        placeHolder: `Lanzamiento nº ${ctx.throwNumber}`,
-      },
-      timeout.token
-    );
-    return pick?.ball;
-  } finally {
-    clearTimeout(timer);
-    timeout.dispose();
+// El desbloqueo de una generación es un hito: se sigue avisando con una notificación
+function announceUnlocks(generations: Generation[]): void {
+  for (const generation of generations) {
+    void vscode.window
+      .showInformationMessage(
+        `🎉 ¡Has desbloqueado la generación ${generation.number} (${generation.name})! Ya pueden aparecer Pokémon del #${generation.firstId} al #${generation.lastId}.`,
+        'Ver mochila'
+      )
+      .then((choice) => {
+        if (choice === 'Ver mochila') {
+          void vscode.commands.executeCommand('pokemonCompanion.backpack.focus');
+        }
+      });
   }
 }
 
 export async function runEncounter(
   state: StateManager,
+  panel: EncounterPanel,
   pokemon: PokemonData
 ): Promise<'captured' | 'fled'> {
+  const view = toView(pokemon);
   let message = `¡Ha aparecido un ${pokemon.name} salvaje!`;
   let throwNumber = 1;
+
+  // Aviso discreto por si el panel no está a la vista
+  vscode.window.setStatusBarMessage(message, 6000);
+  await panel.reveal();
 
   while (true) {
     const owned = state.get().balls;
     if (!BALLS.some((ball) => (owned[ball.id] ?? 0) > 0)) {
-      vscode.window.showWarningMessage(
-        `${pokemon.name} se ha ido: no te quedan Pokéballs.`
-      );
-      return 'fled';
-    }
-
-    const action = await askWithTimeout(message, [THROW_LABEL, FLEE_LABEL]);
-
-    // Pulsó "Huir", cerró la notificación o se acabó el tiempo
-    if (action !== THROW_LABEL) {
-      vscode.window.setStatusBarMessage(`${pokemon.name} se ha escapado`, 4000);
+      panel.showEnd(view, 'fled', `${pokemon.name} se ha ido: no te quedan Pokéballs.`);
       return 'fled';
     }
 
@@ -106,9 +88,29 @@ export async function runEncounter(
       hour: new Date().getHours(),
     };
 
-    const ball = await pickBall(state, pokemon, ctx);
-    if (!ball) {
-      continue; // cerró la lista sin elegir: vuelve al aviso
+    const choice = await panel.ask(
+      view,
+      message,
+      buildOptions(state, pokemon, ctx),
+      ENCOUNTER_TIMEOUT_MS
+    );
+
+    if (choice.kind === 'flee') {
+      panel.showEnd(view, 'fled', `Has huido de ${pokemon.name}.`);
+      return 'fled';
+    }
+    if (choice.kind === 'timeout') {
+      panel.showEnd(
+        view,
+        'fled',
+        `${pokemon.name} se ha cansado de esperar y se ha ido.`
+      );
+      return 'fled';
+    }
+
+    const ball = BALLS.find((b) => b.id === choice.ballId);
+    if (!ball || (state.get().balls[ball.id] ?? 0) <= 0) {
+      continue; // ball desconocida o agotada: vuelve a preguntar
     }
 
     await state.update((s) => {
@@ -118,34 +120,20 @@ export async function runEncounter(
 
     if (tryCatch(catchProbability(pokemon.captureRate, ball, ctx))) {
       const { coins, newGenerations } = await rewardForCapture(state, pokemon);
-      vscode.window.showInformationMessage(
-        `¡Has capturado a ${pokemon.name}! +${coins} 🪙`
-      );
-
-      for (const generation of newGenerations) {
-        void vscode.window
-          .showInformationMessage(
-            `🎉 ¡Has desbloqueado la generación ${generation.number} (${generation.name})! Ya pueden aparecer Pokémon del #${generation.firstId} al #${generation.lastId}.`,
-            'Ver mochila'
-          )
-          .then((choice) => {
-            if (choice === 'Ver mochila') {
-              void vscode.commands.executeCommand(
-                'pokemonCompanion.backpack.focus'
-              );
-            }
-          });
-      }
+      panel.showEnd(view, 'captured', `¡Has capturado a ${pokemon.name}! +${coins} 🪙`);
+      announceUnlocks(newGenerations);
       return 'captured';
     }
 
     if (pokemonFlees()) {
-      vscode.window.showWarningMessage(
+      panel.showEnd(
+        view,
+        'fled',
         `¡${pokemon.name} ha roto la ${ball.name} y ha huido!`
       );
       return 'fled';
     }
 
-    message = `¡${pokemon.name} ha salido de la ${ball.name}! Sigue ahí...`;
+    message = `¡${pokemon.name} ha salido de la ${ball.name}! Sigue ahí…`;
   }
 }

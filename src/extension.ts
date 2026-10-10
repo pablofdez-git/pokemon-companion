@@ -12,6 +12,7 @@ import {
 } from './game/encounter';
 import { ActivityTracker } from './events/activityTracker';
 import { BackpackProvider } from './ui/backpackView';
+import { EncounterPanel } from './ui/encounterPanel';
 import { runEncounter } from './ui/encounterView';
 import { openShop } from './ui/shop';
 import { CoinStatusBar } from './ui/statusBar';
@@ -22,6 +23,7 @@ export function activate(context: vscode.ExtensionContext) {
   const state = new StateManager(context.globalState);
   const statusBar = new CoinStatusBar(state);
   const backpack = new BackpackProvider(state);
+  const encounterPanel = new EncounterPanel(context.extensionUri);
   const tracker = new ActivityTracker();
   const gate = new EncounterGate();
   const sync = new SyncService(state, context.globalState);
@@ -39,9 +41,10 @@ export function activate(context: vscode.ExtensionContext) {
     try {
       const maxId = maxPokemonId(state.get().generationsUnlocked);
       const pokemon = await fetchPokemon(randomPokemonId(maxId));
-      await runEncounter(state, pokemon);
+      await runEncounter(state, encounterPanel, pokemon);
     } catch (error) {
       console.error('Error en el encuentro:', error);
+      encounterPanel.showIdle();
       if (forced) {
         vscode.window.showWarningMessage(
           'No se pudo cargar el Pokémon (¿sin conexión?).'
@@ -55,10 +58,17 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     statusBar,
     backpack,
+    encounterPanel,
     tracker,
     sync,
 
     vscode.window.registerTreeDataProvider('pokemonCompanion.backpack', backpack),
+
+    vscode.window.registerWebviewViewProvider(
+      EncounterPanel.viewId,
+      encounterPanel,
+      { webviewOptions: { retainContextWhenHidden: true } }
+    ),
 
     vscode.workspace.onDidSaveTextDocument(async (document) => {
       const changedChars = tracker.peek(document);
