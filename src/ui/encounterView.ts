@@ -21,7 +21,12 @@ import { BallOption, EncounterPanel, PokemonView } from './encounterPanel';
 const ENCOUNTER_TIMEOUT_MS = 45_000;
 
 function toView(pokemon: PokemonData): PokemonView {
-  return { id: pokemon.id, name: pokemon.name, spriteUrl: pokemon.spriteUrl };
+  return {
+    id: pokemon.id,
+    name: pokemon.name,
+    spriteUrl: pokemon.spriteUrl,
+    animatedSpriteUrl: pokemon.animatedSpriteUrl,
+  };
 }
 
 // Las balls que tienes, con su efecto y su probabilidad en este lanzamiento

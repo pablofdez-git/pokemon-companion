@@ -2,8 +2,14 @@
   const vscode = acquireVsCodeApi();
   const root = document.getElementById('root');
 
+  // Lado máximo, en píxeles, del recuadro donde se dibuja el Pokémon
+  const BOX = 140;
+
   // Escenario del encuentro actual: se usa para animar el lanzamiento
   let current = null;
+  // Detiene la cuenta atrás del encuentro actual, si hay una en marcha
+  let stopCountdown = null;
+  let throwing = false;
 
   // Crea un elemento sin usar innerHTML: los textos se insertan siempre como texto
   function el(tag, options, children) {
@@ -31,18 +37,56 @@
   }
 
   function show(className, nodes) {
+    if (stopCountdown) {
+      stopCountdown();
+      stopCountdown = null;
+    }
     root.className = className;
     root.replaceChildren(...nodes);
   }
 
   function spriteNode(pokemon) {
-    if (pokemon.spriteUrl) {
-      return el('img', {
-        className: 'pokemon-sprite',
-        attrs: { src: pokemon.spriteUrl, alt: pokemon.name },
-      });
+    const animated = pokemon.animatedSpriteUrl;
+    const source = animated || pokemon.spriteUrl;
+    if (!source) {
+      return el('div', { className: 'sprite-placeholder', text: '?' });
     }
-    return el('div', { className: 'sprite-placeholder', text: '?' });
+
+    const img = el('img', {
+      className: animated ? 'pokemon-sprite animated' : 'pokemon-sprite bob',
+      attrs: { src: source, alt: pokemon.name },
+    });
+    if (!animated) {
+      return img;
+    }
+
+    let usingAnimated = true;
+
+    // Los sprites animados vienen a su tamaño real, muy distinto de uno a otro:
+    // se amplían un número entero de veces para que sigan nítidos y conserven proporciones
+    img.addEventListener('load', () => {
+      if (!usingAnimated) {
+        return;
+      }
+      const largest = Math.max(img.naturalWidth, img.naturalHeight, 1);
+      const scale = Math.max(1, Math.min(4, Math.floor(BOX / largest)));
+      img.style.width = `${img.naturalWidth * scale}px`;
+      img.style.height = `${img.naturalHeight * scale}px`;
+    });
+
+    // Si el sprite animado no carga, se usa el estático
+    img.addEventListener('error', () => {
+      if (!usingAnimated || !pokemon.spriteUrl) {
+        return;
+      }
+      usingAnimated = false;
+      img.style.width = '';
+      img.style.height = '';
+      img.className = 'pokemon-sprite bob';
+      img.src = pokemon.spriteUrl;
+    });
+
+    return img;
   }
 
   function titleNode(pokemon) {
@@ -69,6 +113,39 @@
     return button;
   }
 
+  // Barra con el tiempo que queda. Devuelve null si la extensión no mandó el plazo.
+  function countdownNode(msg) {
+    if (typeof msg.deadline !== 'number' || !msg.timeoutMs) {
+      return null;
+    }
+    const fill = el('div', { className: 'timer-fill' });
+    const track = el('div', { className: 'timer' }, [fill]);
+
+    // Se arranca cuando la barra ya está en pantalla; devuelve la función que la detiene
+    function start() {
+      const remaining = Math.max(0, msg.deadline - Date.now());
+      const startScale = Math.min(1, remaining / msg.timeoutMs);
+
+      const animation = fill.animate(
+        [{ transform: `scaleX(${startScale})` }, { transform: 'scaleX(0)' }],
+        { duration: remaining, easing: 'linear', fill: 'forwards' }
+      );
+      // Cuando queda el 25% del tiempo, la barra cambia de color
+      const lowTimer = setTimeout(
+        () => fill.classList.add('low'),
+        Math.max(0, remaining - msg.timeoutMs * 0.25)
+      );
+
+      return function stop() {
+        animation.cancel();
+        clearTimeout(lowTimer);
+        track.classList.add('stopped');
+      };
+    }
+
+    return { track, start };
+  }
+
   function renderIdle() {
     current = null;
     show('idle', [
@@ -84,11 +161,15 @@
     const messageNode = el('p', { className: 'message', text: msg.message });
     const buttons = [];
 
-    // Tras pulsar, se bloquean todos los botones hasta que llegue el siguiente estado
+    // Tras pulsar, se bloquean los botones y se para la cuenta atrás
     function lock(text) {
       buttons.forEach((button) => {
         button.disabled = true;
       });
+      if (stopCountdown) {
+        stopCountdown();
+        stopCountdown = null;
+      }
       messageNode.textContent = text;
     }
 
@@ -113,7 +194,15 @@
     const stage = el('div', { className: 'stage' }, [sprite]);
     current = { stage, sprite };
 
-    show('encounter', [stage, titleNode(msg.pokemon), messageNode, ballsNode, flee]);
+    const countdown = countdownNode(msg);
+    const nodes = [stage, titleNode(msg.pokemon), messageNode];
+    if (countdown) {
+      nodes.push(countdown.track);
+    }
+    nodes.push(ballsNode, flee);
+
+    show('encounter', nodes);
+    stopCountdown = countdown ? countdown.start() : null;
   }
 
   function renderEnded(msg) {
@@ -134,6 +223,11 @@
       vscode.postMessage({ type: 'throwDone' });
       return;
     }
+    if (throwing) {
+      return; // ya hay un lanzamiento en marcha: no se repite
+    }
+    throwing = true;
+
     const { stage, sprite } = current;
     const ball = el('img', {
       className: 'ball-anim',
@@ -223,6 +317,7 @@
       // Si algo interrumpe la animación, el juego sigue igualmente
       console.error('Animación interrumpida', error);
     } finally {
+      throwing = false;
       vscode.postMessage({ type: 'throwDone' });
     }
   }

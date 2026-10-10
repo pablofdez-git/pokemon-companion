@@ -3,6 +3,21 @@ export interface PokemonData {
   name: string;
   captureRate: number;
   spriteUrl: string | null;
+  animatedSpriteUrl: string | null; // sprite animado; solo existe hasta el #649
+}
+
+interface PokemonResponse {
+  name: string;
+  sprites: {
+    front_default: string | null;
+    versions?: {
+      'generation-v'?: {
+        'black-white'?: {
+          animated?: { front_default: string | null };
+        };
+      };
+    };
+  };
 }
 
 const BASE_URL = 'https://pokeapi.co/api/v2';
@@ -27,9 +42,7 @@ export async function fetchPokemon(id: number): Promise<PokemonData> {
   }
 
   const [pokemon, species] = await Promise.all([
-    getJson<{ name: string; sprites: { front_default: string | null } }>(
-      `${BASE_URL}/pokemon/${id}`
-    ),
+    getJson<PokemonResponse>(`${BASE_URL}/pokemon/${id}`),
     getJson<{ capture_rate: number }>(`${BASE_URL}/pokemon-species/${id}`),
   ]);
 
@@ -38,6 +51,9 @@ export async function fetchPokemon(id: number): Promise<PokemonData> {
     name: capitalize(pokemon.name),
     captureRate: species.capture_rate,
     spriteUrl: pokemon.sprites.front_default,
+    animatedSpriteUrl:
+      pokemon.sprites.versions?.['generation-v']?.['black-white']?.animated
+        ?.front_default ?? null,
   };
   cache.set(id, data);
   return data;

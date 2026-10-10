@@ -5,6 +5,7 @@ export interface PokemonView {
   id: number;
   name: string;
   spriteUrl: string | null;
+  animatedSpriteUrl: string | null; // sprite animado (solo existe hasta el #649)
 }
 
 export interface BallOption {
@@ -29,6 +30,8 @@ type ToPanel =
       pokemon: PokemonView;
       message: string;
       balls: BallOption[];
+      deadline: number;  // momento (ms) en que el Pokémon se va si no respondes
+      timeoutMs: number; // duración total de la espera, para dibujar la barra
     }
   | {
       type: 'ended';
@@ -134,7 +137,14 @@ export class EncounterPanel
     return new Promise((resolve) => {
       const timer = setTimeout(() => this.settle({ kind: 'timeout' }), timeoutMs);
       this.pending = { resolve, timer };
-      this.post({ type: 'encounter', pokemon, message, balls });
+      this.post({
+        type: 'encounter',
+        pokemon,
+        message,
+        balls,
+        deadline: Date.now() + timeoutMs,
+        timeoutMs,
+      });
     });
   }
 

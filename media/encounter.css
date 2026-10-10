@@ -166,3 +166,59 @@ body {
   filter: grayscale(1);
   opacity: 0.5;
 }
+
+/* Sprites animados: JS les da su tamaño (múltiplo entero del original) al cargar */
+.pokemon-sprite.animated {
+  width: auto;
+  height: auto;
+}
+
+/* Balanceo suave de los sprites estáticos */
+@keyframes bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.pokemon-sprite.bob {
+  animation: bob 1.8s ease-in-out infinite;
+}
+
+.ended.fled .pokemon-sprite.bob {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pokemon-sprite.bob {
+    animation: none;
+  }
+}
+
+/* Barra con el tiempo que queda antes de que el Pokémon se vaya */
+.timer {
+  width: 100%;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--vscode-widget-border, rgba(128, 128, 128, 0.3));
+  transition: opacity 0.2s;
+}
+
+.timer.stopped {
+  opacity: 0;
+}
+
+.timer-fill {
+  width: 100%;
+  height: 100%;
+  transform-origin: left;
+  background: var(--vscode-progressBar-background, #0e70c0);
+}
+
+.timer-fill.low {
+  background: var(--vscode-editorWarning-foreground, #cca700);
+}
