@@ -35,16 +35,24 @@ type ToPanel =
       pokemon: PokemonView;
       outcome: 'captured' | 'fled';
       message: string;
+    }
+  | {
+      type: 'playThrow';
+      ballSpriteUrl: string;
+      shakes: number;
+      caught: boolean;
     };
 
 // Mensajes del panel hacia la extensión
 type FromPanel =
   | { type: 'ready' }
   | { type: 'throw'; ballId: string }
-  | { type: 'flee' };
+  | { type: 'flee' }
+  | { type: 'throwDone' };
 
-const END_DISPLAY_MS = 8000; // cuánto se ve el resultado antes de volver a la calma
-const REVEAL_WAIT_MS = 3000; // espera máxima a que se cree la vista
+const END_DISPLAY_MS = 8000;    // cuánto se ve el resultado antes de volver a la calma
+const REVEAL_WAIT_MS = 3000;    // espera máxima a que se cree la vista
+const THROW_MAX_WAIT_MS = 7000; // espera máxima a que termine la animación del lanzamiento
 
 export class EncounterPanel
   implements vscode.WebviewViewProvider, vscode.Disposable
@@ -59,6 +67,7 @@ export class EncounterPanel
         timer: ReturnType<typeof setTimeout>;
       }
     | undefined;
+  private throwDone: (() => void) | undefined;
   private idleTimer: ReturnType<typeof setTimeout> | undefined;
   private markResolved!: () => void;
   private readonly resolved = new Promise<void>((resolve) => {
@@ -129,6 +138,25 @@ export class EncounterPanel
     });
   }
 
+  // Anima el lanzamiento y espera a que termine (o a que se agote el tiempo máximo)
+  playThrow(
+    ballSpriteUrl: string,
+    shakes: number,
+    caught: boolean
+  ): Promise<void> {
+    return new Promise((resolve) => {
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const finish = () => {
+        clearTimeout(timer);
+        this.throwDone = undefined;
+        resolve();
+      };
+      timer = setTimeout(finish, THROW_MAX_WAIT_MS);
+      this.throwDone = finish;
+      this.post({ type: 'playThrow', ballSpriteUrl, shakes, caught });
+    });
+  }
+
   // Enseña el resultado y, pasado un rato, vuelve al estado tranquilo
   showEnd(
     pokemon: PokemonView,
@@ -148,6 +176,7 @@ export class EncounterPanel
   dispose(): void {
     clearTimeout(this.idleTimer);
     this.settle({ kind: 'timeout' });
+    this.throwDone?.();
   }
 
   private onMessage(message: FromPanel): void {
@@ -160,6 +189,9 @@ export class EncounterPanel
         break;
       case 'flee':
         this.settle({ kind: 'flee' });
+        break;
+      case 'throwDone':
+        this.throwDone?.();
         break;
     }
   }

@@ -2,7 +2,13 @@ import * as vscode from 'vscode';
 import { StateManager } from '../data/state';
 import { PokemonData } from '../data/pokeapi';
 import { rewardForCapture } from '../game/economy';
-import { catchProbability, pokemonFlees, tryCatch } from '../game/encounter';
+import {
+  CAPTURE_SHAKES,
+  catchProbability,
+  failedShakes,
+  pokemonFlees,
+  tryCatch,
+} from '../game/encounter';
 import { Generation } from '../game/generations';
 import {
   BALLS,
@@ -118,7 +124,15 @@ export async function runEncounter(
     });
     throwNumber += 1;
 
-    if (tryCatch(catchProbability(pokemon.captureRate, ball, ctx))) {
+    const probability = catchProbability(pokemon.captureRate, ball, ctx);
+    const caught = tryCatch(probability);
+    await panel.playThrow(
+      ballSpriteUrl(ball),
+      caught ? CAPTURE_SHAKES : failedShakes(probability),
+      caught
+    );
+
+    if (caught) {
       const { coins, newGenerations } = await rewardForCapture(state, pokemon);
       panel.showEnd(view, 'captured', `¡Has capturado a ${pokemon.name}! +${coins} 🪙`);
       announceUnlocks(newGenerations);

@@ -23,6 +23,28 @@ body {
   opacity: 0.7;
 }
 
+/* Escenario: aquí se mueven el Pokémon y la ball durante el lanzamiento */
+.stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 150px;
+  overflow: hidden;
+}
+
+.ball-anim {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 60px;
+  height: 60px;
+  margin: -30px 0 0 -30px;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
 .pokemon-sprite {
   width: 128px;
   height: 128px;
@@ -119,8 +141,20 @@ body {
   background: var(--vscode-toolbar-hoverBackground);
 }
 
+@keyframes pop {
+  from {
+    opacity: 0.3;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 .ended.captured .pokemon-sprite {
   filter: drop-shadow(0 0 6px var(--vscode-charts-yellow, gold));
+  animation: pop 0.5s ease-out;
 }
 
 .ended.captured .message {

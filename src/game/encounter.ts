@@ -50,3 +50,12 @@ export class EncounterGate {
     this.lastEnd = Date.now();
   }
 }
+
+// Sacudidas de la ball cuando el Pokémon es capturado
+export const CAPTURE_SHAKES = 3;
+
+// Cuántas veces se sacude la ball antes de abrirse si falla (de 0 a 2).
+// Cuanto más cerca estaba de capturarlo, más se sacude.
+export function failedShakes(probability: number): number {
+  return Math.min(2, Math.floor(Math.random() * (1 + probability * 3)));
+}
