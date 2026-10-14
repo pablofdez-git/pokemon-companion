@@ -1,7 +1,6 @@
 import { StateManager } from '../data/state';
 import { PokemonData } from '../data/pokeapi';
 import { GENERATIONS, Generation, unlockedAfterCaptures } from './generations';
-export const SHINY_BONUS_COINS = 50; // premio extra por capturar un variocolor
 
 // Ajusta estos valores a tu gusto para equilibrar el juego
 export const MIN_CHARS_TO_REWARD = 20; // por debajo de esto, no hay moneda
@@ -14,44 +13,25 @@ export function coinsForChanges(changedChars: number): number {
   return Math.floor(changedChars / CHARS_PER_COIN);
 }
 
-// Registra la captura, paga la recompensa y comprueba si desbloquea una generación
-export async function rewardForCapture(
+// Paga las monedas de un guardado según los caracteres nuevos
+export async function rewardForSave(
   state: StateManager,
-  pokemon: PokemonData,
-  shiny: boolean
-): Promise<CaptureResult> {
-  const coins =
-    captureReward(pokemon.captureRate) + (shiny ? SHINY_BONUS_COINS : 0);
-  let newGenerations: Generation[] = [];
-
-  await state.update((s) => {
-    s.captured.push({
-      id: pokemon.id,
-      name: pokemon.name,
-      spriteUrl: shiny ? pokemon.shinySpriteUrl : pokemon.spriteUrl,
-      captureRate: pokemon.captureRate,
-      ...(shiny ? { shiny: true } : {}),
+  changedChars: number
+): Promise<number> {
+  const coins = coinsForChanges(changedChars);
+  if (coins > 0) {
+    await state.update((s) => {
+      s.coins += coins;
     });
-    s.coins += coins;
-
-    const before = s.generationsUnlocked;
-    const after = unlockedAfterCaptures(
-      before,
-      s.captured.map((c) => c.id)
-    );
-    s.generationsUnlocked = after;
-    newGenerations = GENERATIONS.filter(
-      (g) => g.number > before && g.number <= after
-    );
-  });
-
-  return { coins, newGenerations };
+  }
+  return coins;
 }
 
 // --- Monedas por capturar y por vender ---
 export const MIN_CAPTURE_REWARD = 5;         // recompensa por el Pokémon más fácil
 export const MAX_EXTRA_CAPTURE_REWARD = 25;  // extra por el más difícil (5 + 25 = 30)
 export const SELL_PRICE_FACTOR = 0.6;        // vender paga el 60% de la recompensa
+export const SHINY_BONUS_COINS = 50;         // premio extra por capturar un variocolor
 const DEFAULT_CAPTURE_RATE = 120;            // para capturas antiguas sin dato
 
 export function captureReward(captureRate: number): number {
@@ -71,17 +51,20 @@ export interface CaptureResult {
 // Registra la captura, paga la recompensa y comprueba si desbloquea una generación
 export async function rewardForCapture(
   state: StateManager,
-  pokemon: PokemonData
+  pokemon: PokemonData,
+  shiny: boolean
 ): Promise<CaptureResult> {
-  const coins = captureReward(pokemon.captureRate);
+  const coins =
+    captureReward(pokemon.captureRate) + (shiny ? SHINY_BONUS_COINS : 0);
   let newGenerations: Generation[] = [];
 
   await state.update((s) => {
     s.captured.push({
       id: pokemon.id,
       name: pokemon.name,
-      spriteUrl: pokemon.spriteUrl,
+      spriteUrl: shiny ? pokemon.shinySpriteUrl : pokemon.spriteUrl,
       captureRate: pokemon.captureRate,
+      ...(shiny ? { shiny: true } : {}),
     });
     s.coins += coins;
 
