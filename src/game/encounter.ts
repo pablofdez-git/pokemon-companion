@@ -59,3 +59,11 @@ export const CAPTURE_SHAKES = 3;
 export function failedShakes(probability: number): number {
   return Math.min(2, Math.floor(Math.random() * (1 + probability * 3)));
 }
+
+// Probabilidad de que un Pokémon aparezca variocolor (1 entre 50)
+export const SHINY_CHANCE = 0.02;
+
+// Solo puede salir variocolor si la API tiene su sprite
+export function rollShiny(hasShinySprite: boolean): boolean {
+  return hasShinySprite && Math.random() < SHINY_CHANCE;
+}

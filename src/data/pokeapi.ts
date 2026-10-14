@@ -3,18 +3,24 @@ export interface PokemonData {
   name: string;
   captureRate: number;
   spriteUrl: string | null;
-  animatedSpriteUrl: string | null; // sprite animado; solo existe hasta el #649
+  animatedSpriteUrl: string | null;      // sprite animado; solo existe hasta el #649
+  shinySpriteUrl: string | null;         // sprite variocolor
+  animatedShinySpriteUrl: string | null; // sprite variocolor animado (hasta el #649)
+}
+
+interface AnimatedSprites {
+  front_default: string | null;
+  front_shiny: string | null;
 }
 
 interface PokemonResponse {
   name: string;
   sprites: {
     front_default: string | null;
+    front_shiny: string | null;
     versions?: {
       'generation-v'?: {
-        'black-white'?: {
-          animated?: { front_default: string | null };
-        };
+        'black-white'?: { animated?: AnimatedSprites };
       };
     };
   };
@@ -46,14 +52,17 @@ export async function fetchPokemon(id: number): Promise<PokemonData> {
     getJson<{ capture_rate: number }>(`${BASE_URL}/pokemon-species/${id}`),
   ]);
 
+  const animated =
+    pokemon.sprites.versions?.['generation-v']?.['black-white']?.animated;
+
   const data: PokemonData = {
     id,
     name: capitalize(pokemon.name),
     captureRate: species.capture_rate,
     spriteUrl: pokemon.sprites.front_default,
-    animatedSpriteUrl:
-      pokemon.sprites.versions?.['generation-v']?.['black-white']?.animated
-        ?.front_default ?? null,
+    animatedSpriteUrl: animated?.front_default ?? null,
+    shinySpriteUrl: pokemon.sprites.front_shiny ?? null,
+    animatedShinySpriteUrl: animated?.front_shiny ?? null,
   };
   cache.set(id, data);
   return data;

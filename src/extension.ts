@@ -9,6 +9,7 @@ import {
   EncounterGate,
   randomPokemonId,
   rollEncounter,
+  rollShiny,
 } from './game/encounter';
 import { ActivityTracker } from './events/activityTracker';
 import { BackpackProvider } from './ui/backpackView';
@@ -43,7 +44,8 @@ export function activate(context: vscode.ExtensionContext) {
     try {
       const maxId = maxPokemonId(state.get().generationsUnlocked);
       const pokemon = await fetchPokemon(randomPokemonId(maxId));
-      await runEncounter(state, encounterPanel, pokemon);
+      const shiny = rollShiny(Boolean(pokemon.shinySpriteUrl));
+      await runEncounter(state, encounterPanel, pokemon, shiny);
     } catch (error) {
       console.error('Error en el encuentro:', error);
       encounterPanel.showIdle();

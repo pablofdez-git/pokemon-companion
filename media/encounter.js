@@ -91,7 +91,21 @@
 
   function titleNode(pokemon) {
     const number = String(pokemon.id).padStart(3, '0');
-    return el('p', { className: 'pokemon-name', text: `#${number} ${pokemon.name}` });
+    const star = pokemon.shiny ? ' ★' : '';
+    return el('p', {
+      className: pokemon.shiny ? 'pokemon-name shiny' : 'pokemon-name',
+      text: `#${number} ${pokemon.name}${star}`,
+    });
+  }
+
+  // Destellos que rodean a un Pokémon variocolor
+  function sparkleNodes(pokemon) {
+    if (!pokemon.shiny) {
+      return [];
+    }
+    return [1, 2, 3, 4, 5, 6].map((n) =>
+      el('span', { className: `sparkle sp${n}`, text: '★' })
+    );
   }
 
   function ballButton(ball, onPick) {
@@ -191,7 +205,7 @@
     buttons.push(flee);
 
     const sprite = spriteNode(msg.pokemon);
-    const stage = el('div', { className: 'stage' }, [sprite]);
+    const stage = el('div', { className: 'stage' }, [sprite, ...sparkleNodes(msg.pokemon)]);
     current = { stage, sprite };
 
     const countdown = countdownNode(msg);
@@ -208,7 +222,10 @@
   function renderEnded(msg) {
     current = null;
     show(`ended ${msg.outcome}`, [
-      el('div', { className: 'stage' }, [spriteNode(msg.pokemon)]),
+      el('div', { className: 'stage' }, [
+        spriteNode(msg.pokemon),
+        ...(msg.outcome === 'captured' ? sparkleNodes(msg.pokemon) : []),
+      ]),
       titleNode(msg.pokemon),
       el('p', { className: 'message', text: msg.message }),
     ]);

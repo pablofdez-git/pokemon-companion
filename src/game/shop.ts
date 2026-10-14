@@ -39,7 +39,7 @@ export async function sellDuplicate(
   let result: SaleResult = { ok: false, reason: 'No tienes ese Pokémon.' };
 
   await state.update((s) => {
-    const copies = s.captured.filter((c) => c.id === pokemonId);
+    const copies = s.captured.filter((c) => c.id === pokemonId && !c.shiny);
 
     if (copies.length === 1) {
       result = {

@@ -20,12 +20,16 @@ import { BallOption, EncounterPanel, PokemonView } from './encounterPanel';
 
 const ENCOUNTER_TIMEOUT_MS = 45_000;
 
-function toView(pokemon: PokemonData): PokemonView {
+// Si es variocolor se usan sus sprites; si no, los normales
+function toView(pokemon: PokemonData, shiny: boolean): PokemonView {
   return {
     id: pokemon.id,
     name: pokemon.name,
-    spriteUrl: pokemon.spriteUrl,
-    animatedSpriteUrl: pokemon.animatedSpriteUrl,
+    spriteUrl: shiny ? pokemon.shinySpriteUrl : pokemon.spriteUrl,
+    animatedSpriteUrl: shiny
+      ? pokemon.animatedShinySpriteUrl
+      : pokemon.animatedSpriteUrl,
+    shiny,
   };
 }
 
@@ -76,20 +80,22 @@ function announceUnlocks(generations: Generation[]): void {
 export async function runEncounter(
   state: StateManager,
   panel: EncounterPanel,
-  pokemon: PokemonData
+  pokemon: PokemonData,
+  shiny: boolean
 ): Promise<'captured' | 'fled'> {
-  const view = toView(pokemon);
-  let message = `¡Ha aparecido un ${pokemon.name} salvaje!`;
+  const view = toView(pokemon, shiny);
+  const label = shiny ? `${pokemon.name} variocolor` : pokemon.name;
+  let message = `¡Ha aparecido un ${label} salvaje!`;
   let throwNumber = 1;
 
   // Aviso discreto por si el panel no está a la vista
-  vscode.window.setStatusBarMessage(message, 6000);
+  vscode.window.setStatusBarMessage(shiny ? `★ ${message}` : message, 6000);
   await panel.reveal();
 
   while (true) {
     const owned = state.get().balls;
     if (!BALLS.some((ball) => (owned[ball.id] ?? 0) > 0)) {
-      panel.showEnd(view, 'fled', `${pokemon.name} se ha ido: no te quedan Pokéballs.`);
+      panel.showEnd(view, 'fled', `${label} se ha ido: no te quedan Pokéballs.`);
       return 'fled';
     }
 
@@ -107,15 +113,11 @@ export async function runEncounter(
     );
 
     if (choice.kind === 'flee') {
-      panel.showEnd(view, 'fled', `Has huido de ${pokemon.name}.`);
+      panel.showEnd(view, 'fled', `Has huido de ${label}.`);
       return 'fled';
     }
     if (choice.kind === 'timeout') {
-      panel.showEnd(
-        view,
-        'fled',
-        `${pokemon.name} se ha cansado de esperar y se ha ido.`
-      );
+      panel.showEnd(view, 'fled', `${label} se ha cansado de esperar y se ha ido.`);
       return 'fled';
     }
 
@@ -138,8 +140,12 @@ export async function runEncounter(
     );
 
     if (caught) {
-      const { coins, newGenerations } = await rewardForCapture(state, pokemon);
-      panel.showEnd(view, 'captured', `¡Has capturado a ${pokemon.name}! +${coins} 🪙`);
+      const { coins, newGenerations } = await rewardForCapture(
+        state,
+        pokemon,
+        shiny
+      );
+      panel.showEnd(view, 'captured', `¡Has capturado a ${label}! +${coins} 🪙`);
       announceUnlocks(newGenerations);
       return 'captured';
     }
@@ -148,11 +154,11 @@ export async function runEncounter(
       panel.showEnd(
         view,
         'fled',
-        `¡${pokemon.name} ha roto la ${ball.name} y ha huido!`
+        `¡${label} ha roto la ${ball.name} y ha huido!`
       );
       return 'fled';
     }
 
-    message = `¡${pokemon.name} ha salido de la ${ball.name}! Sigue ahí…`;
+    message = `¡${label} ha salido de la ${ball.name}! Sigue ahí…`;
   }
 }

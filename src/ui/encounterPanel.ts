@@ -6,6 +6,7 @@ export interface PokemonView {
   name: string;
   spriteUrl: string | null;
   animatedSpriteUrl: string | null; // sprite animado (solo existe hasta el #649)
+  shiny: boolean;                   // variocolor
 }
 
 export interface BallOption {

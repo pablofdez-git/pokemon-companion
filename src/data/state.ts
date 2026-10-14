@@ -5,6 +5,7 @@ export interface CapturedPokemon {
   name: string;
   spriteUrl: string | null;
   captureRate?: number; // dificultad; no existe en capturas antiguas
+  shiny?: boolean;      // variocolor; no existe en capturas antiguas
 }
 
 export interface GameState {

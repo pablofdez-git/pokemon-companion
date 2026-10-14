@@ -222,3 +222,42 @@ body {
 .timer-fill.low {
   background: var(--vscode-editorWarning-foreground, #cca700);
 }
+
+/* Pokémon variocolor */
+.pokemon-name.shiny {
+  color: var(--vscode-charts-yellow, #ffcb05);
+}
+
+.sparkle {
+  position: absolute;
+  color: var(--vscode-charts-yellow, #ffcb05);
+  opacity: 0;
+  pointer-events: none;
+  animation: twinkle 1.8s ease-in-out infinite;
+}
+
+.sp1 { top: 14%; left: 22%; font-size: 14px; animation-delay: 0s; }
+.sp2 { top: 8%; left: 66%; font-size: 10px; animation-delay: 0.4s; }
+.sp3 { top: 40%; left: 10%; font-size: 9px; animation-delay: 0.9s; }
+.sp4 { top: 36%; left: 82%; font-size: 15px; animation-delay: 0.2s; }
+.sp5 { top: 72%; left: 28%; font-size: 11px; animation-delay: 1.1s; }
+.sp6 { top: 70%; left: 72%; font-size: 12px; animation-delay: 0.6s; }
+
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.4) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1) rotate(35deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sparkle {
+    animation: none;
+    opacity: 0.8;
+  }
+}

@@ -27,18 +27,23 @@ interface CapturedGroup {
   count: number;
 }
 
-// Agrupa las capturas repetidas y las ordena por número de Pokédex
+// Agrupa las capturas repetidas (el variocolor va aparte del normal) y las ordena por Pokédex
 function groupCaptured(captured: CapturedPokemon[]): CapturedGroup[] {
-  const groups = new Map<number, CapturedGroup>();
+  const groups = new Map<string, CapturedGroup>();
   for (const pokemon of captured) {
-    const existing = groups.get(pokemon.id);
+    const key = `${pokemon.id}:${pokemon.shiny ? 's' : 'n'}`;
+    const existing = groups.get(key);
     if (existing) {
       existing.count += 1;
     } else {
-      groups.set(pokemon.id, { pokemon, count: 1 });
+      groups.set(key, { pokemon, count: 1 });
     }
   }
-  return [...groups.values()].sort((a, b) => a.pokemon.id - b.pokemon.id);
+  return [...groups.values()].sort(
+    (a, b) =>
+      a.pokemon.id - b.pokemon.id ||
+      Number(Boolean(a.pokemon.shiny)) - Number(Boolean(b.pokemon.shiny))
+  );
 }
 
 // Los iconos del árbol van fijados a 16x16, así que el sprite grande va en el tooltip
@@ -50,14 +55,17 @@ function pokemonTooltip(
   tooltip.supportHtml = true;
 
   const number = String(pokemon.id).padStart(3, '0');
-  tooltip.appendMarkdown(`**#${number} ${pokemon.name}**\n\n`);
+  const star = pokemon.shiny ? ' ★' : '';
+  tooltip.appendMarkdown(`**#${number} ${pokemon.name}${star}**\n\n`);
   if (pokemon.spriteUrl) {
     tooltip.appendMarkdown(
       `<img src="${pokemon.spriteUrl}" width="128" height="128" alt="${pokemon.name}">\n\n`
     );
   }
   tooltip.appendMarkdown(count > 1 ? `Capturado ${count} veces` : 'Capturado 1 vez');
-  if (count > 1) {
+  if (pokemon.shiny) {
+    tooltip.appendMarkdown('\n\nVariocolor: no se puede vender');
+  } else if (count > 1) {
     tooltip.appendMarkdown(
       `\n\nVender un repetido: ${sellPrice(pokemon.captureRate)} 🪙`
     );
@@ -128,11 +136,16 @@ export class BackpackProvider
         generationsUnlocked,
         captured.map((c) => c.id)
       );
+      const shinyCount = groupCaptured(captured).filter(
+        (g) => g.pokemon.shiny
+      ).length;
+      const shinyText = shinyCount > 0 ? ` · ★ ${shinyCount}` : '';
+
       return [
         progressItem(progress),
         new BackpackItem('Pokéballs', Expanded, 'balls'),
         new BackpackItem(
-          `Pokémon capturados (${progress.distinct}/${maxPokemonId(generationsUnlocked)})`,
+          `Pokémon capturados (${progress.distinct}/${maxPokemonId(generationsUnlocked)})${shinyText}`,
           Expanded,
           'pokemon'
         ),
@@ -157,15 +170,22 @@ export class BackpackProvider
         return [empty];
       }
       return groups.map(({ pokemon, count }) => {
+        const number = String(pokemon.id).padStart(3, '0');
         const item = new BackpackItem(
-          `#${String(pokemon.id).padStart(3, '0')} ${pokemon.name}`,
+          `#${number} ${pokemon.shiny ? '★ ' : ''}${pokemon.name}`,
           None
         );
         item.pokemonId = pokemon.id;
-        // Solo los repetidos muestran el botón de vender (ver package.json)
-        item.contextValue = count > 1 ? 'duplicatePokemon' : 'singlePokemon';
-        if (count > 1) {
-          item.description = `x${count}`;
+        // Solo los repetidos normales muestran el botón de vender (ver package.json)
+        item.contextValue =
+          !pokemon.shiny && count > 1 ? 'duplicatePokemon' : 'singlePokemon';
+
+        const details = [
+          count > 1 ? `x${count}` : '',
+          pokemon.shiny ? 'variocolor' : '',
+        ].filter(Boolean);
+        if (details.length > 0) {
+          item.description = details.join(' · ');
         }
         if (pokemon.spriteUrl) {
           item.iconPath = vscode.Uri.parse(pokemon.spriteUrl);
