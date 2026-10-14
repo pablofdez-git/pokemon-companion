@@ -21,6 +21,15 @@ export class CoinStatusBar implements vscode.Disposable {
     this.item.text = `🪙 ${this.state.get().coins}`;
   }
 
+    // Oculta o muestra el contador (por ejemplo, al pausar el juego)
+  setVisible(visible: boolean): void {
+    if (visible) {
+      this.item.show();
+    } else {
+      this.item.hide();
+    }
+  }
+
   dispose(): void {
     this.subscription.dispose();
     this.item.dispose();

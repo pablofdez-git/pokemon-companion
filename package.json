@@ -6,7 +6,7 @@
   "type": "git",
   "url": "https://github.com/pablofdez-git/pokemon-companion.git"
 },
-  "version": "0.0.3",
+  "version": "0.0.4",
   "engines": {
     "vscode": "^1.138.0"
   },
@@ -21,9 +21,9 @@
       "command": "pokemonCompanion.resetProgress",
       "title": "Pokémon Companion: Reiniciar progreso"
     },
-    {
-      "command": "pokemonCompanion.forceEncounter",
-      "title": "Pokémon Companion: Forzar encuentro (pruebas)"
+        {
+      "command": "pokemonCompanion.togglePause",
+      "title": "Pokémon Companion: Pausar o reanudar"
     },
     {
       "command": "pokemonCompanion.openShop",
@@ -77,12 +77,14 @@
         "type": "webview",
         "id": "pokemonCompanion.encounter",
         "name": "Encuentro",
-        "icon": "media/backpack.svg"
+        "icon": "media/backpack.svg",
+        "when": "!pokemonCompanion.paused"
       },
       {
         "id": "pokemonCompanion.backpack",
         "name": "Mochila",
-        "icon": "media/backpack.svg"
+        "icon": "media/backpack.svg",
+        "when": "!pokemonCompanion.paused"
       }
     ]
   },

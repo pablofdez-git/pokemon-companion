@@ -14,6 +14,7 @@ import { ActivityTracker } from './events/activityTracker';
 import { BackpackProvider } from './ui/backpackView';
 import { EncounterPanel } from './ui/encounterPanel';
 import { runEncounter } from './ui/encounterView';
+import { PauseController } from './ui/pauseToggle';
 import { openShop } from './ui/shop';
 import { CoinStatusBar } from './ui/statusBar';
 
@@ -21,6 +22,7 @@ let syncService: SyncService | undefined;
 
 export function activate(context: vscode.ExtensionContext) {
   const state = new StateManager(context.globalState);
+  const pause = new PauseController(context.globalState);
   const statusBar = new CoinStatusBar(state);
   const backpack = new BackpackProvider(state);
   const encounterPanel = new EncounterPanel(context.extensionUri);
@@ -29,11 +31,11 @@ export function activate(context: vscode.ExtensionContext) {
   const sync = new SyncService(state, context.globalState);
   syncService = sync;
 
-  async function startEncounter(forced: boolean): Promise<void> {
-    if (!gate.canStart(forced)) {
-      if (forced) {
-        vscode.window.showInformationMessage('Ya hay un encuentro en curso.');
-      }
+  // Si el juego arranca en pausa, el contador de monedas no se ve
+  statusBar.setVisible(!pause.isPaused);
+
+  async function startEncounter(): Promise<void> {
+    if (pause.isPaused || !gate.canStart()) {
       return;
     }
 
@@ -45,22 +47,25 @@ export function activate(context: vscode.ExtensionContext) {
     } catch (error) {
       console.error('Error en el encuentro:', error);
       encounterPanel.showIdle();
-      if (forced) {
-        vscode.window.showWarningMessage(
-          'No se pudo cargar el Pokémon (¿sin conexión?).'
-        );
-      }
     } finally {
       gate.end();
     }
   }
 
   context.subscriptions.push(
+    pause,
     statusBar,
     backpack,
     encounterPanel,
     tracker,
     sync,
+
+    pause.onDidChange((paused) => {
+      statusBar.setVisible(!paused);
+      if (paused) {
+        encounterPanel.abort();
+      }
+    }),
 
     vscode.window.registerTreeDataProvider('pokemonCompanion.backpack', backpack),
 
@@ -71,6 +76,11 @@ export function activate(context: vscode.ExtensionContext) {
     ),
 
     vscode.workspace.onDidSaveTextDocument(async (document) => {
+      if (pause.isPaused) {
+        tracker.consume(document); // lo escrito en pausa no cuenta
+        return;
+      }
+
       const changedChars = tracker.peek(document);
       const gained = await rewardForSave(state, changedChars);
 
@@ -80,10 +90,14 @@ export function activate(context: vscode.ExtensionContext) {
 
         if (rollEncounter()) {
           // Sin await: el encuentro espera tu respuesta y no debe bloquear el guardado
-          void startEncounter(false);
+          void startEncounter();
         }
       }
     }),
+
+    vscode.commands.registerCommand('pokemonCompanion.togglePause', () =>
+      pause.toggle()
+    ),
 
     vscode.commands.registerCommand('pokemonCompanion.openShop', () =>
       openShop(state)
@@ -105,10 +119,6 @@ export function activate(context: vscode.ExtensionContext) {
           vscode.window.showWarningMessage(result.reason);
         }
       }
-    ),
-
-    vscode.commands.registerCommand('pokemonCompanion.forceEncounter', () =>
-      startEncounter(true)
     ),
 
     vscode.commands.registerCommand('pokemonCompanion.syncNow', () =>
