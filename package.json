@@ -57,6 +57,11 @@
         "icon": "$(book)"
       },
       {
+        "command": "pokemonCompanion.openAchievements",
+        "title": "Ctrl+Catch: Abrir logros",
+        "icon": "$(trophy)"
+      },
+      {
         "command": "pokemonCompanion.sellDuplicate",
         "title": "Vender un repetido",
         "icon": {
@@ -111,7 +116,12 @@
         {
           "command": "pokemonCompanion.openPokedex",
           "when": "view == pokemonCompanion.backpack",
-          "group": "navigation"
+          "group": "navigation@1"
+        },
+        {
+          "command": "pokemonCompanion.openAchievements",
+          "when": "view == pokemonCompanion.backpack",
+          "group": "navigation@2"
         }
       ]
     },

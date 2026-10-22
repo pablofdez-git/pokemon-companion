@@ -107,6 +107,10 @@ function mergeStats(
   return merged;
 }
 
+function union(a: string[], b: string[]): string[] {
+  return [...new Set([...a, ...b])];
+}
+
 // Combina dos partidas que han cambiado por separado.
 // Las tres deben venir normalizadas (normalizeState). updatedAt lo pone quien la guarde.
 export function mergeStates(
@@ -125,5 +129,8 @@ export function mergeStates(
     ),
     updatedAt: Math.max(local.updatedAt, remote.updatedAt),
     stats: mergeStats(base?.stats, local.stats, remote.stats),
+    // Un logro conseguido (o su recompensa cobrada) en cualquier ordenador vale para los dos
+    achievements: union(local.achievements, remote.achievements),
+    achievementsClaimed: union(local.achievementsClaimed, remote.achievementsClaimed),
   };
 }

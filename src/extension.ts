@@ -2,6 +2,14 @@ import * as vscode from 'vscode';
 import { StateManager } from './data/state';
 import { SyncService } from './data/syncService';
 import { PokemonData, fetchPokemon } from './data/pokeapi';
+import {
+  Achievement,
+  TIER_LABELS,
+  claimReward,
+  pendingRewards,
+  pickRewardPokemon,
+  unlockAchievements,
+} from './game/achievements';
 import { rewardForSave } from './game/economy';
 import { sellDuplicate } from './game/shop';
 import { maxPokemonId } from './game/generations';
@@ -16,9 +24,11 @@ import {
   rollShiny,
 } from './game/encounter';
 import { ActivityTracker } from './events/activityTracker';
+import { AchievementsPanel } from './ui/achievementsPanel';
 import { BackpackProvider } from './ui/backpackView';
 import { EncounterPanel } from './ui/encounterPanel';
 import { runEncounter } from './ui/encounterView';
+import { BALLS } from './game/items';
 import { evolveFromBackpack } from './ui/evolution';
 import { PauseController } from './ui/pauseToggle';
 import { PokedexPanel } from './ui/pokedexPanel';
@@ -27,6 +37,8 @@ import { CoinStatusBar } from './ui/statusBar';
 
 let syncService: SyncService | undefined;
 
+const REWARD_DELAY_MS = 4000; // para que se vea el final de la captura antes de la recompensa
+
 export function activate(context: vscode.ExtensionContext) {
   const state = new StateManager(context.globalState);
   const pause = new PauseController(context.globalState);
@@ -34,6 +46,7 @@ export function activate(context: vscode.ExtensionContext) {
   const backpack = new BackpackProvider(state);
   const encounterPanel = new EncounterPanel(context.extensionUri);
   const pokedex = new PokedexPanel(context.extensionUri, state);
+  const achievementsPanel = new AchievementsPanel(context.extensionUri, state);
   const tracker = new ActivityTracker();
   const settings = () => vscode.workspace.getConfiguration('pokemonCompanion');
   const encounterChance = () =>
@@ -49,8 +62,44 @@ export function activate(context: vscode.ExtensionContext) {
   // Si el juego arranca en pausa, el contador de monedas no se ve
   statusBar.setVisible(!pause.isPaused);
 
-  async function startEncounter(): Promise<void> {
-    if (pause.isPaused || !gate.canStart()) {
+  // Los logros se comprueban de uno en uno para que no se pisen al cambiar el estado
+  let checking: Promise<void> = Promise.resolve();
+  function checkAchievements(): Promise<void> {
+    checking = checking
+      .then(async () => {
+        announceAchievements(await unlockAchievements(state));
+      })
+      .catch((error) => console.error('Error al comprobar los logros:', error));
+    return checking;
+  }
+
+  function announceAchievements(unlocked: Achievement[]): void {
+    if (unlocked.length === 0) {
+      return;
+    }
+    const text =
+      unlocked.length > 3
+        ? `🏆 Has conseguido ${unlocked.length} logros. Cada uno trae un Pokémon de recompensa.`
+        : unlocked
+            .map((a) => `🏆 Logro: ${a.name}. Recompensa: un Pokémon ${TIER_LABELS[a.tier]}.`)
+            .join(' ');
+    void vscode.window.showInformationMessage(text, 'Ver logros').then((choice) => {
+      if (choice === 'Ver logros') {
+        void vscode.commands.executeCommand('pokemonCompanion.openAchievements');
+      }
+    });
+  }
+
+  // Las recompensas esperan a que haya una ball con la que capturarlas
+  function nextReward(): Achievement | undefined {
+    const { balls } = state.get();
+    const hasBalls = BALLS.some((ball) => (balls[ball.id] ?? 0) > 0);
+    return hasBalls ? pendingRewards(state.get())[0] : undefined;
+  }
+
+  // Un encuentro normal, o el de recompensa de un logro (sin cooldown, y se elige por su nivel)
+  async function startEncounter(reward?: Achievement): Promise<void> {
+    if (pause.isPaused || !gate.canStart(Boolean(reward))) {
       return;
     }
 
@@ -59,7 +108,9 @@ export function activate(context: vscode.ExtensionContext) {
     let pokemon: PokemonData;
     try {
       const maxId = maxPokemonId(state.get().generationsUnlocked);
-      pokemon = await fetchPokemon(randomPokemonId(maxId));
+      pokemon = reward
+        ? await pickRewardPokemon(reward.tier, maxId, fetchPokemon)
+        : await fetchPokemon(randomPokemonId(maxId));
     } catch (error) {
       console.error('No se pudo cargar el Pokémon:', error);
       vscode.window.setStatusBarMessage(
@@ -72,12 +123,28 @@ export function activate(context: vscode.ExtensionContext) {
 
     try {
       const shiny = rollShiny(Boolean(pokemon.shinySpriteUrl));
-      await runEncounter(state, encounterPanel, pokemon, shiny);
+      const outcome = await runEncounter(state, encounterPanel, pokemon, shiny, {
+        rewardFor: reward?.name,
+      });
+      if (reward && outcome === 'captured') {
+        await claimReward(state, reward.id);
+      }
     } catch (error) {
       console.error('Error en el encuentro:', error);
       encounterPanel.showIdle();
     } finally {
       gate.end();
+    }
+
+    // Si esta captura ha dado un logro, su recompensa llega enseguida
+    if (!reward) {
+      const pendingBefore = pendingRewards(state.get()).length;
+      await checkAchievements();
+      const next = nextReward();
+      if (next && pendingRewards(state.get()).length > pendingBefore) {
+        await new Promise((resolve) => setTimeout(resolve, REWARD_DELAY_MS));
+        void startEncounter(next);
+      }
     }
   }
 
@@ -87,8 +154,12 @@ export function activate(context: vscode.ExtensionContext) {
     backpack,
     encounterPanel,
     pokedex,
+    achievementsPanel,
     tracker,
     sync,
+
+    // Evoluciones, ventas, compras… cualquier cambio puede completar un logro
+    state.onDidChange(() => void checkAchievements()),
 
     pause.onDidChange((paused) => {
       statusBar.setVisible(!paused);
@@ -118,7 +189,11 @@ export function activate(context: vscode.ExtensionContext) {
         tracker.consume(document); // solo se descuentan si dieron monedas
         vscode.window.setStatusBarMessage(`+${gained} 🪙`, 3000);
 
-        if (rollEncounter(encounterChance())) {
+        await checkAchievements();
+        const reward = nextReward();
+        if (reward) {
+          void startEncounter(reward); // las recompensas pendientes van antes que el azar
+        } else if (rollEncounter(encounterChance())) {
           // Sin await: el encuentro espera tu respuesta y no debe bloquear el guardado
           void startEncounter();
         }
@@ -135,6 +210,10 @@ export function activate(context: vscode.ExtensionContext) {
 
     vscode.commands.registerCommand('pokemonCompanion.openPokedex', () =>
       pokedex.show()
+    ),
+
+    vscode.commands.registerCommand('pokemonCompanion.openAchievements', () =>
+      achievementsPanel.show()
     ),
 
     vscode.commands.registerCommand(

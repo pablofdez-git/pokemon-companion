@@ -2,6 +2,7 @@
 
 ## [Sin publicar]
 
+- Logros: 32 retos (capturas, especies, rachas, código escrito, monedas, evoluciones, variocolores, generaciones…) en una pestaña propia (botón 🏆 junto a la Pokédex) con su progreso, agrupados y con el color de su dificultad. Cada logro da como recompensa un encuentro con un Pokémon más raro cuanto más difícil sea; si lo dejas escapar, sigue pendiente.
 - El botón ⬆ de la Mochila solo aparece en los Pokémon que pueden evolucionar ahora, y su descripción lo indica.
 
 ## [0.5.0] - 2026-10-22

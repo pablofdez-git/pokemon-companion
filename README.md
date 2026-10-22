@@ -40,6 +40,10 @@ En la barra de actividad, el icono de Ctrl+Catch abre la *Mochila*, con:
 - Tus estadísticas: tu **racha** de días seguidos programando, caracteres escritos, monedas ganadas y gastadas, encuentros, porcentaje de captura…
 - Tus Pokémon capturados. Los repetidos tienen un botón para **venderlos** y recuperar monedas, y todos uno para **evolucionarlos** (⬆).
 
+## Logros
+
+Pulsa el botón 🏆 de la cabecera de la *Mochila* (junto al de la Pokédex), o la línea **Logros**, para abrir una pestaña con todos los retos (capturas, especies distintas, días seguidos, código escrito, evoluciones, variocolores, generaciones…) con lo que te falta para cada uno. Al conseguir uno aparece un **Pokémon de recompensa**: cuanto más difícil el logro, más raro es (común, poco común, raro o legendario). No huye si fallas, y si lo dejas escapar sigue esperándote en el siguiente guardado. Necesitas tener alguna ball.
+
 ## Evoluciones
 
 Los Pokémon de la *Mochila* que pueden evolucionar muestran un botón ⬆ (tarda un momento en aparecer la primera vez, mientras consulta la PokéAPI). Púlsalo para evolucionarlo pagando monedas (de 30 a 150, según lo difícil que sea la evolución). Si tiene varias (como Eevee), eliges cuál. Se gasta una copia, el variocolor se conserva, y solo puedes evolucionar a Pokémon de generaciones ya desbloqueadas.

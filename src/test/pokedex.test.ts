@@ -10,6 +10,8 @@ function state(captured: CapturedPokemon[], generationsUnlocked = 1): GameState 
     captured,
     generationsUnlocked,
     updatedAt: 0,
+    achievements: [],
+    achievementsClaimed: [],
     stats: { ...EMPTY_STATS },
   };
 }

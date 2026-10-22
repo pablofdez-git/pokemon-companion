@@ -9,7 +9,8 @@ Guía del proyecto para Claude Code (y para cualquiera que se incorpore).
 - Al **guardar** un archivo con texto nuevo escrito, ganas **monedas** 🪙.
 - Tras un guardado que da monedas, a veces aparece un **Pokémon salvaje** en el panel *Encuentro* de la barra lateral. Le lanzas balls para capturarlo (o huyes, o se cansa y se va).
 - Con las monedas compras **balls** en la **tienda** (clic en el contador de monedas de la barra de estado).
-- La **Mochila** (vista de árbol) muestra tus balls, tus Pokémon y el progreso de generaciones. Los **repetidos** se pueden vender.
+- La **Mochila** (vista de árbol) muestra tus balls, tus Pokémon, tus logros y el progreso de generaciones. Los **repetidos** se pueden vender y los Pokémon se pueden **evolucionar**.
+- Los **logros** dan como recompensa un encuentro con un Pokémon más raro cuanto más difícil sea el logro.
 - Capturar suficientes especies distintas **desbloquea la siguiente generación** (Kanto → … → Paldea).
 - Hay **variocolores** (shiny, 1/50) con destellos, bonus de monedas, y que no se pueden vender.
 - El juego se puede **pausar** y la partida se **sincroniza entre ordenadores** con un archivo JSON (por defecto en OneDrive).
@@ -65,6 +66,7 @@ src/
     stats.ts              GameStats (contadores) y racha de días: recordActivity, currentStreak
     syncRules.ts          decideSync(): push / pull / conflict / none
     evolution.ts          nextEvolutionIds(), evolutionCost(), evolvePokemon()
+    achievements.ts       Lista de logros, comprobación, recompensas pendientes y pickRewardPokemon()
     syncMerge.ts          mergeStates(): combina dos partidas en un conflicto (con o sin base)
   ui/                     Todo lo que toca la interfaz de VS Code
     statusBar.ts          Contador de monedas (abre la tienda)
@@ -75,9 +77,11 @@ src/
     encounterView.ts      runEncounter(): bucle de un encuentro completo
     evolution.ts          evolveFromBackpack(): QuickPick de evoluciones
     pokedexPanel.ts       WebviewPanel de la Pokédex (pestaña del editor, se refresca con onDidChange)
+    achievementsPanel.ts  WebviewPanel de los Logros (misma estructura que la Pokédex)
 media/
   encounter.js / .css     Código del webview del encuentro (JS plano, sin bundler) y estilos
   pokedex.js / .css       Webview de la Pokédex (cuadrícula, filtros; recuerda el filtro con vscode.setState)
+  achievements.js / .css  Webview de los Logros (cabecera con pokéball en CSS, tarjetas por grupo con el color del nivel)
   sidebar.svg, sell-*.svg   Iconos (sidebar = barra de actividad; icon.png = icono de la tienda)
   screenshots/              Capturas para el README (no se empaquetan)
 ```
@@ -86,7 +90,7 @@ media/
 
 ### Estado (`data/state.ts`)
 - Todo el progreso es un único objeto `GameState` guardado en `context.globalState` con la clave `pokemonCompanion.state`:
-  `coins`, `balls` (id → cantidad), `captured` (lista de `CapturedPokemon`, con repetidos), `generationsUnlocked`, `updatedAt`.
+  `coins`, `balls` (id → cantidad), `captured` (lista de `CapturedPokemon`, con repetidos), `generationsUnlocked`, `updatedAt`, `stats`, `achievements` y `achievementsClaimed`.
 - **Siempre se modifica con `state.update(s => { ... })`**: hace copia profunda, aplica el cambio, pone `updatedAt = Date.now()`, guarda y dispara `onDidChange`. La UI (barra de estado, mochila) y la sincronización se suscriben a ese evento.
 - `get()` normaliza partidas antiguas (campos que faltan, capturas guardadas en formato viejo). Los campos nuevos del estado deben ser opcionales o tener un valor por defecto aquí, para no romper partidas existentes ni las sincronizadas.
 - `replaceWith()` aplica una partida remota **sin tocar** `updatedAt`.
@@ -134,6 +138,15 @@ media/
 - Solo se ofrecen evoluciones de generaciones ya desbloqueadas (`availableEvolutions`; la Pokédex solo muestra esas). No se comprueban condiciones de la API (nivel, intercambio, objeto): cualquier evolución se compra con monedas.
 - Cuenta en `stats.evolutions` (sumable en `mergeStates`) y `coinsSpent`; puede desbloquear generaciones como una captura.
 
+### Logros (`game/achievements.ts`)
+- Cada logro es un contador con objetivo (`progress(state) >= target`) y un nivel de dificultad (`tier` 1–4). Se apuntan en `state.achievements` (ids); la recompensa cobrada va en `achievementsClaimed`. Pendientes = conseguidos − cobrados (`pendingRewards`).
+- Se comprueban con `unlockAchievements()`, encadenado en una cola (`checkAchievements` en `extension.ts`) y llamado en cada `state.onDidChange`, así que cualquier cosa (guardar, capturar, evolucionar…) puede completar uno. Un logro nuevo avisa con una notificación (resumida si son más de 3).
+- **Recompensa**: un encuentro especial (`startEncounter(reward)`) con un Pokémon elegido por `pickRewardPokemon(tier, ...)`: pide tandas de ids al azar y acepta el primero cuyo `captureRate` cae en `TIER_CAPTURE_RATES[tier]` (común → legendario); si ninguno encaja, el más cercano. No tiene cooldown, no huye tras un fallo (`runEncounter(..., { rewardFor })`) y solo se da por cobrada al **capturarlo** (`claimReward`); si lo dejas escapar sigue pendiente.
+- Cuándo sale: justo después de un guardado con recompensa (antes que la tirada de encuentro aleatorio) o 4 s después de una captura que haya dado un logro nuevo. Solo si tienes alguna ball y el juego no está en pausa.
+- Para añadir un logro: una entrada en `ACHIEVEMENTS` con id **estable** (se guarda en las partidas). Se combinan en `mergeStates` por unión.
+- **Pestaña de Logros** (`ui/achievementsPanel.ts`, `media/achievements.*`, como la Pokédex): se abre con `pokemonCompanion.openAchievements` (botón `$(trophy)` junto al de la Pokédex en la cabecera de la Mochila, o la línea "Logros" de la Mochila). `buildAchievements(state)` (pura, testeada) agrupa los logros (`ACHIEVEMENT_GROUPS`) con su progreso; protocolo igual que la Pokédex: panel → `ready`; extensión → `update` con `achievements` y `tierBalls` (URL de la ball de cada nivel: Poké, Super, Ultra y Master). Filtros Todos / Conseguidos / Por conseguir, recordados con `vscode.setState`.
+- Cada logro lleva `group` (uno de `ACHIEVEMENT_GROUPS`).
+
 ### Generaciones (`game/generations.ts`)
 - Para desbloquear la siguiente hay que tener `ceil(maxPokemonId(actual) × UNLOCK_FRACTION)` especies **distintas** (los repetidos no cuentan). Puede subir más de una de golpe.
 
@@ -159,7 +172,7 @@ media/
   - `normalizeState()` (`data/state.ts`) prepara las partidas remota y base antes de combinarlas.
 
 ## Contribuciones en `package.json`
-- Comandos: `resetProgress`, `togglePause`, `openShop`, `openPokedex` (botón en la cabecera de la Mochila), `evolve` (oculto en la paleta; botón en línea en cada Pokémon de la mochila), `sellDuplicate` (oculto en la paleta; botón en línea en la mochila cuando `viewItem == duplicatePokemon`), `syncNow`.
+- Comandos: `resetProgress`, `togglePause`, `openShop`, `openPokedex` y `openAchievements` (botones en la cabecera de la Mochila), `evolve` (oculto en la paleta; botón en línea en cada Pokémon de la mochila), `sellDuplicate` (oculto en la paleta; botón en línea en la mochila cuando el `contextValue` contiene `duplicatePokemon`), `syncNow`.
 - Contenedor en la barra de actividad `pokemonCompanion` con las vistas `pokemonCompanion.encounter` (webview) y `pokemonCompanion.backpack` (árbol).
 - Ajustes: `pokemonCompanion.syncFolder` (scope `machine`), `encounterChance` y `encounterCooldownSeconds` (scope `application`).
 
@@ -187,9 +200,11 @@ Publicada en el Marketplace como `pablofdez.pokemon-companion`; la versión actu
 - 0.3.0: estadísticas en la Mochila.
 - 0.4.0: combinar partidas en un conflicto de sincronización.
 - 0.5.0: ajustes de equilibrio (probabilidad y cooldown de encuentros) y evoluciones.
+- Sin publicar: el botón ⬆ solo en los que evolucionan, y logros con recompensa.
 
 **Próximos pasos (en este orden):**
-1. **Traducción al inglés** (opcional): `vscode.l10n`, `package.nls.json` y `package.nls.es.json`. Todos los textos están escritos a mano en español en `src/` y `media/*.js`.
+1. **Compañero Pokémon**: elegir uno de los capturados y verlo en pantalla (por decidir dónde).
+2. **Traducción al inglés** (opcional): `vscode.l10n`, `package.nls.json` y `package.nls.es.json`. Todos los textos están escritos a mano en español en `src/` y `media/*.js`.
 
 **Cómo se trabaja cada novedad:**
 1. Implementar con su test. La lógica pura va en `game/`.

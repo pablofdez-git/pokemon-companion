@@ -19,6 +19,8 @@ const SNAPSHOT: Snapshot = {
     captured: [{ id: 1, name: 'Bulbasaur', spriteUrl: null }],
     generationsUnlocked: 1,
     updatedAt: 1234,
+    achievements: [],
+    achievementsClaimed: [],
     stats: { ...EMPTY_STATS, encounters: 3 },
   },
 };

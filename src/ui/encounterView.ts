@@ -77,17 +77,22 @@ export function announceUnlocks(generations: Generation[]): void {
   }
 }
 
+export interface EncounterOptions {
+  rewardFor?: string; // nombre del logro: es un encuentro de recompensa (no huye tras un fallo)
+}
+
 // Juega un encuentro completo y lo apunta en las estadísticas
 export async function runEncounter(
   state: StateManager,
   panel: EncounterPanel,
   pokemon: PokemonData,
-  shiny: boolean
+  shiny: boolean,
+  options: EncounterOptions = {}
 ): Promise<'captured' | 'fled'> {
   await state.update((s) => {
     s.stats.encounters += 1;
   });
-  const outcome = await playEncounter(state, panel, pokemon, shiny);
+  const outcome = await playEncounter(state, panel, pokemon, shiny, options);
   if (outcome === 'fled') {
     await state.update((s) => {
       s.stats.fled += 1;
@@ -100,11 +105,14 @@ async function playEncounter(
   state: StateManager,
   panel: EncounterPanel,
   pokemon: PokemonData,
-  shiny: boolean
+  shiny: boolean,
+  options: EncounterOptions
 ): Promise<'captured' | 'fled'> {
   const view = toView(pokemon, shiny);
   const label = shiny ? `${pokemon.name} variocolor` : pokemon.name;
-  let message = `¡Ha aparecido un ${label} salvaje!`;
+  let message = options.rewardFor
+    ? `🏆 Recompensa por «${options.rewardFor}»: ¡ha aparecido un ${label}!`
+    : `¡Ha aparecido un ${label} salvaje!`;
   let throwNumber = 1;
 
   // Aviso discreto por si el panel no está a la vista
@@ -170,7 +178,8 @@ async function playEncounter(
       return 'captured';
     }
 
-    if (pokemonFlees()) {
+    // Una recompensa no se escapa: solo se pierde si la dejas (y entonces sigue pendiente)
+    if (!options.rewardFor && pokemonFlees()) {
       panel.showEnd(
         view,
         'fled',

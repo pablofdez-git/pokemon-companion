@@ -11,6 +11,8 @@ function game(overrides: Partial<GameState> = {}): GameState {
     captured: [],
     generationsUnlocked: 1,
     updatedAt: 1,
+    achievements: [],
+    achievementsClaimed: [],
     stats: { ...EMPTY_STATS },
     ...overrides,
   };

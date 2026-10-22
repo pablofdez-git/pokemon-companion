@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { CapturedPokemon, StateManager } from '../data/state';
 import { cachedEvolutionIds, fetchEvolutionIds } from '../data/pokeapi';
+import { ACHIEVEMENTS, pendingRewards } from '../game/achievements';
 import { sellPrice } from '../game/economy';
 import { availableEvolutions } from '../game/evolution';
 import {
@@ -240,9 +241,22 @@ export class BackpackProvider
       const statsSection = new BackpackItem('Estadísticas', Collapsed, 'stats');
       statsSection.id = 'section-stats';
 
+      const game = this.state.get();
+      const done = ACHIEVEMENTS.filter((a) => game.achievements.includes(a.id)).length;
+      const rewards = pendingRewards(game).length;
+      const achievementsLine = new BackpackItem('Logros', None);
+      achievementsLine.description = `${done}/${ACHIEVEMENTS.length}${rewards > 0 ? ` · 🎁 ${rewards}` : ''}`;
+      achievementsLine.iconPath = new vscode.ThemeIcon('trophy');
+      achievementsLine.tooltip = 'Abrir los logros';
+      achievementsLine.command = {
+        command: 'pokemonCompanion.openAchievements',
+        title: 'Abrir logros',
+      };
+
       return [
         progressItem(progress),
         new BackpackItem('Pokéballs', Expanded, 'balls'),
+        achievementsLine,
         statsSection,
         new BackpackItem(
           `Pokémon capturados (${progress.distinct}/${maxPokemonId(generationsUnlocked)})${shinyText}`,

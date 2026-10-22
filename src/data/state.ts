@@ -16,6 +16,8 @@ export interface GameState {
   generationsUnlocked: number;
   updatedAt: number; // momento (ms) del último cambio; sirve para sincronizar
   stats: GameStats;
+  achievements: string[];        // ids de los logros conseguidos
+  achievementsClaimed: string[]; // ids de los logros cuya recompensa ya capturaste
 }
 
 const KEY = 'pokemonCompanion.state';
@@ -27,6 +29,8 @@ const DEFAULT_STATE: GameState = {
   generationsUnlocked: 1,
   updatedAt: 0,
   stats: EMPTY_STATS,
+  achievements: [],
+  achievementsClaimed: [],
 };
 
 // Copia una partida guardada (aquí, en el archivo de sincronización o de una versión antigua)
@@ -40,6 +44,9 @@ export function normalizeState(saved: GameState): GameState {
   state.updatedAt = state.updatedAt ?? 0;
   // Las anteriores a la 0.3.0 no tienen estadísticas; si se añaden contadores, llegan a 0
   state.stats = { ...EMPTY_STATS, ...state.stats };
+  // Las anteriores a los logros no tienen estas listas
+  state.achievements = state.achievements ?? [];
+  state.achievementsClaimed = state.achievementsClaimed ?? [];
   return state;
 }
 
