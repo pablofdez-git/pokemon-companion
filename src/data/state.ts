@@ -29,6 +29,20 @@ const DEFAULT_STATE: GameState = {
   stats: EMPTY_STATS,
 };
 
+// Copia una partida guardada (aquí, en el archivo de sincronización o de una versión antigua)
+// y rellena lo que le falte, sin modificar el original
+export function normalizeState(saved: GameState): GameState {
+  const state: GameState = JSON.parse(JSON.stringify(saved));
+  // Descarta capturas guardadas con el formato antiguo (solo ids)
+  state.captured = state.captured.filter((c) => typeof c === 'object');
+  // Partidas anteriores a las generaciones y a la sincronización no tienen estos campos
+  state.generationsUnlocked = state.generationsUnlocked ?? 1;
+  state.updatedAt = state.updatedAt ?? 0;
+  // Las anteriores a la 0.3.0 no tienen estadísticas; si se añaden contadores, llegan a 0
+  state.stats = { ...EMPTY_STATS, ...state.stats };
+  return state;
+}
+
 export class StateManager {
   private readonly emitter = new vscode.EventEmitter<void>();
   // La interfaz se suscribe aquí para refrescarse cuando el estado cambia
@@ -37,17 +51,7 @@ export class StateManager {
   constructor(private readonly memento: vscode.Memento) {}
 
   get(): GameState {
-    const saved = this.memento.get<GameState>(KEY);
-    // Copia profunda para no modificar nunca DEFAULT_STATE por accidente
-    const state: GameState = JSON.parse(JSON.stringify(saved ?? DEFAULT_STATE));
-    // Descarta capturas guardadas con el formato antiguo (solo ids)
-    state.captured = state.captured.filter((c) => typeof c === 'object');
-    // Partidas anteriores a las generaciones y a la sincronización no tienen estos campos
-    state.generationsUnlocked = state.generationsUnlocked ?? 1;
-    state.updatedAt = state.updatedAt ?? 0;
-    // Las anteriores a la 0.3.0 no tienen estadísticas; si se añaden contadores, llegan a 0
-    state.stats = { ...EMPTY_STATS, ...state.stats };
-    return state;
+    return normalizeState(this.memento.get<GameState>(KEY) ?? DEFAULT_STATE);
   }
 
   async update(change: (state: GameState) => void): Promise<void> {

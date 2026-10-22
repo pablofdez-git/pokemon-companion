@@ -1,5 +1,9 @@
 # Cambios
 
+## [Sin publicar]
+
+- Combinar partidas: si la partida ha cambiado en dos ordenadores a la vez, ahora puedes juntar las dos (capturas, monedas, balls y estadísticas) en lugar de quedarte con una y perder la otra.
+
 ## [0.3.0] - 2026-10-22
 
 - Estadísticas en la Mochila: racha de días programando, días y caracteres escritos, monedas ganadas y gastadas, encuentros, capturas (con porcentaje), huidas, balls lanzadas y variocolores. Se cuentan desde esta versión.

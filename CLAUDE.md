@@ -64,6 +64,7 @@ src/
     shop.ts               buyBall / sellDuplicate
     stats.ts              GameStats (contadores) y racha de días: recordActivity, currentStreak
     syncRules.ts          decideSync(): push / pull / conflict / none
+    syncMerge.ts          mergeStates(): combina dos partidas en un conflicto (con o sin base)
   ui/                     Todo lo que toca la interfaz de VS Code
     statusBar.ts          Contador de monedas (abre la tienda)
     pauseToggle.ts        Botón de pausa + context key `pokemonCompanion.paused`
@@ -139,6 +140,13 @@ media/
 - `decideSync(localUpdatedAt, remoteSavedAt, lastSyncedAt)` compara tres marcas de tiempo; `lastSyncedAt` se guarda en `globalState`. Ambos cambiados → conflicto: diálogo modal para elegir qué partida conservar.
 - Cuándo se sincroniza: al arrancar, al recuperar el foco la ventana, 3 s después de cada cambio, con el comando *Sincronizar partida ahora* y al cerrar (`deactivate` → `flush()`, solo push y sin preguntar).
 - Todas las operaciones pasan por una cola (`enqueue`) para que no se pisen.
+- **Combinar en un conflicto** (`game/syncMerge.ts`):
+  - En cada push y pull se guarda en `globalState` la partida sincronizada (`pokemonCompanion.lastSyncedState`), que sirve de **base**.
+  - Con base, `mergeStates` suma los cambios de cada lado: `local + remoto − base`, sin bajar de 0. Así se calculan las monedas, las balls, las copias de cada especie (la normal y la variocolor por separado) y los contadores de estadísticas.
+  - Sin base (primer conflicto tras actualizar) toma el máximo de cada cosa.
+  - La racha y los días activos no se suman: se toma el lado con el último día activo y el máximo de `activeDays` y `bestStreak`.
+  - Las generaciones se recalculan con la colección combinada.
+  - `normalizeState()` (`data/state.ts`) prepara las partidas remota y base antes de combinarlas.
 
 ## Contribuciones en `package.json`
 - Comandos: `resetProgress`, `togglePause`, `openShop`, `openPokedex` (botón en la cabecera de la Mochila), `sellDuplicate` (oculto en la paleta; botón en línea en la mochila cuando `viewItem == duplicatePokemon`), `syncNow`.

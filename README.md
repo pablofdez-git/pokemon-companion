@@ -63,7 +63,7 @@ La partida se guarda en un archivo `partida.json` dentro de una carpeta comparti
 - Por defecto, `OneDrive/PokemonCompanion`.
 - O la carpeta que indiques en el ajuste **`pokemonCompanion.syncFolder`** (Dropbox, Google Drive, una carpeta de red…).
 
-Se sincroniza al abrir VS Code, al volver a la ventana, unos segundos después de cada cambio y al cerrar. Si la partida ha cambiado en dos ordenadores a la vez, se te pregunta cuál conservar.
+Se sincroniza al abrir VS Code, al volver a la ventana, unos segundos después de cada cambio y al cerrar. Si la partida ha cambiado en dos ordenadores a la vez, puedes **combinarlas**: se juntan las capturas de los dos, se suman las monedas y balls ganadas o gastadas en cada uno, y se quitan los repetidos que vendiste. También puedes quedarte con una de las dos.
 
 ## Privacidad
 

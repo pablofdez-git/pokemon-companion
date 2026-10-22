@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
+import { mergeStates } from '../game/syncMerge';
 import { decideSync } from '../game/syncRules';
-import { GameState, StateManager } from './state';
+import { GameState, StateManager, normalizeState } from './state';
 import {
   Snapshot,
   readSnapshot,
@@ -9,7 +10,10 @@ import {
 } from './syncFile';
 
 const LAST_SYNC_KEY = 'pokemonCompanion.lastSyncedAt';
+// La partida tal como quedó en la última sincronización: la base para combinar en un conflicto
+const LAST_SYNC_STATE_KEY = 'pokemonCompanion.lastSyncedState';
 const PUSH_DELAY_MS = 3000;
+const MERGE = 'Combinar las dos';
 const USE_CLOUD = 'Usar la de OneDrive';
 const KEEP_THIS = 'Mantener esta';
 
@@ -128,16 +132,19 @@ export class SyncService implements vscode.Disposable {
       savedAt: local.updatedAt,
       state: local,
     });
-    await this.memento.update(LAST_SYNC_KEY, local.updatedAt);
+    await this.markSynced(local.updatedAt, local);
   }
 
   private async pull(remote: Snapshot): Promise<void> {
-    await this.state.replaceWith({
-      ...remote.state,
-      updatedAt: remote.savedAt,
-    });
-    await this.memento.update(LAST_SYNC_KEY, remote.savedAt);
+    const state = { ...remote.state, updatedAt: remote.savedAt };
+    await this.state.replaceWith(state);
+    await this.markSynced(remote.savedAt, state);
     vscode.window.setStatusBarMessage('Partida actualizada desde OneDrive', 4000);
+  }
+
+  private async markSynced(at: number, state: GameState): Promise<void> {
+    await this.memento.update(LAST_SYNC_KEY, at);
+    await this.memento.update(LAST_SYNC_STATE_KEY, state);
   }
 
   private async resolveConflict(
@@ -150,17 +157,30 @@ export class SyncService implements vscode.Disposable {
       return;
     }
 
+    const saved = this.memento.get<GameState>(LAST_SYNC_STATE_KEY);
+    const base = saved ? normalizeState(saved) : undefined;
+    const merged = mergeStates(base, local, normalizeState(remote.state));
+
     const choice = await vscode.window.showWarningMessage(
-      'La partida de este ordenador y la de OneDrive han cambiado por separado. ¿Cuál quieres conservar? La otra se perderá.',
+      'La partida de este ordenador y la de OneDrive han cambiado por separado. Puedes combinarlas o quedarte con una (la otra se perderá).',
       {
         modal: true,
-        detail: `Este ordenador: ${summarize(local)}\nOneDrive: ${summarize(remote.state)}`,
+        detail: [
+          `Este ordenador: ${summarize(local)}`,
+          `OneDrive: ${summarize(remote.state)}`,
+          `Combinadas: ${summarize(merged)}`,
+        ].join('\n'),
       },
+      MERGE,
       USE_CLOUD,
       KEEP_THIS
     );
 
-    if (choice === USE_CLOUD) {
+    if (choice === MERGE) {
+      await this.state.replaceWith({ ...merged, updatedAt: Date.now() });
+      await this.push(file, this.state.get());
+      vscode.window.setStatusBarMessage('Partidas combinadas', 4000);
+    } else if (choice === USE_CLOUD) {
       await this.pull(remote);
     } else if (choice === KEEP_THIS) {
       await this.push(file, local);
