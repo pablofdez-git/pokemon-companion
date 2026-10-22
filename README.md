@@ -56,6 +56,12 @@ Pulsa el botón 📖 de la cabecera de la *Mochila* (o el comando *Ctrl+Catch: A
 - **Ctrl+Catch: Sincronizar partida ahora**
 - **Ctrl+Catch: Reiniciar progreso**
 
+## Ajustes
+
+- **`pokemonCompanion.encounterChance`**: probabilidad de encuentro tras un guardado que da monedas (de 0.05 a 1; por defecto 0.25).
+- **`pokemonCompanion.encounterCooldownSeconds`**: segundos mínimos entre encuentros (de 10 a 3600; por defecto 60).
+- **`pokemonCompanion.syncFolder`**: carpeta de sincronización (ver abajo).
+
 ## Jugar en varios ordenadores
 
 La partida se guarda en un archivo `partida.json` dentro de una carpeta compartida:

@@ -95,7 +95,7 @@ media/
 - Al guardar: `peek()` → `rewardForSave()` (1 moneda cada 20 caracteres, mínimo 20). Solo si se ganan monedas se hace `consume()`; así lo escrito sigue acumulándose hasta llegar al mínimo. En pausa, se descarta lo escrito.
 
 ### Encuentros (`game/encounter.ts`, `ui/encounterView.ts`, `ui/encounterPanel.ts`)
-1. Tras un guardado con recompensa, `rollEncounter()` (`ENCOUNTER_CHANCE`). `EncounterGate` impide encuentros simultáneos y aplica el cooldown (`ENCOUNTER_COOLDOWN_MS`).
+1. Tras un guardado con recompensa, `rollEncounter(chance)`. `EncounterGate` impide encuentros simultáneos y aplica el cooldown. Ambos valores salen de los ajustes `pokemonCompanion.encounterChance` y `encounterCooldownSeconds` (scope `application`), leídos en cada uso en `extension.ts` y limitados con `clampEncounterChance` / `cooldownMsFromSeconds`; `ENCOUNTER_CHANCE` y `ENCOUNTER_COOLDOWN_MS` son los valores por defecto. Si cambias los límites, hazlo también en `package.json`.
 2. Se elige un id aleatorio entre 1 y `maxPokemonId(generationsUnlocked)`, se pide a la PokéAPI y se decide si es shiny.
 3. `runEncounter()` hace un bucle: muestra las balls disponibles con su multiplicador y probabilidad → espera la elección (45 s de límite) → gasta la ball → tira la captura → anima el lanzamiento → captura (recompensa + posible desbloqueo de generación) o fallo (30 % de que huya).
 4. Probabilidad: `min(1, captureRate/255 × multiplicador_de_la_ball)`. El multiplicador depende de un `CatchContext` (número de lanzamiento, si ya tienes la especie, hora local), así funcionan Quick/Dusk/Repeat/Timer Ball.
@@ -151,7 +151,7 @@ media/
 ## Contribuciones en `package.json`
 - Comandos: `resetProgress`, `togglePause`, `openShop`, `openPokedex` (botón en la cabecera de la Mochila), `sellDuplicate` (oculto en la paleta; botón en línea en la mochila cuando `viewItem == duplicatePokemon`), `syncNow`.
 - Contenedor en la barra de actividad `pokemonCompanion` con las vistas `pokemonCompanion.encounter` (webview) y `pokemonCompanion.backpack` (árbol).
-- Ajuste: `pokemonCompanion.syncFolder` (scope `machine`).
+- Ajustes: `pokemonCompanion.syncFolder` (scope `machine`), `encounterChance` y `encounterCooldownSeconds` (scope `application`).
 
 ## Convenciones
 - Código, comentarios, mensajes y nombres visibles **en español**; identificadores en inglés.
@@ -163,7 +163,7 @@ media/
 - Al añadir un campo al estado: hacerlo opcional o darle valor por defecto en `normalizeState()` (`data/state.ts`), por compatibilidad con partidas antiguas y con otros ordenadores que aún tengan la versión anterior.
 
 ## Notas / cosas a vigilar
-- Valores de equilibrio actuales: `ENCOUNTER_CHANCE = 0.25`, `ENCOUNTER_COOLDOWN_MS` = 1 min, `UNLOCK_FRACTION = 0.25`. Si se cambian, actualizar también su comentario.
+- Valores de equilibrio por defecto: `ENCOUNTER_CHANCE = 0.25`, `ENCOUNTER_COOLDOWN_MS` = 1 min, `UNLOCK_FRACTION = 0.25`. Si se cambian, actualizar también su comentario y el `default` en `package.json`.
 - Los iconos de la mochila y de la tienda se cargan desde URLs remotas (GitHub raw de PokeAPI/sprites); sin conexión no se ven, y sin conexión no puede haber encuentros (falla `fetchPokemon` y el panel vuelve a reposo).
 - Los `.vsix` generados están en la raíz y se ignoran en git.
 
@@ -176,17 +176,14 @@ Publicada en el Marketplace como `pablofdez.pokemon-companion`; la versión actu
 - 0.2.0: Pokédex visual.
 - 0.3.0: estadísticas en la Mochila.
 - 0.4.0: combinar partidas en un conflicto de sincronización.
+- Sin publicar: ajustes de equilibrio (probabilidad y cooldown de encuentros).
 
 **Próximos pasos (en este orden):**
-1. **Ajustes de equilibrio** en `contributes.configuration`:
-   - Probabilidad de encuentro y tiempo de espera entre encuentros, con mínimos y máximos razonables.
-   - Hoy son las constantes `ENCOUNTER_CHANCE` y `ENCOUNTER_COOLDOWN_MS` de `game/encounter.ts`. Leerlas con `workspace.getConfiguration('pokemonCompanion')`, y que `rollEncounter` y `EncounterGate` las reciban como parámetro para seguir siendo testeables.
-   - Si son ajustes de máquina o de usuario (`scope`), se deciden al implementarlo.
-2. **Evoluciones**:
+1. **Evoluciones**:
    - Evolucionar un Pokémon capturado, juntando varias copias o pagando monedas (por decidir).
    - Usa `pokemon-species/{id}` → `evolution_chain.url` de la PokéAPI.
    - Tiene que encajar con la Pokédex (la especie evolucionada cuenta como capturada), las estadísticas y `mergeStates`.
-3. **Traducción al inglés** (opcional): `vscode.l10n`, `package.nls.json` y `package.nls.es.json`. Todos los textos están escritos a mano en español en `src/` y `media/*.js`.
+2. **Traducción al inglés** (opcional): `vscode.l10n`, `package.nls.json` y `package.nls.es.json`. Todos los textos están escritos a mano en español en `src/` y `media/*.js`.
 
 **Cómo se trabaja cada novedad:**
 1. Implementar con su test. La lógica pura va en `game/`.

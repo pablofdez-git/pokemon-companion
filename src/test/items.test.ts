@@ -1,8 +1,17 @@
 import * as assert from 'assert';
 import {
+  ENCOUNTER_CHANCE,
+  ENCOUNTER_COOLDOWN_MS,
   EncounterGate,
+  MAX_COOLDOWN_SECONDS,
+  MAX_ENCOUNTER_CHANCE,
+  MIN_COOLDOWN_SECONDS,
+  MIN_ENCOUNTER_CHANCE,
   catchProbability,
+  clampEncounterChance,
+  cooldownMsFromSeconds,
   failedShakes,
+  rollEncounter,
   rollShiny,
 } from '../game/encounter';
 import { BALLS, BallType, CatchContext, describeMultiplier } from '../game/items';
@@ -86,6 +95,31 @@ suite('encuentros', () => {
     gate.end();
     assert.ok(!gate.canStart());
     assert.ok(gate.canStart(true));
+  });
+
+  test('los ajustes de equilibrio se limitan a su rango', () => {
+    assert.strictEqual(clampEncounterChance(0), MIN_ENCOUNTER_CHANCE);
+    assert.strictEqual(clampEncounterChance(5), MAX_ENCOUNTER_CHANCE);
+    assert.strictEqual(clampEncounterChance(0.5), 0.5);
+    assert.strictEqual(clampEncounterChance(NaN), ENCOUNTER_CHANCE);
+    assert.strictEqual(cooldownMsFromSeconds(1), MIN_COOLDOWN_SECONDS * 1000);
+    assert.strictEqual(cooldownMsFromSeconds(99999), MAX_COOLDOWN_SECONDS * 1000);
+    assert.strictEqual(cooldownMsFromSeconds(120), 120000);
+    assert.strictEqual(cooldownMsFromSeconds(NaN), ENCOUNTER_COOLDOWN_MS);
+  });
+
+  test('rollEncounter respeta la probabilidad dada', () => {
+    for (let i = 0; i < 100; i += 1) {
+      assert.strictEqual(rollEncounter(0), false);
+      assert.strictEqual(rollEncounter(1), true);
+    }
+  });
+
+  test('EncounterGate usa el cooldown configurado', () => {
+    const gate = new EncounterGate(() => 0);
+    gate.start();
+    gate.end();
+    assert.ok(gate.canStart());
   });
 
   test('EncounterGate: cancelar no gasta el cooldown', () => {

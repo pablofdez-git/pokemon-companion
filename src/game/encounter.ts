@@ -5,8 +5,34 @@ export const ENCOUNTER_CHANCE = 0.25;           // 25% por guardado con recompen
 export const ENCOUNTER_COOLDOWN_MS = 60 * 1000; // mínimo 1 min entre encuentros
 export const FLEE_CHANCE_AFTER_FAIL = 0.3;         // 30% de huir tras un fallo
 
-export function rollEncounter(): boolean {
-  return Math.random() < ENCOUNTER_CHANCE;
+// Límites de los ajustes del usuario (deben coincidir con package.json)
+export const MIN_ENCOUNTER_CHANCE = 0.05;
+export const MAX_ENCOUNTER_CHANCE = 1;
+export const MIN_COOLDOWN_SECONDS = 10;
+export const MAX_COOLDOWN_SECONDS = 3600;
+
+function clamp(value: number, min: number, max: number, fallback: number): number {
+  return Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : fallback;
+}
+
+export function clampEncounterChance(value: number): number {
+  return clamp(value, MIN_ENCOUNTER_CHANCE, MAX_ENCOUNTER_CHANCE, ENCOUNTER_CHANCE);
+}
+
+// Recibe segundos (como el ajuste) y devuelve milisegundos
+export function cooldownMsFromSeconds(seconds: number): number {
+  return (
+    clamp(
+      seconds,
+      MIN_COOLDOWN_SECONDS,
+      MAX_COOLDOWN_SECONDS,
+      ENCOUNTER_COOLDOWN_MS / 1000
+    ) * 1000
+  );
+}
+
+export function rollEncounter(chance = ENCOUNTER_CHANCE): boolean {
+  return Math.random() < chance;
 }
 
 export function randomPokemonId(maxId: number): number {
@@ -34,11 +60,14 @@ export class EncounterGate {
   private active = false;
   private lastEnd = 0;
 
+  // El cooldown se pide en cada consulta para que un cambio de ajuste valga al momento
+  constructor(private readonly cooldownMs: () => number = () => ENCOUNTER_COOLDOWN_MS) {}
+
   canStart(ignoreCooldown = false): boolean {
     if (this.active) {
       return false;
     }
-    return ignoreCooldown || Date.now() - this.lastEnd >= ENCOUNTER_COOLDOWN_MS;
+    return ignoreCooldown || Date.now() - this.lastEnd >= this.cooldownMs();
   }
 
   start(): void {

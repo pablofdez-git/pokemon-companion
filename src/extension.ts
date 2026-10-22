@@ -6,7 +6,11 @@ import { rewardForSave } from './game/economy';
 import { sellDuplicate } from './game/shop';
 import { maxPokemonId } from './game/generations';
 import {
+  ENCOUNTER_CHANCE,
+  ENCOUNTER_COOLDOWN_MS,
   EncounterGate,
+  clampEncounterChance,
+  cooldownMsFromSeconds,
   randomPokemonId,
   rollEncounter,
   rollShiny,
@@ -30,7 +34,14 @@ export function activate(context: vscode.ExtensionContext) {
   const encounterPanel = new EncounterPanel(context.extensionUri);
   const pokedex = new PokedexPanel(context.extensionUri, state);
   const tracker = new ActivityTracker();
-  const gate = new EncounterGate();
+  const settings = () => vscode.workspace.getConfiguration('pokemonCompanion');
+  const encounterChance = () =>
+    clampEncounterChance(settings().get<number>('encounterChance', ENCOUNTER_CHANCE));
+  const gate = new EncounterGate(() =>
+    cooldownMsFromSeconds(
+      settings().get<number>('encounterCooldownSeconds', ENCOUNTER_COOLDOWN_MS / 1000)
+    )
+  );
   const sync = new SyncService(state, context.globalState);
   syncService = sync;
 
@@ -106,7 +117,7 @@ export function activate(context: vscode.ExtensionContext) {
         tracker.consume(document); // solo se descuentan si dieron monedas
         vscode.window.setStatusBarMessage(`+${gained} 🪙`, 3000);
 
-        if (rollEncounter()) {
+        if (rollEncounter(encounterChance())) {
           // Sin await: el encuentro espera tu respuesta y no debe bloquear el guardado
           void startEncounter();
         }

@@ -1,5 +1,9 @@
 # Cambios
 
+## [Sin publicar]
+
+- Ajustes de equilibrio: `pokemonCompanion.encounterChance` (probabilidad de encuentro) y `pokemonCompanion.encounterCooldownSeconds` (tiempo mínimo entre encuentros).
+
 ## [0.4.0] - 2026-10-22
 
 - Combinar partidas: si la partida ha cambiado en dos ordenadores a la vez, ahora puedes juntar las dos (capturas, monedas, balls y estadísticas) en lugar de quedarte con una y perder la otra.

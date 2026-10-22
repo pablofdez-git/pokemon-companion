@@ -130,6 +130,22 @@
           "default": "",
           "scope": "machine",
           "markdownDescription": "Carpeta donde guardar la copia de la partida para compartirla entre ordenadores. Si está vacía, se usa la carpeta `PokemonCompanion` dentro del OneDrive de este equipo."
+        },
+        "pokemonCompanion.encounterChance": {
+          "type": "number",
+          "default": 0.25,
+          "minimum": 0.05,
+          "maximum": 1,
+          "scope": "application",
+          "markdownDescription": "Probabilidad de que aparezca un Pokémon salvaje tras un guardado que da monedas (de `0.05` a `1`). Por defecto `0.25`."
+        },
+        "pokemonCompanion.encounterCooldownSeconds": {
+          "type": "number",
+          "default": 60,
+          "minimum": 10,
+          "maximum": 3600,
+          "scope": "application",
+          "markdownDescription": "Segundos mínimos entre el final de un encuentro y el siguiente (de `10` a `3600`). Por defecto `60`."
         }
       }
     }
