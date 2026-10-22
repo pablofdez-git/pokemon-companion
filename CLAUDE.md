@@ -203,8 +203,9 @@ Publicada en el Marketplace como `pablofdez.pokemon-companion`; la versión actu
 - Sin publicar: el botón ⬆ solo en los que evolucionan, y logros con recompensa.
 
 **Próximos pasos (en este orden):**
-1. **Compañero Pokémon**: elegir uno de los capturados y verlo en pantalla (por decidir dónde).
-2. **Traducción al inglés** (opcional): `vscode.l10n`, `package.nls.json` y `package.nls.es.json`. Todos los textos están escritos a mano en español en `src/` y `media/*.js`.
+1. **Traducción al inglés** (opcional): `vscode.l10n`, `package.nls.json` y `package.nls.es.json`. Todos los textos están escritos a mano en español en `src/` y `media/*.js`.
+
+**Descartado:** el *compañero Pokémon* (uno de los capturados visible en la barra de estado y en un panel lateral, con reacciones). Se implementó y se quitó por resultar un incordio; no hace falta volver a proponerlo.
 
 **Cómo se trabaja cada novedad:**
 1. Implementar con su test. La lógica pura va en `game/`.
