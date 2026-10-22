@@ -1,6 +1,6 @@
 # Cambios
 
-## [Sin publicar]
+## [0.3.0] - 2026-10-22
 
 - Estadísticas en la Mochila: racha de días programando, días y caracteres escritos, monedas ganadas y gastadas, encuentros, capturas (con porcentaje), huidas, balls lanzadas y variocolores. Se cuentan desde esta versión.
 
