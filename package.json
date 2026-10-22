@@ -52,6 +52,11 @@
         "title": "Ctrl+Catch: Abrir tienda"
       },
       {
+        "command": "pokemonCompanion.openPokedex",
+        "title": "Ctrl+Catch: Abrir Pokédex",
+        "icon": "$(book)"
+      },
+      {
         "command": "pokemonCompanion.sellDuplicate",
         "title": "Vender un repetido",
         "icon": {
@@ -81,6 +86,13 @@
           "command": "pokemonCompanion.sellDuplicate",
           "when": "view == pokemonCompanion.backpack && viewItem == duplicatePokemon",
           "group": "1_sell"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "pokemonCompanion.openPokedex",
+          "when": "view == pokemonCompanion.backpack",
+          "group": "navigation"
         }
       ]
     },

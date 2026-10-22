@@ -1,5 +1,9 @@
 # Cambios
 
+## [Sin publicar]
+
+- Pokédex visual: cuadrícula por generación con siluetas de los que faltan, variocolores, repetidos y filtros. Se abre desde la cabecera de la Mochila.
+
 ## [0.1.0] - 2026-10-22
 
 Primera versión preparada para el Marketplace, con el nombre **Ctrl+Catch**.

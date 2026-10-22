@@ -1,0 +1,193 @@
+body {
+  padding: 16px 24px 32px;
+  color: var(--vscode-foreground);
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+}
+
+#root {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* Cabecera con el progreso total y los filtros */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 8px 0 12px;
+  background: var(--vscode-editor-background);
+}
+
+h1 {
+  margin: 0 0 4px;
+  font-size: 1.6em;
+}
+
+.stats {
+  margin: 0 0 8px;
+  opacity: 0.85;
+}
+
+.shiny-count {
+  color: var(--vscode-charts-yellow);
+}
+
+.progress {
+  height: 6px;
+  margin-bottom: 10px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: rgba(128, 128, 128, 0.2);
+  background: color-mix(in srgb, var(--vscode-foreground) 12%, transparent);
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--vscode-progressBar-background);
+}
+
+.filters {
+  display: flex;
+  gap: 6px;
+}
+
+.filter {
+  padding: 4px 12px;
+  border: 1px solid var(--vscode-button-border, transparent);
+  border-radius: 12px;
+  color: var(--vscode-button-secondaryForeground);
+  background: var(--vscode-button-secondaryBackground);
+  font: inherit;
+  cursor: pointer;
+}
+
+.filter:hover {
+  background: var(--vscode-button-secondaryHoverBackground);
+}
+
+.filter.active {
+  color: var(--vscode-button-foreground);
+  background: var(--vscode-button-background);
+}
+
+/* Una sección por generación */
+.generation {
+  margin-top: 20px;
+}
+
+h2 {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin: 0 0 6px;
+  font-size: 1.15em;
+}
+
+.gen-count {
+  font-size: 0.85em;
+  font-weight: normal;
+  opacity: 0.75;
+}
+
+.generation.locked h2 {
+  opacity: 0.55;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: 8px;
+}
+
+.card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 4px 8px;
+  border: 1px solid var(--vscode-widget-border, transparent);
+  border-radius: 8px;
+  background: var(--vscode-editorWidget-background);
+}
+
+.card.caught:hover {
+  border-color: var(--vscode-focusBorder);
+}
+
+.card.shiny {
+  border-color: var(--vscode-charts-yellow);
+}
+
+/* Fila de arriba: número a la izquierda; variocolor y repetidos a la derecha */
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  min-height: 18px;
+}
+
+.number {
+  font-size: 0.8em;
+  opacity: 0.6;
+}
+
+.badges {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+/* Los sprites traen mucho margen transparente: se amplían y se recorta con márgenes negativos */
+.sprite {
+  width: 96px;
+  height: 96px;
+  margin: -14px 0 -10px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+/* Los que faltan se ven solo como silueta */
+.card.unknown .sprite {
+  filter: brightness(0);
+  opacity: 0.35;
+}
+
+.missing-sprite {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2em;
+  opacity: 0.4;
+}
+
+.name {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 0.9em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card.unknown .name {
+  opacity: 0.5;
+}
+
+.count {
+  padding: 0 5px;
+  border-radius: 8px;
+  color: var(--vscode-badge-foreground);
+  background: var(--vscode-badge-background);
+  font-size: 0.75em;
+}
+
+.star {
+  color: var(--vscode-charts-yellow);
+}
+
+.empty {
+  margin: 8px 0;
+  opacity: 0.7;
+}

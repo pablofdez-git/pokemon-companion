@@ -60,6 +60,7 @@ src/
     encounter.ts          Probabilidades de encuentro, captura, huida, shiny; EncounterGate (cooldown)
     generations.ts        Tabla de generaciones y reglas de desbloqueo
     items.ts              Catálogo de balls (precio, regla, multiplicador según contexto)
+    pokedex.ts            buildPokedex(): agrupa capturas por especie y generación (siluetas, shiny)
     shop.ts               buyBall / sellDuplicate
     syncRules.ts          decideSync(): push / pull / conflict / none
   ui/                     Todo lo que toca la interfaz de VS Code
@@ -69,8 +70,10 @@ src/
     backpackView.ts       TreeDataProvider de la Mochila
     encounterPanel.ts     WebviewViewProvider del panel Encuentro (protocolo de mensajes)
     encounterView.ts      runEncounter(): bucle de un encuentro completo
+    pokedexPanel.ts       WebviewPanel de la Pokédex (pestaña del editor, se refresca con onDidChange)
 media/
-  encounter.js / .css     Código del webview (JS plano, sin bundler) y estilos
+  encounter.js / .css     Código del webview del encuentro (JS plano, sin bundler) y estilos
+  pokedex.js / .css       Webview de la Pokédex (cuadrícula, filtros; recuerda el filtro con vscode.setState)
   sidebar.svg, sell-*.svg   Iconos (sidebar = barra de actividad; icon.png = icono de la tienda)
   screenshots/              Capturas para el README (no se empaquetan)
 ```
@@ -104,6 +107,11 @@ media/
 - El HTML usa CSP con nonce; `encounter.js` crea el DOM con `textContent` (nada de `innerHTML`). Imágenes solo `https:`/`data:`.
 - Sprites animados de Black/White (solo hasta el #649), escalados por un entero para que se vean nítidos; si fallan se usa el estático.
 
+### Pokédex (`game/pokedex.ts`, `ui/pokedexPanel.ts`, `media/pokedex.*`)
+- `buildPokedex(state)` es pura y testeada: una entrada por especie de las generaciones desbloqueadas; las no capturadas llevan `name: null` y el sprite genérico de `speciesSpriteUrl(id)`, que el CSS pinta como silueta (`filter: brightness(0)`).
+- Panel único: `show()` lo crea o lo trae al frente. Protocolo: panel → `ready`; extensión → `update` con el `PokedexData` completo (también en cada `state.onDidChange`).
+- Se abre con `pokemonCompanion.openPokedex` (botón `$(book)` en `view/title` de la Mochila).
+
 ### Generaciones (`game/generations.ts`)
 - Para desbloquear la siguiente hay que tener `ceil(maxPokemonId(actual) × UNLOCK_FRACTION)` especies **distintas** (los repetidos no cuentan). Puede subir más de una de golpe.
 
@@ -122,7 +130,7 @@ media/
 - Todas las operaciones pasan por una cola (`enqueue`) para que no se pisen.
 
 ## Contribuciones en `package.json`
-- Comandos: `resetProgress`, `togglePause`, `openShop`, `sellDuplicate` (oculto en la paleta; botón en línea en la mochila cuando `viewItem == duplicatePokemon`), `syncNow`.
+- Comandos: `resetProgress`, `togglePause`, `openShop`, `openPokedex` (botón en la cabecera de la Mochila), `sellDuplicate` (oculto en la paleta; botón en línea en la mochila cuando `viewItem == duplicatePokemon`), `syncNow`.
 - Contenedor en la barra de actividad `pokemonCompanion` con las vistas `pokemonCompanion.encounter` (webview) y `pokemonCompanion.backpack` (árbol).
 - Ajuste: `pokemonCompanion.syncFolder` (scope `machine`).
 

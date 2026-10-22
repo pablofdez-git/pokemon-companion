@@ -39,8 +39,17 @@ En la barra de actividad, el icono de la mochila abre:
 - Tus balls.
 - Tus Pokémon capturados. Los repetidos tienen un botón para **venderlos** y recuperar monedas.
 
+## Pokédex
+
+Pulsa el botón 📖 de la cabecera de la *Mochila* (o el comando *Ctrl+Catch: Abrir Pokédex*) para ver tu colección en grande:
+
+- Las especies que has capturado aparecen en color, con cuántas tienes y una ★ si tienes su variocolor.
+- Las que te faltan se ven solo como silueta.
+- Progreso total y por generación, con filtros *Todos*, *Capturados* y *Me faltan*.
+
 ## Comandos
 
+- **Ctrl+Catch: Abrir Pokédex**
 - **Ctrl+Catch: Abrir tienda**
 - **Ctrl+Catch: Pausar o reanudar**: sin monedas ni encuentros mientras está en pausa (también con el botón ⏸ de la barra de estado).
 - **Ctrl+Catch: Sincronizar partida ahora**

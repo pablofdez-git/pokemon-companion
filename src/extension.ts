@@ -16,6 +16,7 @@ import { BackpackProvider } from './ui/backpackView';
 import { EncounterPanel } from './ui/encounterPanel';
 import { runEncounter } from './ui/encounterView';
 import { PauseController } from './ui/pauseToggle';
+import { PokedexPanel } from './ui/pokedexPanel';
 import { openShop } from './ui/shop';
 import { CoinStatusBar } from './ui/statusBar';
 
@@ -27,6 +28,7 @@ export function activate(context: vscode.ExtensionContext) {
   const statusBar = new CoinStatusBar(state);
   const backpack = new BackpackProvider(state);
   const encounterPanel = new EncounterPanel(context.extensionUri);
+  const pokedex = new PokedexPanel(context.extensionUri, state);
   const tracker = new ActivityTracker();
   const gate = new EncounterGate();
   const sync = new SyncService(state, context.globalState);
@@ -72,6 +74,7 @@ export function activate(context: vscode.ExtensionContext) {
     statusBar,
     backpack,
     encounterPanel,
+    pokedex,
     tracker,
     sync,
 
@@ -116,6 +119,10 @@ export function activate(context: vscode.ExtensionContext) {
 
     vscode.commands.registerCommand('pokemonCompanion.openShop', () =>
       openShop(state)
+    ),
+
+    vscode.commands.registerCommand('pokemonCompanion.openPokedex', () =>
+      pokedex.show()
     ),
 
     vscode.commands.registerCommand(
