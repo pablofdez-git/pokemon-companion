@@ -1,6 +1,6 @@
 # Cambios
 
-## [Sin publicar]
+## [0.4.0] - 2026-10-22
 
 - Combinar partidas: si la partida ha cambiado en dos ordenadores a la vez, ahora puedes juntar las dos (capturas, monedas, balls y estadísticas) en lugar de quedarte con una y perder la otra.
 
