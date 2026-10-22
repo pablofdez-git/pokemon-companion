@@ -11,6 +11,7 @@ const ADDITIVE_STATS = [
   'captures',
   'fled',
   'throws',
+  'evolutions',
 ] as const;
 
 // Con la base (la partida en la última sincronización) se suman los cambios de los dos lados.

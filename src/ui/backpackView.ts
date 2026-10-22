@@ -18,6 +18,7 @@ type Section = 'balls' | 'pokemon' | 'stats';
 
 class BackpackItem extends vscode.TreeItem {
   pokemonId?: number;
+  shiny?: boolean;
 
   constructor(
     label: string,
@@ -158,6 +159,7 @@ function statsItems(stats: GameStats, shinies: number): BackpackItem[] {
     ),
     statItem('Huidas', formatNumber(stats.fled), 'run-all'),
     statItem('Balls lanzadas', formatNumber(stats.throws), 'circle-large-outline'),
+    statItem('Evoluciones', formatNumber(stats.evolutions), 'arrow-circle-up'),
     statItem('Variocolores', formatNumber(shinies), 'star-full'),
   ];
 }
@@ -239,6 +241,7 @@ export class BackpackProvider
           None
         );
         item.pokemonId = pokemon.id;
+        item.shiny = Boolean(pokemon.shiny);
         // Solo los repetidos normales muestran el botón de vender (ver package.json)
         item.contextValue =
           !pokemon.shiny && count > 1 ? 'duplicatePokemon' : 'singlePokemon';

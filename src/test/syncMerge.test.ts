@@ -31,6 +31,15 @@ function counts(captured: CapturedPokemon[]): Record<string, number> {
 }
 
 suite('combinar partidas con base', () => {
+  test('una evolución en un lado se junta con una captura en el otro', () => {
+    const base = game({ captured: [mon(4), mon(4)] });
+    const local = game({ captured: [mon(4), mon(5)], stats: { ...EMPTY_STATS, evolutions: 1 } });
+    const remote = game({ captured: [mon(4), mon(4), mon(7)] });
+    const merged = mergeStates(base, local, remote);
+    assert.deepStrictEqual(counts(merged.captured), { 4: 1, 5: 1, 7: 1 });
+    assert.strictEqual(merged.stats.evolutions, 1);
+  });
+
   test('suma los cambios de monedas de los dos lados', () => {
     // Las dos partían de 100: aquí se ganan 50 y allí se gastan 30
     const merged = mergeStates(game(), game({ coins: 150 }), game({ coins: 70 }));

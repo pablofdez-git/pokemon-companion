@@ -65,6 +65,11 @@
         }
       },
       {
+        "command": "pokemonCompanion.evolve",
+        "title": "Evolucionar",
+        "icon": "$(arrow-circle-up)"
+      },
+      {
         "command": "pokemonCompanion.syncNow",
         "title": "Ctrl+Catch: Sincronizar partida ahora"
       }
@@ -74,9 +79,23 @@
         {
           "command": "pokemonCompanion.sellDuplicate",
           "when": "false"
+        },
+        {
+          "command": "pokemonCompanion.evolve",
+          "when": "false"
         }
       ],
       "view/item/context": [
+        {
+          "command": "pokemonCompanion.evolve",
+          "when": "view == pokemonCompanion.backpack && viewItem =~ /^(duplicate|single)Pokemon$/",
+          "group": "inline@0"
+        },
+        {
+          "command": "pokemonCompanion.evolve",
+          "when": "view == pokemonCompanion.backpack && viewItem =~ /^(duplicate|single)Pokemon$/",
+          "group": "2_evolve"
+        },
         {
           "command": "pokemonCompanion.sellDuplicate",
           "when": "view == pokemonCompanion.backpack && viewItem == duplicatePokemon",

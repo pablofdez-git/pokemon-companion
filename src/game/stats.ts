@@ -8,6 +8,7 @@ export interface GameStats {
   captures: number;      // incluye los que luego se vendieron
   fled: number;          // encuentros que terminaron sin captura
   throws: number;        // balls lanzadas
+  evolutions: number;    // Pokémon evolucionados
   activeDays: number;    // días distintos con algún guardado que dio monedas
   streak: number;        // días seguidos hasta lastActiveDay
   bestStreak: number;
@@ -22,6 +23,7 @@ export const EMPTY_STATS: GameStats = {
   captures: 0,
   fled: 0,
   throws: 0,
+  evolutions: 0,
   activeDays: 0,
   streak: 0,
   bestStreak: 0,

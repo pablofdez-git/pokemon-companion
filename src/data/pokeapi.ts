@@ -1,3 +1,5 @@
+import { EvolutionNode, nextEvolutionIds } from '../game/evolution';
+
 export interface PokemonData {
   id: number;
   name: string;
@@ -42,6 +44,24 @@ async function getJson<T>(url: string): Promise<T> {
 
 function capitalize(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+const evolutionCache = new Map<number, number[]>();
+
+// Especies a las que puede evolucionar una especie: pokemon-species → evolution_chain
+export async function fetchEvolutionIds(id: number): Promise<number[]> {
+  const cached = evolutionCache.get(id);
+  if (cached) {
+    return cached;
+  }
+
+  const species = await getJson<{ evolution_chain: { url: string } }>(
+    `${BASE_URL}/pokemon-species/${id}`
+  );
+  const chain = await getJson<{ chain: EvolutionNode }>(species.evolution_chain.url);
+  const ids = nextEvolutionIds(chain.chain, id);
+  evolutionCache.set(id, ids);
+  return ids;
 }
 
 export async function fetchPokemon(id: number): Promise<PokemonData> {

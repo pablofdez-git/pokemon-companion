@@ -19,6 +19,7 @@ import { ActivityTracker } from './events/activityTracker';
 import { BackpackProvider } from './ui/backpackView';
 import { EncounterPanel } from './ui/encounterPanel';
 import { runEncounter } from './ui/encounterView';
+import { evolveFromBackpack } from './ui/evolution';
 import { PauseController } from './ui/pauseToggle';
 import { PokedexPanel } from './ui/pokedexPanel';
 import { openShop } from './ui/shop';
@@ -151,6 +152,16 @@ export function activate(context: vscode.ExtensionContext) {
         } else {
           vscode.window.showWarningMessage(result.reason);
         }
+      }
+    ),
+
+    vscode.commands.registerCommand(
+      'pokemonCompanion.evolve',
+      async (item?: { pokemonId?: number; shiny?: boolean }) => {
+        if (item?.pokemonId === undefined) {
+          return;
+        }
+        await evolveFromBackpack(state, item.pokemonId, Boolean(item.shiny));
       }
     ),
 

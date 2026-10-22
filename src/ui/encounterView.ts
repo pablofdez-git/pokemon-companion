@@ -62,7 +62,7 @@ function buildOptions(
 }
 
 // El desbloqueo de una generación es un hito: se sigue avisando con una notificación
-function announceUnlocks(generations: Generation[]): void {
+export function announceUnlocks(generations: Generation[]): void {
   for (const generation of generations) {
     void vscode.window
       .showInformationMessage(

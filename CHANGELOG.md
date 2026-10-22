@@ -2,6 +2,7 @@
 
 ## [Sin publicar]
 
+- Evoluciones: botón ⬆ en la Mochila para evolucionar un Pokémon pagando monedas. Si tiene varias evoluciones, eliges. Se cuentan en las estadísticas.
 - Ajustes de equilibrio: `pokemonCompanion.encounterChance` (probabilidad de encuentro) y `pokemonCompanion.encounterCooldownSeconds` (tiempo mínimo entre encuentros).
 
 ## [0.4.0] - 2026-10-22

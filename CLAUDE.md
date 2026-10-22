@@ -64,6 +64,7 @@ src/
     shop.ts               buyBall / sellDuplicate
     stats.ts              GameStats (contadores) y racha de días: recordActivity, currentStreak
     syncRules.ts          decideSync(): push / pull / conflict / none
+    evolution.ts          nextEvolutionIds(), evolutionCost(), evolvePokemon()
     syncMerge.ts          mergeStates(): combina dos partidas en un conflicto (con o sin base)
   ui/                     Todo lo que toca la interfaz de VS Code
     statusBar.ts          Contador de monedas (abre la tienda)
@@ -72,6 +73,7 @@ src/
     backpackView.ts       TreeDataProvider de la Mochila
     encounterPanel.ts     WebviewViewProvider del panel Encuentro (protocolo de mensajes)
     encounterView.ts      runEncounter(): bucle de un encuentro completo
+    evolution.ts          evolveFromBackpack(): QuickPick de evoluciones
     pokedexPanel.ts       WebviewPanel de la Pokédex (pestaña del editor, se refresca con onDidChange)
 media/
   encounter.js / .css     Código del webview del encuentro (JS plano, sin bundler) y estilos
@@ -124,6 +126,13 @@ media/
 - `StateManager.get()` rellena con `EMPTY_STATS` los contadores que falten, así que añadir uno nuevo es compatible con partidas antiguas.
 - Se muestran en la sección "Estadísticas" de la Mochila. Tiene id fijo (`section-stats`) para que VS Code recuerde si está plegada.
 
+### Evoluciones (`game/evolution.ts`, `ui/evolution.ts`)
+- Botón en línea (`$(arrow-circle-up)`) en cada Pokémon de la Mochila → comando oculto `pokemonCompanion.evolve`. La mochila es síncrona, así que **no** sabe si un Pokémon evoluciona: la consulta se hace al pulsar.
+- `fetchEvolutionIds(id)` (`data/pokeapi.ts`): `pokemon-species/{id}` → `evolution_chain.url`, y `nextEvolutionIds()` (pura) saca las evoluciones directas del árbol. Con caché. Las ramificadas (Eevee) se eligen en un QuickPick.
+- `evolvePokemon()` cambia **una copia** (normal o variocolor, la que se elija) por la evolución y cobra `evolutionCost(captureRate de la evolución)`: 30–150 monedas. Se puede evolucionar la única copia (la base deja de estar capturada). El variocolor se conserva.
+- Solo se ofrecen evoluciones de generaciones ya desbloqueadas (la Pokédex solo muestra esas). No se comprueban condiciones de la API (nivel, intercambio, objeto): cualquier evolución se compra con monedas.
+- Cuenta en `stats.evolutions` (sumable en `mergeStates`) y `coinsSpent`; puede desbloquear generaciones como una captura.
+
 ### Generaciones (`game/generations.ts`)
 - Para desbloquear la siguiente hay que tener `ceil(maxPokemonId(actual) × UNLOCK_FRACTION)` especies **distintas** (los repetidos no cuentan). Puede subir más de una de golpe.
 
@@ -149,7 +158,7 @@ media/
   - `normalizeState()` (`data/state.ts`) prepara las partidas remota y base antes de combinarlas.
 
 ## Contribuciones en `package.json`
-- Comandos: `resetProgress`, `togglePause`, `openShop`, `openPokedex` (botón en la cabecera de la Mochila), `sellDuplicate` (oculto en la paleta; botón en línea en la mochila cuando `viewItem == duplicatePokemon`), `syncNow`.
+- Comandos: `resetProgress`, `togglePause`, `openShop`, `openPokedex` (botón en la cabecera de la Mochila), `evolve` (oculto en la paleta; botón en línea en cada Pokémon de la mochila), `sellDuplicate` (oculto en la paleta; botón en línea en la mochila cuando `viewItem == duplicatePokemon`), `syncNow`.
 - Contenedor en la barra de actividad `pokemonCompanion` con las vistas `pokemonCompanion.encounter` (webview) y `pokemonCompanion.backpack` (árbol).
 - Ajustes: `pokemonCompanion.syncFolder` (scope `machine`), `encounterChance` y `encounterCooldownSeconds` (scope `application`).
 
@@ -176,14 +185,10 @@ Publicada en el Marketplace como `pablofdez.pokemon-companion`; la versión actu
 - 0.2.0: Pokédex visual.
 - 0.3.0: estadísticas en la Mochila.
 - 0.4.0: combinar partidas en un conflicto de sincronización.
-- Sin publicar: ajustes de equilibrio (probabilidad y cooldown de encuentros).
+- Sin publicar: ajustes de equilibrio (probabilidad y cooldown de encuentros) y evoluciones.
 
 **Próximos pasos (en este orden):**
-1. **Evoluciones**:
-   - Evolucionar un Pokémon capturado, juntando varias copias o pagando monedas (por decidir).
-   - Usa `pokemon-species/{id}` → `evolution_chain.url` de la PokéAPI.
-   - Tiene que encajar con la Pokédex (la especie evolucionada cuenta como capturada), las estadísticas y `mergeStates`.
-2. **Traducción al inglés** (opcional): `vscode.l10n`, `package.nls.json` y `package.nls.es.json`. Todos los textos están escritos a mano en español en `src/` y `media/*.js`.
+1. **Traducción al inglés** (opcional): `vscode.l10n`, `package.nls.json` y `package.nls.es.json`. Todos los textos están escritos a mano en español en `src/` y `media/*.js`.
 
 **Cómo se trabaja cada novedad:**
 1. Implementar con su test. La lógica pura va en `game/`.

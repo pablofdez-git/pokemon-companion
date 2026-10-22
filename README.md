@@ -38,7 +38,11 @@ En la barra de actividad, el icono de Ctrl+Catch abre la *Mochila*, con:
 - El progreso hacia la siguiente generación.
 - Tus balls.
 - Tus estadísticas: tu **racha** de días seguidos programando, caracteres escritos, monedas ganadas y gastadas, encuentros, porcentaje de captura…
-- Tus Pokémon capturados. Los repetidos tienen un botón para **venderlos** y recuperar monedas.
+- Tus Pokémon capturados. Los repetidos tienen un botón para **venderlos** y recuperar monedas, y todos uno para **evolucionarlos** (⬆).
+
+## Evoluciones
+
+Pulsa ⬆ en un Pokémon de la *Mochila* para evolucionarlo pagando monedas (de 30 a 150, según lo difícil que sea la evolución). Si tiene varias (como Eevee), eliges cuál. Se gasta una copia, el variocolor se conserva, y solo puedes evolucionar a Pokémon de generaciones ya desbloqueadas.
 
 ## Pokédex
 
