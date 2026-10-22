@@ -160,9 +160,38 @@ media/
 - Resultados de operaciones que pueden fallar como uniones discriminadas (`{ ok: true, ... } | { ok: false, reason }`), no excepciones.
 - Todo lo que crea suscripciones o recursos implementa `vscode.Disposable` y se añade a `context.subscriptions` en `extension.ts`.
 - TypeScript `strict`, módulo `Node16`, target `ES2022`. Estilo: comillas simples, punto y coma, 2 espacios.
-- Al añadir un campo al estado: hacerlo opcional o darle valor por defecto en `StateManager.get()`, por compatibilidad con partidas antiguas y con otros ordenadores que aún tengan la versión anterior.
+- Al añadir un campo al estado: hacerlo opcional o darle valor por defecto en `normalizeState()` (`data/state.ts`), por compatibilidad con partidas antiguas y con otros ordenadores que aún tengan la versión anterior.
 
 ## Notas / cosas a vigilar
 - Valores de equilibrio actuales: `ENCOUNTER_CHANCE = 0.25`, `ENCOUNTER_COOLDOWN_MS` = 1 min, `UNLOCK_FRACTION = 0.25`. Si se cambian, actualizar también su comentario.
 - Los iconos de la mochila y de la tienda se cargan desde URLs remotas (GitHub raw de PokeAPI/sprites); sin conexión no se ven, y sin conexión no puede haber encuentros (falla `fetchPokemon` y el panel vuelve a reposo).
 - Los `.vsix` generados están en la raíz y se ignoran en git.
+
+## Hoja de ruta
+
+Publicada en el Marketplace como `pablofdez.pokemon-companion`; la versión actual se ve en `package.json`.
+
+**Hecho:**
+- 0.1.0: arreglos, tests, nombre Ctrl+Catch, iconos propios, README de tienda y CI con Releases automáticas.
+- 0.2.0: Pokédex visual.
+- 0.3.0: estadísticas en la Mochila.
+- 0.4.0: combinar partidas en un conflicto de sincronización.
+
+**Próximos pasos (en este orden):**
+1. **Ajustes de equilibrio** en `contributes.configuration`:
+   - Probabilidad de encuentro y tiempo de espera entre encuentros, con mínimos y máximos razonables.
+   - Hoy son las constantes `ENCOUNTER_CHANCE` y `ENCOUNTER_COOLDOWN_MS` de `game/encounter.ts`. Leerlas con `workspace.getConfiguration('pokemonCompanion')`, y que `rollEncounter` y `EncounterGate` las reciban como parámetro para seguir siendo testeables.
+   - Si son ajustes de máquina o de usuario (`scope`), se deciden al implementarlo.
+2. **Evoluciones**:
+   - Evolucionar un Pokémon capturado, juntando varias copias o pagando monedas (por decidir).
+   - Usa `pokemon-species/{id}` → `evolution_chain.url` de la PokéAPI.
+   - Tiene que encajar con la Pokédex (la especie evolucionada cuenta como capturada), las estadísticas y `mergeStates`.
+3. **Traducción al inglés** (opcional): `vscode.l10n`, `package.nls.json` y `package.nls.es.json`. Todos los textos están escritos a mano en español en `src/` y `media/*.js`.
+
+**Cómo se trabaja cada novedad:**
+1. Implementar con su test. La lógica pura va en `game/`.
+2. Probar con F5. No instalar el `.vsix` local si tiene la misma versión que la de la tienda.
+3. Añadirla a `## [Sin publicar]` en el CHANGELOG y al README.
+4. Hacer commit y push, y esperar a que pase el CI.
+5. Para publicar: subir `version`, renombrar `## [Sin publicar]` a `## [x.y.z] - fecha`, hacer commit y `git tag vx.y.z && git push origin main vx.y.z`. El CI crea la Release.
+6. El usuario sube el `.vsix` al Marketplace a mano (*Update* en marketplace.visualstudio.com/manage).
