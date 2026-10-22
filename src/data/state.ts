@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { EMPTY_STATS, GameStats } from '../game/stats';
 
 export interface CapturedPokemon {
   id: number;
@@ -14,6 +15,7 @@ export interface GameState {
   captured: CapturedPokemon[];
   generationsUnlocked: number;
   updatedAt: number; // momento (ms) del último cambio; sirve para sincronizar
+  stats: GameStats;
 }
 
 const KEY = 'pokemonCompanion.state';
@@ -24,6 +26,7 @@ const DEFAULT_STATE: GameState = {
   captured: [],
   generationsUnlocked: 1,
   updatedAt: 0,
+  stats: EMPTY_STATS,
 };
 
 export class StateManager {
@@ -42,6 +45,8 @@ export class StateManager {
     // Partidas anteriores a las generaciones y a la sincronización no tienen estos campos
     state.generationsUnlocked = state.generationsUnlocked ?? 1;
     state.updatedAt = state.updatedAt ?? 0;
+    // Las anteriores a la 0.3.0 no tienen estadísticas; si se añaden contadores, llegan a 0
+    state.stats = { ...EMPTY_STATS, ...state.stats };
     return state;
   }
 

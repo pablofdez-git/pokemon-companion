@@ -1,6 +1,7 @@
 import { StateManager } from '../data/state';
 import { PokemonData } from '../data/pokeapi';
 import { GENERATIONS, Generation, unlockedAfterCaptures } from './generations';
+import { dayKey, recordActivity } from './stats';
 
 // Ajusta estos valores a tu gusto para equilibrar el juego
 export const MIN_CHARS_TO_REWARD = 20; // por debajo de esto, no hay moneda
@@ -13,15 +14,19 @@ export function coinsForChanges(changedChars: number): number {
   return Math.floor(changedChars / CHARS_PER_COIN);
 }
 
-// Paga las monedas de un guardado según los caracteres nuevos
+// Paga las monedas de un guardado según los caracteres nuevos y apunta el día para la racha
 export async function rewardForSave(
   state: StateManager,
-  changedChars: number
+  changedChars: number,
+  now: Date = new Date()
 ): Promise<number> {
   const coins = coinsForChanges(changedChars);
   if (coins > 0) {
     await state.update((s) => {
       s.coins += coins;
+      s.stats.coinsEarned += coins;
+      s.stats.charsWritten += changedChars;
+      recordActivity(s.stats, dayKey(now));
     });
   }
   return coins;
@@ -67,6 +72,8 @@ export async function rewardForCapture(
       ...(shiny ? { shiny: true } : {}),
     });
     s.coins += coins;
+    s.stats.coinsEarned += coins;
+    s.stats.captures += 1;
 
     const before = s.generationsUnlocked;
     const after = unlockedAfterCaptures(

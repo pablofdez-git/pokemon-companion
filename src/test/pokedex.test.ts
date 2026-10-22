@@ -1,9 +1,17 @@
 import * as assert from 'assert';
 import { CapturedPokemon, GameState } from '../data/state';
 import { buildPokedex, speciesSpriteUrl } from '../game/pokedex';
+import { EMPTY_STATS } from '../game/stats';
 
 function state(captured: CapturedPokemon[], generationsUnlocked = 1): GameState {
-  return { coins: 0, balls: {}, captured, generationsUnlocked, updatedAt: 0 };
+  return {
+    coins: 0,
+    balls: {},
+    captured,
+    generationsUnlocked,
+    updatedAt: 0,
+    stats: { ...EMPTY_STATS },
+  };
 }
 
 function caught(id: number, extra: Partial<CapturedPokemon> = {}): CapturedPokemon {

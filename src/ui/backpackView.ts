@@ -7,8 +7,14 @@ import {
   maxPokemonId,
 } from '../game/generations';
 import { BALLS, BallType, ballSpriteUrl } from '../game/items';
+import {
+  GameStats,
+  captureRate,
+  currentStreak,
+  dayKey,
+} from '../game/stats';
 
-type Section = 'balls' | 'pokemon';
+type Section = 'balls' | 'pokemon' | 'stats';
 
 class BackpackItem extends vscode.TreeItem {
   pokemonId?: number;
@@ -110,6 +116,52 @@ function progressItem(progress: GenerationProgress): BackpackItem {
   return item;
 }
 
+function formatNumber(n: number): string {
+  return n.toLocaleString('es-ES');
+}
+
+function statItem(
+  label: string,
+  value: string,
+  icon: string,
+  tooltip?: string
+): BackpackItem {
+  const item = new BackpackItem(label, vscode.TreeItemCollapsibleState.None);
+  item.description = value;
+  item.iconPath = new vscode.ThemeIcon(icon);
+  item.tooltip = tooltip;
+  return item;
+}
+
+function statsItems(stats: GameStats, shinies: number): BackpackItem[] {
+  const streak = currentStreak(stats, dayKey(new Date()));
+  const rate = captureRate(stats);
+  const days = (n: number) => `${n} ${n === 1 ? 'día' : 'días'}`;
+
+  return [
+    statItem(
+      'Racha',
+      `${days(streak)} · mejor: ${days(stats.bestStreak)}`,
+      'flame',
+      'Días seguidos programando. Cuenta un día si algún guardado te dio monedas.'
+    ),
+    statItem('Días programando', formatNumber(stats.activeDays), 'calendar'),
+    statItem('Caracteres escritos', formatNumber(stats.charsWritten), 'edit'),
+    statItem('Monedas ganadas', formatNumber(stats.coinsEarned), 'arrow-up'),
+    statItem('Monedas gastadas', formatNumber(stats.coinsSpent), 'arrow-down'),
+    statItem('Encuentros', formatNumber(stats.encounters), 'eye'),
+    statItem(
+      'Capturas',
+      rate === null ? '0' : `${formatNumber(stats.captures)} (${rate}%)`,
+      'pass',
+      'Incluye los que vendiste después. El porcentaje es sobre los encuentros.'
+    ),
+    statItem('Huidas', formatNumber(stats.fled), 'run-all'),
+    statItem('Balls lanzadas', formatNumber(stats.throws), 'circle-large-outline'),
+    statItem('Variocolores', formatNumber(shinies), 'star-full'),
+  ];
+}
+
 export class BackpackProvider
   implements vscode.TreeDataProvider<BackpackItem>, vscode.Disposable
 {
@@ -126,9 +178,10 @@ export class BackpackProvider
   }
 
   getChildren(element?: BackpackItem): BackpackItem[] {
-    const { balls, captured, generationsUnlocked } = this.state.get();
+    const { balls, captured, generationsUnlocked, stats } = this.state.get();
     const None = vscode.TreeItemCollapsibleState.None;
     const Expanded = vscode.TreeItemCollapsibleState.Expanded;
+    const Collapsed = vscode.TreeItemCollapsibleState.Collapsed;
 
     // Raíz: progreso de generaciones y las dos secciones
     if (!element) {
@@ -141,9 +194,14 @@ export class BackpackProvider
       ).length;
       const shinyText = shinyCount > 0 ? ` · ★ ${shinyCount}` : '';
 
+      // Id fijo: así VS Code recuerda si la tienes abierta aunque la mochila se refresque
+      const statsSection = new BackpackItem('Estadísticas', Collapsed, 'stats');
+      statsSection.id = 'section-stats';
+
       return [
         progressItem(progress),
         new BackpackItem('Pokéballs', Expanded, 'balls'),
+        statsSection,
         new BackpackItem(
           `Pokémon capturados (${progress.distinct}/${maxPokemonId(generationsUnlocked)})${shinyText}`,
           Expanded,
@@ -160,6 +218,11 @@ export class BackpackProvider
         item.tooltip = ballTooltip(ball, balls[ball.id] ?? 0);
         return item;
       });
+    }
+
+    if (element.section === 'stats') {
+      const shinies = groupCaptured(captured).filter((g) => g.pokemon.shiny).length;
+      return statsItems(stats, shinies);
     }
 
     if (element.section === 'pokemon') {

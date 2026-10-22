@@ -1,5 +1,9 @@
 # Cambios
 
+## [Sin publicar]
+
+- Estadísticas en la Mochila: racha de días programando, días y caracteres escritos, monedas ganadas y gastadas, encuentros, capturas (con porcentaje), huidas, balls lanzadas y variocolores. Se cuentan desde esta versión.
+
 ## [0.2.0] - 2026-10-22
 
 - Pokédex visual: cuadrícula por generación con siluetas de los que faltan, variocolores, repetidos y filtros. Se abre desde la cabecera de la Mochila.

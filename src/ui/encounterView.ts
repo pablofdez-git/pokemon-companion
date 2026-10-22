@@ -77,7 +77,26 @@ function announceUnlocks(generations: Generation[]): void {
   }
 }
 
+// Juega un encuentro completo y lo apunta en las estadísticas
 export async function runEncounter(
+  state: StateManager,
+  panel: EncounterPanel,
+  pokemon: PokemonData,
+  shiny: boolean
+): Promise<'captured' | 'fled'> {
+  await state.update((s) => {
+    s.stats.encounters += 1;
+  });
+  const outcome = await playEncounter(state, panel, pokemon, shiny);
+  if (outcome === 'fled') {
+    await state.update((s) => {
+      s.stats.fled += 1;
+    });
+  }
+  return outcome;
+}
+
+async function playEncounter(
   state: StateManager,
   panel: EncounterPanel,
   pokemon: PokemonData,
@@ -128,6 +147,7 @@ export async function runEncounter(
 
     await state.update((s) => {
       s.balls[ball.id] -= 1;
+      s.stats.throws += 1;
     });
     throwNumber += 1;
 

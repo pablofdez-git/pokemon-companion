@@ -23,6 +23,7 @@ export async function buyBall(
 
   await state.update((s) => {
     s.coins -= total;
+    s.stats.coinsSpent += total;
     s.balls[ball.id] = (s.balls[ball.id] ?? 0) + quantity;
   });
   return { ok: true, spent: total };
@@ -56,6 +57,7 @@ export async function sellDuplicate(
     const earned = sellPrice(pokemon.captureRate);
     s.captured.splice(s.captured.lastIndexOf(pokemon), 1);
     s.coins += earned;
+    s.stats.coinsEarned += earned;
     result = { ok: true, name: pokemon.name, earned };
   });
 

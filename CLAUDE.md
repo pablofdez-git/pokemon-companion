@@ -62,6 +62,7 @@ src/
     items.ts              Catálogo de balls (precio, regla, multiplicador según contexto)
     pokedex.ts            buildPokedex(): agrupa capturas por especie y generación (siluetas, shiny)
     shop.ts               buyBall / sellDuplicate
+    stats.ts              GameStats (contadores) y racha de días: recordActivity, currentStreak
     syncRules.ts          decideSync(): push / pull / conflict / none
   ui/                     Todo lo que toca la interfaz de VS Code
     statusBar.ts          Contador de monedas (abre la tienda)
@@ -111,6 +112,16 @@ media/
 - `buildPokedex(state)` es pura y testeada: una entrada por especie de las generaciones desbloqueadas; las no capturadas llevan `name: null` y el sprite genérico de `speciesSpriteUrl(id)`, que el CSS pinta como silueta (`filter: brightness(0)`).
 - Panel único: `show()` lo crea o lo trae al frente. Protocolo: panel → `ready`; extensión → `update` con el `PokedexData` completo (también en cada `state.onDidChange`).
 - Se abre con `pokemonCompanion.openPokedex` (botón `$(book)` en `view/title` de la Mochila).
+
+### Estadísticas (`game/stats.ts`)
+- `GameState.stats` guarda contadores acumulados. Se apuntan donde ocurre cada cosa:
+  - `rewardForSave`: monedas, caracteres y día activo.
+  - `rewardForCapture`: capturas y monedas.
+  - `buyBall` y `sellDuplicate`: monedas gastadas y ganadas.
+  - `runEncounter`: encuentros y huidas; `playEncounter` cuenta los lanzamientos.
+- Racha: `recordActivity` cuenta un día cuando un guardado da monedas, con `dayKey` en hora local. `currentStreak` devuelve 0 si el último día activo no fue hoy ni ayer.
+- `StateManager.get()` rellena con `EMPTY_STATS` los contadores que falten, así que añadir uno nuevo es compatible con partidas antiguas.
+- Se muestran en la sección "Estadísticas" de la Mochila. Tiene id fijo (`section-stats`) para que VS Code recuerde si está plegada.
 
 ### Generaciones (`game/generations.ts`)
 - Para desbloquear la siguiente hay que tener `ceil(maxPokemonId(actual) × UNLOCK_FRACTION)` especies **distintas** (los repetidos no cuentan). Puede subir más de una de golpe.

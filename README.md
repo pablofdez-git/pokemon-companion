@@ -33,10 +33,11 @@ Si ves un Pokémon con destellos ★, es un **variocolor** (1 de cada 50): da 50
 
 ## Mochila
 
-En la barra de actividad, el icono de la mochila abre:
+En la barra de actividad, el icono de Ctrl+Catch abre la *Mochila*, con:
 
 - El progreso hacia la siguiente generación.
 - Tus balls.
+- Tus estadísticas: tu **racha** de días seguidos programando, caracteres escritos, monedas ganadas y gastadas, encuentros, porcentaje de captura…
 - Tus Pokémon capturados. Los repetidos tienen un botón para **venderlos** y recuperar monedas.
 
 ## Pokédex

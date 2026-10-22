@@ -8,6 +8,7 @@ import {
   resolveSyncFile,
   writeSnapshot,
 } from '../data/syncFile';
+import { EMPTY_STATS } from '../game/stats';
 
 const SNAPSHOT: Snapshot = {
   version: 1,
@@ -18,6 +19,7 @@ const SNAPSHOT: Snapshot = {
     captured: [{ id: 1, name: 'Bulbasaur', spriteUrl: null }],
     generationsUnlocked: 1,
     updatedAt: 1234,
+    stats: { ...EMPTY_STATS, encounters: 3 },
   },
 };
 
