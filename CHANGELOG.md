@@ -1,6 +1,6 @@
 # Cambios
 
-## [Sin publicar]
+## [0.6.0] - 2026-10-22
 
 - Interfaz sin emojis (salvo la moneda 🪙): iconos propios de VS Code y SVG en las pestañas.
 - Logros: 32 retos (capturas, especies, rachas, código escrito, monedas, evoluciones, variocolores, generaciones…) en una pestaña propia (botón del trofeo junto a la Pokédex) con su progreso, agrupados y con el color de su dificultad. Cada logro da como recompensa un encuentro con un Pokémon más raro cuanto más difícil sea; si lo dejas escapar, sigue pendiente.
