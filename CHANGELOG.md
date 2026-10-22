@@ -1,5 +1,9 @@
 # Cambios
 
+## [Sin publicar]
+
+- El botón ⬆ de la Mochila solo aparece en los Pokémon que pueden evolucionar ahora, y su descripción lo indica.
+
 ## [0.5.0] - 2026-10-22
 
 - Evoluciones: botón ⬆ en la Mochila para evolucionar un Pokémon pagando monedas. Si tiene varias evoluciones, eliges. Se cuentan en las estadísticas.

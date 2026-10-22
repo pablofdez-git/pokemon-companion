@@ -1,8 +1,7 @@
 import * as vscode from 'vscode';
 import { StateManager } from '../data/state';
 import { PokemonData, fetchEvolutionIds, fetchPokemon } from '../data/pokeapi';
-import { evolutionCost, evolvePokemon } from '../game/evolution';
-import { maxPokemonId } from '../game/generations';
+import { availableEvolutions, evolutionCost, evolvePokemon } from '../game/evolution';
 import { announceUnlocks } from './encounterView';
 
 interface EvolutionPick extends vscode.QuickPickItem {
@@ -29,8 +28,7 @@ export async function evolveFromBackpack(
       { location: vscode.ProgressLocation.Notification, title: `Buscando evoluciones de ${owned.name}…` },
       async () => {
         const ids = await fetchEvolutionIds(pokemonId);
-        const maxId = maxPokemonId(state.get().generationsUnlocked);
-        const available = ids.filter((id) => id <= maxId);
+        const available = availableEvolutions(ids, state.get().generationsUnlocked);
         blocked = ids.length - available.length;
         return Promise.all(available.map((id) => fetchPokemon(id)));
       }

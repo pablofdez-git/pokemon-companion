@@ -5,6 +5,7 @@ import {
   EVOLUTION_BASE_COST,
   EVOLUTION_EXTRA_COST,
   EvolutionNode,
+  availableEvolutions,
   evolutionCost,
   evolvePokemon,
   nextEvolutionIds,
@@ -57,6 +58,12 @@ suite('evoluciones', () => {
     const chain = node(133, node(134), node(135), node(136));
     assert.deepStrictEqual(nextEvolutionIds(chain, 133), [134, 135, 136]);
     assert.deepStrictEqual(nextEvolutionIds(chain, 999), []);
+  });
+
+  test('availableEvolutions descarta las de generaciones bloqueadas', () => {
+    assert.deepStrictEqual(availableEvolutions([5, 169], 1), [5]); // Crobat es de Johto
+    assert.deepStrictEqual(availableEvolutions([5, 169], 2), [5, 169]);
+    assert.deepStrictEqual(availableEvolutions([], 9), []);
   });
 
   test('el coste va del mínimo al máximo según la dificultad', () => {

@@ -1,6 +1,11 @@
 import { StateManager } from '../data/state';
 import { PokemonData } from '../data/pokeapi';
-import { GENERATIONS, Generation, unlockedAfterCaptures } from './generations';
+import {
+  GENERATIONS,
+  Generation,
+  maxPokemonId,
+  unlockedAfterCaptures,
+} from './generations';
 
 // Ajusta estos valores a tu gusto
 export const EVOLUTION_BASE_COST = 30;   // coste de evolucionar a la especie más fácil
@@ -40,6 +45,12 @@ export function nextEvolutionIds(chain: EvolutionNode, speciesId: number): numbe
   return node.evolves_to
     .map((next) => speciesIdFromUrl(next.species.url))
     .filter((id): id is number => id !== null);
+}
+
+// Evoluciones que se pueden elegir ahora: las de generaciones ya desbloqueadas
+export function availableEvolutions(ids: number[], generationsUnlocked: number): number[] {
+  const maxId = maxPokemonId(generationsUnlocked);
+  return ids.filter((id) => id <= maxId);
 }
 
 // Cuanto más difícil de capturar es la evolución, más cuesta

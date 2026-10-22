@@ -127,10 +127,11 @@ media/
 - Se muestran en la sección "Estadísticas" de la Mochila. Tiene id fijo (`section-stats`) para que VS Code recuerde si está plegada.
 
 ### Evoluciones (`game/evolution.ts`, `ui/evolution.ts`)
-- Botón en línea (`$(arrow-circle-up)`) en cada Pokémon de la Mochila → comando oculto `pokemonCompanion.evolve`. La mochila es síncrona, así que **no** sabe si un Pokémon evoluciona: la consulta se hace al pulsar.
+- Botón en línea (`$(arrow-circle-up)`) → comando oculto `pokemonCompanion.evolve`. Solo sale en los Pokémon con `evolvable` en su `contextValue` (que es una lista de palabras: `duplicatePokemon`/`singlePokemon` + `evolvable`; los `when` de `package.json` usan `=~`).
+- La mochila es síncrona, así que `BackpackProvider.prefetchEvolutions()` consulta en segundo plano (de una en una) las especies que no están en la caché de `cachedEvolutionIds()` y refresca el árbol al terminar. Si falla, no reintenta hasta pasado 1 min. Sin conexión, el botón no sale.
 - `fetchEvolutionIds(id)` (`data/pokeapi.ts`): `pokemon-species/{id}` → `evolution_chain.url`, y `nextEvolutionIds()` (pura) saca las evoluciones directas del árbol. Con caché. Las ramificadas (Eevee) se eligen en un QuickPick.
 - `evolvePokemon()` cambia **una copia** (normal o variocolor, la que se elija) por la evolución y cobra `evolutionCost(captureRate de la evolución)`: 30–150 monedas. Se puede evolucionar la única copia (la base deja de estar capturada). El variocolor se conserva.
-- Solo se ofrecen evoluciones de generaciones ya desbloqueadas (la Pokédex solo muestra esas). No se comprueban condiciones de la API (nivel, intercambio, objeto): cualquier evolución se compra con monedas.
+- Solo se ofrecen evoluciones de generaciones ya desbloqueadas (`availableEvolutions`; la Pokédex solo muestra esas). No se comprueban condiciones de la API (nivel, intercambio, objeto): cualquier evolución se compra con monedas.
 - Cuenta en `stats.evolutions` (sumable en `mergeStates`) y `coinsSpent`; puede desbloquear generaciones como una captura.
 
 ### Generaciones (`game/generations.ts`)

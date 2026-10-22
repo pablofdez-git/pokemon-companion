@@ -1,6 +1,8 @@
 import * as vscode from 'vscode';
 import { CapturedPokemon, StateManager } from '../data/state';
+import { cachedEvolutionIds, fetchEvolutionIds } from '../data/pokeapi';
 import { sellPrice } from '../game/economy';
+import { availableEvolutions } from '../game/evolution';
 import {
   GenerationProgress,
   generationProgress,
@@ -15,6 +17,8 @@ import {
 } from '../game/stats';
 
 type Section = 'balls' | 'pokemon' | 'stats';
+
+const RETRY_AFTER_MS = 60 * 1000; // espera antes de volver a consultar una evolución que falló
 
 class BackpackItem extends vscode.TreeItem {
   pokemonId?: number;
@@ -56,7 +60,8 @@ function groupCaptured(captured: CapturedPokemon[]): CapturedGroup[] {
 // Los iconos del árbol van fijados a 16x16, así que el sprite grande va en el tooltip
 function pokemonTooltip(
   pokemon: CapturedPokemon,
-  count: number
+  count: number,
+  evolvable: boolean
 ): vscode.MarkdownString {
   const tooltip = new vscode.MarkdownString();
   tooltip.supportHtml = true;
@@ -76,6 +81,9 @@ function pokemonTooltip(
     tooltip.appendMarkdown(
       `\n\nVender un repetido: ${sellPrice(pokemon.captureRate)} 🪙`
     );
+  }
+  if (evolvable) {
+    tooltip.appendMarkdown('\n\nPuede evolucionar: pulsa ⬆');
   }
   return tooltip;
 }
@@ -170,9 +178,41 @@ export class BackpackProvider
   private readonly emitter = new vscode.EventEmitter<void>();
   readonly onDidChangeTreeData = this.emitter.event;
   private readonly subscription: vscode.Disposable;
+  private readonly loading = new Set<number>();   // especies que se están consultando
+  private readonly failedAt = new Map<number, number>(); // para reintentar sin insistir
+  private disposed = false;
 
   constructor(private readonly state: StateManager) {
     this.subscription = state.onDidChange(() => this.emitter.fire());
+  }
+
+  // Consulta en segundo plano las evoluciones que aún no se conocen y refresca al terminar.
+  // Se hace de una en una para no saturar la PokéAPI.
+  private async prefetchEvolutions(ids: number[]): Promise<void> {
+    const now = Date.now();
+    const pending = ids.filter(
+      (id) =>
+        cachedEvolutionIds(id) === undefined &&
+        !this.loading.has(id) &&
+        now - (this.failedAt.get(id) ?? 0) > RETRY_AFTER_MS
+    );
+    if (pending.length === 0) {
+      return;
+    }
+
+    pending.forEach((id) => this.loading.add(id));
+    for (const id of pending) {
+      try {
+        await fetchEvolutionIds(id);
+      } catch {
+        this.failedAt.set(id, Date.now()); // sin conexión: el botón no sale
+      }
+      this.loading.delete(id);
+      if (this.disposed) {
+        return;
+      }
+    }
+    this.emitter.fire();
   }
 
   getTreeItem(element: BackpackItem): vscode.TreeItem {
@@ -234,6 +274,7 @@ export class BackpackProvider
         empty.description = '¡Sigue programando!';
         return [empty];
       }
+      void this.prefetchEvolutions([...new Set(groups.map((g) => g.pokemon.id))]);
       return groups.map(({ pokemon, count }) => {
         const number = String(pokemon.id).padStart(3, '0');
         const item = new BackpackItem(
@@ -242,9 +283,16 @@ export class BackpackProvider
         );
         item.pokemonId = pokemon.id;
         item.shiny = Boolean(pokemon.shiny);
-        // Solo los repetidos normales muestran el botón de vender (ver package.json)
-        item.contextValue =
-          !pokemon.shiny && count > 1 ? 'duplicatePokemon' : 'singlePokemon';
+        const evolvable =
+          availableEvolutions(cachedEvolutionIds(pokemon.id) ?? [], generationsUnlocked)
+            .length > 0;
+        // Solo los repetidos normales muestran vender y solo los que evolucionan, el ⬆ (ver package.json)
+        item.contextValue = [
+          !pokemon.shiny && count > 1 ? 'duplicatePokemon' : 'singlePokemon',
+          evolvable ? 'evolvable' : '',
+        ]
+          .filter(Boolean)
+          .join(' ');
 
         const details = [
           count > 1 ? `x${count}` : '',
@@ -256,7 +304,7 @@ export class BackpackProvider
         if (pokemon.spriteUrl) {
           item.iconPath = vscode.Uri.parse(pokemon.spriteUrl);
         }
-        item.tooltip = pokemonTooltip(pokemon, count);
+        item.tooltip = pokemonTooltip(pokemon, count, evolvable);
         return item;
       });
     }
@@ -265,6 +313,7 @@ export class BackpackProvider
   }
 
   dispose(): void {
+    this.disposed = true;
     this.subscription.dispose();
     this.emitter.dispose();
   }

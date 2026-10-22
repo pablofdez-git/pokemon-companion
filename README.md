@@ -42,7 +42,7 @@ En la barra de actividad, el icono de Ctrl+Catch abre la *Mochila*, con:
 
 ## Evoluciones
 
-Pulsa ⬆ en un Pokémon de la *Mochila* para evolucionarlo pagando monedas (de 30 a 150, según lo difícil que sea la evolución). Si tiene varias (como Eevee), eliges cuál. Se gasta una copia, el variocolor se conserva, y solo puedes evolucionar a Pokémon de generaciones ya desbloqueadas.
+Los Pokémon de la *Mochila* que pueden evolucionar muestran un botón ⬆ (tarda un momento en aparecer la primera vez, mientras consulta la PokéAPI). Púlsalo para evolucionarlo pagando monedas (de 30 a 150, según lo difícil que sea la evolución). Si tiene varias (como Eevee), eliges cuál. Se gasta una copia, el variocolor se conserva, y solo puedes evolucionar a Pokémon de generaciones ya desbloqueadas.
 
 ## Pokédex
 

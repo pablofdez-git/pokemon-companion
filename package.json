@@ -88,22 +88,22 @@
       "view/item/context": [
         {
           "command": "pokemonCompanion.evolve",
-          "when": "view == pokemonCompanion.backpack && viewItem =~ /^(duplicate|single)Pokemon$/",
+          "when": "view == pokemonCompanion.backpack && viewItem =~ /evolvable/",
           "group": "inline@0"
         },
         {
           "command": "pokemonCompanion.evolve",
-          "when": "view == pokemonCompanion.backpack && viewItem =~ /^(duplicate|single)Pokemon$/",
+          "when": "view == pokemonCompanion.backpack && viewItem =~ /evolvable/",
           "group": "2_evolve"
         },
         {
           "command": "pokemonCompanion.sellDuplicate",
-          "when": "view == pokemonCompanion.backpack && viewItem == duplicatePokemon",
+          "when": "view == pokemonCompanion.backpack && viewItem =~ /duplicatePokemon/",
           "group": "inline"
         },
         {
           "command": "pokemonCompanion.sellDuplicate",
-          "when": "view == pokemonCompanion.backpack && viewItem == duplicatePokemon",
+          "when": "view == pokemonCompanion.backpack && viewItem =~ /duplicatePokemon/",
           "group": "1_sell"
         }
       ],

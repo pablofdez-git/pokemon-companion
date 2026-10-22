@@ -48,6 +48,11 @@ function capitalize(text: string): string {
 
 const evolutionCache = new Map<number, number[]>();
 
+// Lo que ya se consultó, sin pedir nada: la mochila lo usa para saber qué Pokémon evolucionan
+export function cachedEvolutionIds(id: number): number[] | undefined {
+  return evolutionCache.get(id);
+}
+
 // Especies a las que puede evolucionar una especie: pokemon-species → evolution_chain
 export async function fetchEvolutionIds(id: number): Promise<number[]> {
   const cached = evolutionCache.get(id);
