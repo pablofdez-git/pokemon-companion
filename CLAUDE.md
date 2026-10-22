@@ -24,8 +24,18 @@ npm run compile   # tsc -p ./  → genera out/
 npm run watch     # compilación incremental
 npm run lint      # eslint src
 npm test          # compile + lint + vscode-test (abre un VS Code de prueba)
-npx @vscode/vsce package   # genera pokemon-companion-<versión>.vsix
+npm run package  # genera pokemon-companion-<versión>.vsix (vsce, con out/ limpio)
 ```
+
+### CI y versiones
+- `.github/workflows/ci.yml`: en cada push a `main` y en cada PR pasa lint, tests (con `xvfb-run`) y empaqueta. El `.vsix` queda como artefacto del run.
+- **Sacar una versión:**
+  1. Sube `version` en `package.json`.
+  2. Añade su sección `## [x.y.z] - fecha` al `CHANGELOG.md`.
+  3. Haz commit y luego `git tag vx.y.z && git push origin main vx.y.z`.
+
+  El CI comprueba que la etiqueta coincide con la versión y crea la Release de GitHub con el `.vsix` adjunto; las notas salen de la sección del CHANGELOG.
+- La publicación en el Marketplace se hace a mano: se sube el `.vsix` en marketplace.visualstudio.com/manage, publisher `pablofdez`.
 
 - Para probar: **F5** en VS Code (`.vscode/launch.json`) abre una ventana *Extension Development Host*.
 - Entrada: `out/extension.js` (compilado desde `src/extension.ts`). Activación: `onStartupFinished`.

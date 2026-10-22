@@ -14,3 +14,4 @@ desktop.ini
 out/test/**
 **/*.ts
 **/.vscode-test.*
+.github/**
