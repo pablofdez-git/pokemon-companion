@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Ctrl+Catch · Guía del Entrenador</title>
+<style>
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; }
+  :root {
+    --red: #e1380f; --dark: #23272e; --yellow: #f5c400; --blue: #3f51c1;
+    --muted: #6b7280; --line: #e5e7eb;
+  }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  /* En pantalla las páginas se amplían según la ventana, hasta un tope (ver el script del final);
+     al imprimir o generar el PDF no se toca nada */
+  @media screen {
+    html { background: #3a3d44; }
+    .page { margin: 0 auto 6mm; }
+    .page:last-of-type { margin-bottom: 0; }
+  }
+  @media print {
+    body { zoom: 1 !important; }
+  }
+  body {
+    margin: 0; counter-reset: pg;
+    font-family: Carlito, Calibri, "Segoe UI", Arial, sans-serif;
+    font-size: 10.6pt; line-height: 1.42; color: var(--dark);
+  }
+  code, .kbd {
+    font-family: "DejaVu Sans Mono", Consolas, "Courier New", monospace;
+    font-size: 8.8pt; color: var(--red);
+  }
+  p { margin: 0 0 2.4mm; }
+
+  /* ---- Página ---- */
+  .page {
+    position: relative; width: 210mm; height: 297mm; overflow: hidden;
+    page-break-after: always; counter-increment: pg; background: #fff;
+  }
+  .topbar {
+    position: absolute; inset: 0 0 auto 0; height: 11mm; padding: 0 18mm;
+    display: flex; align-items: center; gap: 2.4mm;
+    background: var(--red); border-bottom: 1.3mm solid var(--dark);
+    color: #fff; font-weight: 700; font-size: 9pt;
+  }
+  .topbar svg { width: 7mm; height: 7mm; }
+  .content { position: absolute; top: 19mm; left: 18mm; right: 18mm; bottom: 19mm; }
+  .footer {
+    position: absolute; left: 18mm; right: 18mm; bottom: 6mm; padding-top: 2mm;
+    border-top: 1px solid var(--line); text-align: center; font-weight: 700; font-size: 9pt;
+    display: flex; justify-content: center; align-items: center; gap: 2mm;
+  }
+  .footer svg { width: 6.5mm; height: 6.5mm; }
+  .footer::after { content: "Página " counter(pg); }
+  .footer { }
+
+  /* ---- Títulos ---- */
+  h2.section {
+    display: flex; align-items: center; gap: 3.2mm; margin: 0 0 4.5mm;
+    padding-bottom: 2mm; font-size: 21pt; line-height: 1.1;
+    background: linear-gradient(to right, var(--yellow) 0 30mm, var(--red) 30mm) left bottom / 100% 0.9mm no-repeat;
+  }
+  h2.section svg { width: 11mm; height: 11mm; flex: none; }
+  h3 { margin: 5mm 0 2mm; font-size: 14pt; color: var(--red); }
+  h3:first-child { margin-top: 0; }
+  strong { font-weight: 700; }
+  .muted { color: var(--muted); font-size: 9pt; }
+  .small { font-size: 9.2pt; }
+
+  /* ---- Pasos ---- */
+  .step { display: flex; gap: 4mm; margin-bottom: 3.6mm; }
+  .num {
+    flex: none; width: 7.2mm; height: 7.2mm; border-radius: 50%; margin-top: 0.4mm;
+    background: var(--red); color: #fff; font-weight: 700; display: flex;
+    align-items: center; justify-content: center; font-size: 10.5pt;
+  }
+  .step .title { font-weight: 700; font-size: 11.2pt; }
+  .step p { margin: 0; }
+
+  /* ---- Avisos ---- */
+  .callout {
+    margin: 4mm 0; padding: 3mm 4.2mm 2.4mm; border-left: 1.7mm solid var(--blue);
+    background: #ecefff; border-radius: 0.8mm; font-size: 9.6pt;
+  }
+  .callout .ct { font-weight: 700; font-size: 10.4pt; margin-bottom: 1mm; }
+  .callout p { margin: 0 0 1.4mm; }
+  .callout.red { border-color: var(--red); background: #fde9e5; }
+  .callout.yellow { border-color: var(--yellow); background: #fff6d6; }
+
+  /* ---- Tablas ---- */
+  table.tbl { width: 100%; border-collapse: collapse; font-size: 9.6pt; margin: 2mm 0 3mm; }
+  .tbl th {
+    background: var(--red); color: #fff; text-align: left; padding: 2.4mm 3mm; font-size: 9.4pt;
+  }
+  .tbl td { padding: 2.1mm 3mm; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  .tbl tr:nth-child(even) td { background: #f6f7f9; }
+  .tbl.compact td { padding: 1.5mm 3mm; }
+  .tbl.compact th { padding: 1.9mm 3mm; }
+  .tbl td:first-child { font-weight: 700; }
+  .tbl img.ball { width: 6mm; height: 6mm; vertical-align: middle; image-rendering: pixelated; }
+  .tbl.balls td:first-child { width: 11mm; }
+
+  /* ---- Iconos ---- */
+  .coin { width: 1.05em; height: 1.05em; vertical-align: -0.17em; }
+  .star { color: #e0a800; }
+
+  /* ---- Figuras ---- */
+  figure { margin: 0; text-align: center; }
+  figcaption { margin-top: 1.4mm; font-size: 8.6pt; font-style: italic; color: var(--muted); }
+  .shot { border: 1px solid var(--line); background: #1f1f1f; display: block; }
+
+  /* ---- Portada ---- */
+  .cover { background: #fff; }
+  .cover .hero {
+    position: absolute; inset: 0 0 auto 0; height: 170mm; background: var(--red); overflow: hidden;
+    color: #fff; text-align: center;
+  }
+  .circle { position: absolute; border-radius: 50%; background: rgba(255,255,255,0.1); }
+  .cover h1 { margin: 52mm 0 0; font-size: 46pt; line-height: 1.05; font-weight: 700; }
+  .cover .sub { margin-top: 5mm; font-size: 20pt; }
+  .cover .tag { margin-top: 3mm; font-size: 13pt; font-style: italic; color: var(--yellow); }
+  .cover .band { position: absolute; left: 0; right: 0; top: 170mm; height: 6mm; background: var(--dark); }
+  .cover .ball {
+    position: absolute; left: 50%; top: 158mm; width: 36mm; height: 36mm; margin-left: -18mm;
+    border-radius: 50%; background: var(--dark); display: flex; align-items: center; justify-content: center;
+  }
+  .cover .ball i { width: 25mm; height: 25mm; border-radius: 50%; background: #fff; display: block; position: relative; }
+  .cover .ball i::after {
+    content: ""; position: absolute; inset: 5mm; border-radius: 50%; border: 1.6mm solid #c9ccd3;
+  }
+  .toc { position: absolute; left: 0; right: 0; top: 204mm; text-align: center; }
+  .toc h4 { margin: 0 0 3mm; font-size: 12.5pt; }
+  .toc ol { list-style: none; margin: 0 auto; padding: 0; width: 82mm; text-align: left; font-size: 10.4pt; }
+  .toc li { display: flex; gap: 5mm; padding: 0.9mm 0; }
+  .toc li b { color: var(--red); width: 5mm; }
+  .cover .ver { position: absolute; bottom: 12mm; left: 0; right: 0; text-align: center; font-size: 8.6pt; color: var(--muted); }
+
+  /* ---- Ciclo de juego ---- */
+  .flow { display: grid; grid-template-columns: 1fr 9mm 1fr 9mm 1fr; grid-template-rows: auto 9mm auto; align-items: center; margin: 2mm 0 1mm; }
+  .box {
+    position: relative; border: 0.35mm solid var(--dark); border-radius: 2.4mm; background: #f4f5f7;
+    padding: 4.2mm 2mm 2.8mm; text-align: center; font-size: 9.6pt; line-height: 1.25; height: 17.5mm;
+  }
+  .box b { display: block; font-size: 10pt; }
+  .box span { font-size: 8.4pt; color: var(--muted); }
+  .box em {
+    position: absolute; left: -2mm; top: -2mm; width: 5.4mm; height: 5.4mm; border-radius: 50%;
+    background: var(--yellow); border: 0.3mm solid var(--dark); font-style: normal; font-weight: 700;
+    font-size: 8.5pt; display: flex; align-items: center; justify-content: center;
+  }
+  .arr { display: flex; align-items: center; justify-content: center; }
+  .arr svg { width: 7mm; height: 7mm; }
+
+  /* ---- Maquetación de dos columnas ---- */
+  .two { display: flex; gap: 6mm; align-items: flex-start; }
+  .two > .grow { flex: 1; }
+  .gallery { display: flex; gap: 4mm; justify-content: space-between; align-items: flex-start; }
+  .gallery figure { flex: 1; }
+  .gallery .shot { width: 100%; height: 66mm; object-fit: cover; object-position: top; }
+  .crop { width: 52mm; height: 98mm; overflow: hidden; border: 1px solid var(--line); background: #1f1f1f; }
+  .crop img { width: 100%; display: block; margin-top: -89mm; }
+  ul.tight { margin: 0 0 2mm; padding-left: 5mm; }
+  ul.tight li { margin-bottom: 0.9mm; }
+  .tiers { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3mm; margin: 2mm 0 3mm; }
+  .tier { border: 0.3mm solid var(--line); border-top: 1.6mm solid var(--c); border-radius: 1.4mm; padding: 2.2mm 3mm; font-size: 9.2pt; background: #fff; }
+  .tier b { display: block; font-size: 10pt; color: var(--c); letter-spacing: 0.4mm; }
+  .tier .st { color: var(--c); letter-spacing: 0.4mm; }
+  .tier img { width: 6.4mm; height: 6.4mm; float: right; image-rendering: pixelated; }
+</style>
+</head>
+<body>
+
+<!-- Símbolos reutilizables -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="pb" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="11" fill="#fff" stroke="#23272e" stroke-width="2"/>
+      <path d="M1 12a11 11 0 0 1 22 0z" fill="#e1380f" stroke="#23272e" stroke-width="2" stroke-linejoin="round"/>
+      <line x1="1" y1="12" x2="23" y2="12" stroke="#23272e" stroke-width="2"/>
+      <circle cx="12" cy="12" r="3.6" fill="#fff" stroke="#23272e" stroke-width="2"/>
+    </symbol>
+    <symbol id="coin" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="10.4" fill="#f5c400" stroke="#c99a00" stroke-width="1.6"/>
+      <circle cx="12" cy="12" r="6.4" fill="none" stroke="#c99a00" stroke-width="1.5"/>
+    </symbol>
+    <symbol id="arrow" viewBox="0 0 24 24">
+      <path d="M3 12h15M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- ================= PORTADA ================= -->
+<section class="page cover">
+  <div class="hero">
+    <div class="circle" style="width:34mm;height:34mm;left:24mm;top:12mm"></div>
+    <div class="circle" style="width:96mm;height:96mm;right:-26mm;top:-30mm"></div>
+    <div class="circle" style="width:56mm;height:56mm;left:-18mm;top:74mm"></div>
+    <div class="circle" style="width:34mm;height:34mm;right:34mm;top:124mm"></div>
+    <h1>Ctrl+Catch</h1>
+    <div class="sub">Guía del Entrenador</div>
+    <div class="tag">Captura Pokémon mientras programas</div>
+  </div>
+  <div class="band"></div>
+  <div class="ball"><i></i></div>
+  <div class="toc">
+    <h4>Dentro de esta guía</h4>
+    <ol>
+      <li><b>1</b> Qué es y qué necesitas</li>
+      <li><b>2</b> Instalación paso a paso</li>
+      <li><b>3</b> Tu primera partida</li>
+      <li><b>4</b> La mochila y la tienda</li>
+      <li><b>5</b> Las Poké Balls</li>
+      <li><b>6</b> La Pokédex y los logros</li>
+      <li><b>7</b> Evoluciones y estadísticas</li>
+      <li><b>8</b> Generaciones y colección</li>
+      <li><b>9</b> Ajustes, varios ordenadores y soluciones</li>
+    </ol>
+  </div>
+  <div class="ver">Versión 0.6.0 &nbsp;·&nbsp; Extensión para Visual Studio Code &nbsp;·&nbsp; Proyecto de aficionados</div>
+</section>
+
+<!-- ================= 1. QUÉ ES ================= -->
+<section class="page">
+  <div class="topbar"><svg><use href="#pb"/></svg> Ctrl+Catch &nbsp;·&nbsp; Guía del Entrenador</div>
+  <div class="content">
+    <h2 class="section"><svg><use href="#pb"/></svg> ¿Qué es Ctrl+Catch?</h2>
+    <p><strong>Ctrl+Catch</strong> (antes <em>Pokémon Companion</em>) es una extensión para Visual Studio Code que convierte tu rato de programar en una pequeña aventura. Mientras escribes código ganas monedas, de vez en cuando aparece un Pokémon salvaje en una barra lateral (con suerte, variocolor) y tú decides qué Poké Ball lanzarle. Cuantos más Pokémon distintos captures, más generaciones se desbloquean.</p>
+    <p>No hace falta cambiar tu forma de trabajar: el juego se alimenta de lo que ya haces, que es escribir y guardar. Además puedes <strong>evolucionar</strong> a tus Pokémon, completar <strong>logros</strong> que te dan Pokémon de recompensa y seguir tu colección en una <strong>Pokédex</strong>.</p>
+
+    <h3>El ciclo de juego</h3>
+    <div class="flow">
+      <div class="box"><em>1</em><b>Programas y guardas</b><span>texto nuevo = monedas</span></div>
+      <div class="arr" style="color:var(--red)"><svg><use href="#arrow"/></svg></div>
+      <div class="box"><em>2</em><b>Ganas monedas</b><span>una por cada 20 caracteres</span></div>
+      <div class="arr" style="color:var(--red)"><svg><use href="#arrow"/></svg></div>
+      <div class="box"><em>3</em><b>Aparece un Pokémon</b><span>salvaje, en el panel</span></div>
+
+      <div class="arr" style="color:var(--blue);transform:rotate(-90deg)"><svg><use href="#arrow"/></svg></div><div></div><div></div><div></div>
+      <div class="arr" style="color:var(--red);transform:rotate(90deg)"><svg><use href="#arrow"/></svg></div>
+
+      <div class="box"><em>6</em><b>Compras y avanzas</b><span>balls, evoluciones, logros</span></div>
+      <div class="arr" style="color:var(--red);transform:rotate(180deg)"><svg><use href="#arrow"/></svg></div>
+      <div class="box"><em>5</em><b>Lo capturas</b><span>y cobras monedas</span></div>
+      <div class="arr" style="color:var(--red);transform:rotate(180deg)"><svg><use href="#arrow"/></svg></div>
+      <div class="box"><em>4</em><b>Lanzas una ball</b><span>tú eliges cuál</span></div>
+    </div>
+
+    <h3>Lo que necesitas</h3>
+    <div class="callout blue">
+      <div class="ct">Antes de empezar</div>
+      <p><strong>Visual Studio Code, versión 1.90 o superior.</strong> Para saber cuál tienes, abre el menú Ayuda &gt; Acerca de.</p>
+      <p><strong>Conexión a internet.</strong> Los datos y los dibujos de los Pokémon se descargan de la PokéAPI. Sin conexión no aparecen encuentros.</p>
+      <p><strong>Opcional:</strong> una cuenta de OneDrive (o cualquier carpeta compartida), si quieres continuar la misma partida en varios ordenadores.</p>
+    </div>
+
+    <h3>Tus datos y aviso legal</h3>
+    <p>La extensión no pide cuentas ni envía estadísticas. Solo se conecta a <strong>pokeapi.co</strong> (datos de los Pokémon) y a <strong>raw.githubusercontent.com</strong> (dibujos). Tu partida se guarda en Visual Studio Code y, si se detecta OneDrive, también en el archivo <code>partida.json</code> de tu carpeta de OneDrive. No se lee el contenido de tus archivos: solo se cuenta cuántos caracteres añades.</p>
+    <p class="muted">Pokémon y los nombres e imágenes de los Pokémon pertenecen a Nintendo, Game Freak, Creatures y The Pokémon Company. Este es un proyecto de aficionados, sin ánimo de lucro y sin relación con ellos, pensado para compartir entre amigos. No lo publiques ni lo vendas.</p>
+  </div>
+  <div class="footer"><svg><use href="#pb"/></svg></div>
+</section>
+
+<!-- ================= 2. INSTALACIÓN ================= -->
+<section class="page">
+  <div class="topbar"><svg><use href="#pb"/></svg> Ctrl+Catch &nbsp;·&nbsp; Guía del Entrenador</div>
+  <div class="content">
+    <h2 class="section"><svg><use href="#pb"/></svg> Instalación paso a paso</h2>
+    <p>La forma más sencilla es instalarla desde el <strong>Marketplace</strong> de Visual Studio Code: se instala en un clic y se actualiza sola.</p>
+
+    <div class="step"><div class="num">1</div><div>
+      <div class="title">Abre el panel de extensiones</div>
+      <p>En Visual Studio Code pulsa <span class="kbd">Ctrl+Shift+X</span>, o el icono de los cuatro cuadrados de la barra lateral.</p></div></div>
+    <div class="step"><div class="num">2</div><div>
+      <div class="title">Busca la extensión</div>
+      <p>Escribe <strong>Ctrl+Catch</strong> en el buscador. Comprueba que el autor es <strong>pablofdez</strong> y que el identificador es <code>pablofdez.pokemon-companion</code>.</p></div></div>
+    <div class="step"><div class="num">3</div><div>
+      <div class="title">Pulsa «Instalar»</div>
+      <p>Es todo. Si Visual Studio Code te pide recargar la ventana, pulsa <strong>Recargar</strong>.</p></div></div>
+    <div class="step"><div class="num">4</div><div>
+      <div class="title">Comprueba que funciona</div>
+      <p>Deben aparecer un icono de <strong>Poké Ball en la barra lateral</strong> y un contador de monedas <svg class="coin"><use href="#coin"/></svg> abajo a la derecha, con un pequeño botón de pausa a su lado. Escribe unas líneas de código, guarda con <span class="kbd">Ctrl+S</span> y verás subir las monedas.</p></div></div>
+
+    <h3>Método rápido desde la terminal</h3>
+    <p>Si prefieres la línea de comandos:</p>
+    <div style="background:var(--dark);color:#e8eaed;border-radius:1mm;padding:3mm 4mm;font-family:'DejaVu Sans Mono',Consolas,monospace;font-size:9pt;margin-bottom:3mm">code --install-extension pablofdez.pokemon-companion</div>
+
+    <h3>Sin Marketplace: con un archivo .vsix</h3>
+    <p>Si no puedes usar el Marketplace (por ejemplo, un ordenador sin acceso), descarga el archivo <code>.vsix</code> de la última versión en la página de <em>Releases</em> del proyecto (<code>github.com/pablofdez-git/pokemon-companion/releases</code>) y cópialo al ordenador. Después, en el panel de extensiones, pulsa los tres puntos (<code>···</code>) de la esquina superior derecha, elige <strong>Instalar desde VSIX…</strong> (en inglés, <em>Install from VSIX…</em>) y selecciona el archivo. O desde la terminal, en la carpeta donde esté:</p>
+    <div style="background:var(--dark);color:#e8eaed;border-radius:1mm;padding:3mm 4mm;font-family:'DejaVu Sans Mono',Consolas,monospace;font-size:9pt;margin-bottom:3mm">code --install-extension pokemon-companion-0.6.0.vsix</div>
+
+    <div class="callout red">
+      <div class="ct">Si algo falla</div>
+      <p><strong>«La extensión no es compatible con la versión … de Code».</strong> Tu Visual Studio Code es demasiado antiguo. Actualízalo (botón <strong>Actualizar</strong> de la barra superior, o Ayuda &gt; Buscar actualizaciones) y repite la instalación.</p>
+      <p><strong>No encuentro «Instalar desde VSIX…».</strong> Asegúrate de estar en el panel de extensiones y de pulsar los tres puntos de la parte superior de <em>ese</em> panel, no los del editor.</p>
+      <p><strong>No aparece el icono de la Poké Ball.</strong> Recarga la ventana: <span class="kbd">Ctrl+Shift+P</span> y escribe <code>Developer: Reload Window</code>.</p>
+    </div>
+    <div class="callout yellow">
+      <div class="ct">Consejo de entrenador</div>
+      <p>Si la instalaste desde el Marketplace, las versiones nuevas llegan solas y <strong>tu partida se conserva</strong>. Con un archivo <code>.vsix</code>, instala el nuevo encima del anterior. Para quitarla, búscala en Extensiones y pulsa <strong>Desinstalar</strong>.</p>
+    </div>
+  </div>
+  <div class="footer"><svg><use href="#pb"/></svg></div>
+</section>
+
+<!-- ================= 3. PRIMERA PARTIDA ================= -->
+<section class="page">
+  <div class="topbar"><svg><use href="#pb"/></svg> Ctrl+Catch &nbsp;·&nbsp; Guía del Entrenador</div>
+  <div class="content">
+    <h2 class="section"><svg><use href="#pb"/></svg> Tu primera partida</h2>
+
+    <div class="step"><div class="num">1</div><div>
+      <div class="title">Programa y guarda</div>
+      <p>Cada vez que guardas un archivo con texto nuevo ganas monedas <svg class="coin"><use href="#coin"/></svg>: una por cada 20 caracteres que hayas añadido (hace falta añadir al menos 20). Borrar texto, deshacer y rehacer <strong>no</strong> dan monedas, y pegar o autocompletar en bucle paga muy poco.</p></div></div>
+    <div class="step"><div class="num">2</div><div>
+      <div class="title">Aparece un Pokémon</div>
+      <p>Cuando un guardado te da monedas hay una probabilidad (un 25 % de fábrica, ajustable) de que aparezca un Pokémon salvaje. Se abre solo el panel <strong>Encuentro</strong>, sin quitarte el foco del editor, y abajo sale un aviso. Después de un encuentro hay un descanso de un minuto (también ajustable).</p></div></div>
+    <div class="step"><div class="num">3</div><div>
+      <div class="title">Elige una ball</div>
+      <p>Cada ball muestra cuántas tienes, su efecto en este lanzamiento y la probabilidad estimada de captura. Tienes <strong>45 segundos</strong>: una barra se vacía bajo el mensaje y cambia de color cuando queda poco.</p></div></div>
+    <div class="step"><div class="num">4</div><div>
+      <div class="title">Mira cómo se resuelve</div>
+      <p>La ball vuela, el Pokémon entra en ella, cae y se sacude. Si lo captura, cobras entre 5 y 30 monedas según lo difícil que fuera. Si se resiste puedes volver a intentarlo, pero cada fallo tiene un 30 % de que el Pokémon huya.</p></div></div>
+
+    <div class="gallery" style="margin-top:4mm">
+      <figure><img class="shot" src="../../media/screenshots/encuentro.png"><figcaption>El encuentro: eliges la ball</figcaption></figure>
+      <figure><img class="shot" src="../../media/screenshots/lanzamiento.png"><figcaption>El lanzamiento</figcaption></figure>
+      <figure><img class="shot" src="../../media/screenshots/capturado.png"><figcaption>¡Capturado!</figcaption></figure>
+    </div>
+
+    <div class="callout yellow">
+      <div class="ct">Consejos de entrenador</div>
+      <p><strong>Un sitio fijo para el panel.</strong> Si el panel Encuentro te quita el sitio del Explorador cada vez que aparece un Pokémon, arrastra el icono de la Poké Ball de la barra lateral hasta la <strong>barra lateral secundaria</strong> (la de la derecha). Si no la ves, actívala con el botón de diseño de la esquina superior derecha.</p>
+      <p><strong>Pausa para clase.</strong> ¿Vas a compartir pantalla o a corregir en la pizarra? Pulsa el <strong>botón de pausa</strong> de la barra de estado, junto al contador de monedas: se esconden las monedas, la Poké Ball y los paneles, y no salen encuentros hasta que lo reanudes. Lo que escribas en pausa no cuenta.</p>
+    </div>
+  </div>
+  <div class="footer"><svg><use href="#pb"/></svg></div>
+</section>
+
+<!-- ================= 4. MOCHILA Y TIENDA ================= -->
+<section class="page">
+  <div class="topbar"><svg><use href="#pb"/></svg> Ctrl+Catch &nbsp;·&nbsp; Guía del Entrenador</div>
+  <div class="content">
+    <h2 class="section"><svg><use href="#pb"/></svg> La mochila y la tienda</h2>
+    <div class="two">
+      <figure style="flex:none">
+        <div class="crop"><img src="../../media/screenshots/encuentro.png"></div>
+        <figcaption style="width:52mm">La Mochila (captura de una versión anterior: ahora también incluye las líneas Logros y Estadísticas)</figcaption>
+      </figure>
+      <div class="grow">
+        <p>Debajo del panel Encuentro está la <strong>Mochila</strong>, dividida en estas partes:</p>
+        <p><strong>Progreso.</strong> La primera línea te dice cuántos Pokémon distintos te faltan para desbloquear la siguiente generación.</p>
+        <p><strong>Pokéballs.</strong> Todos los tipos, con las que tienes de cada uno. Pasa el ratón por encima para ver su dibujo grande y su regla.</p>
+        <p><strong>Logros.</strong> Una línea con cuántos llevas (por ejemplo <em>5/32</em>) y si tienes recompensas pendientes. Al pulsarla se abre la pestaña de logros.</p>
+        <p><strong>Estadísticas.</strong> Una sección plegable con tu racha de días, caracteres escritos, monedas, encuentros, capturas y más (ver página 10).</p>
+        <p><strong>Pokémon capturados.</strong> Ordenados por número de Pokédex. Al pasar el ratón ves su sprite grande y cuántas veces lo has capturado. Los variocolor llevan una <span class="star">★</span>.</p>
+        <p><strong>Botones de cada Pokémon.</strong> A la derecha de cada uno aparecen, según el caso, la flecha hacia arriba para <strong>evolucionarlo</strong> y el carrito para <strong>venderlo</strong>.</p>
+      </div>
+    </div>
+
+    <h3>La tienda</h3>
+    <p>Pulsa el contador de monedas <svg class="coin"><use href="#coin"/></svg> de la barra de estado (abajo a la derecha), o usa el comando <em>Ctrl+Catch: Abrir tienda</em>. Eliges la ball y cuántas quieres; si no te llega el dinero, te dice cuánto te falta.</p>
+
+    <h3>Repetidos y venta</h3>
+    <p>Si tienes el mismo Pokémon más de una vez, aparece <strong>xN</strong> a su lado y un botón de carrito: lo vendes por el 60 % de lo que pagaron al capturarlo. Siempre te quedas con una copia. Los variocolor <strong>no se pueden vender</strong>.</p>
+
+    <div class="callout yellow">
+      <div class="ct">Consejo de entrenador</div>
+      <p>No gastes todo en balls caras: con las monedas también evolucionas Pokémon (página 10). Y si te quedas sin balls, el Pokémon que aparezca se irá; las <strong>recompensas de logros</strong> esperan a que tengas alguna.</p>
+    </div>
+  </div>
+  <div class="footer"><svg><use href="#pb"/></svg></div>
+</section>
+
+<!-- ================= 5. POKÉ BALLS ================= -->
+<section class="page">
+  <div class="topbar"><svg><use href="#pb"/></svg> Ctrl+Catch &nbsp;·&nbsp; Guía del Entrenador</div>
+  <div class="content">
+    <h2 class="section"><svg><use href="#pb"/></svg> Las Poké Balls</h2>
+    <p>Todas parten de la misma fórmula. La <strong>probabilidad de captura</strong> es el ratio de captura del Pokémon (un número entre 3 y 255 que indica lo difícil que es) dividido entre 255, multiplicado por el efecto de la ball. Un Rattata, con ratio 255, cae siempre con una Poké Ball; un Mewtwo, con ratio 3, casi nunca.</p>
+
+    <table class="tbl balls">
+      <tr><th></th><th>Ball</th><th>Precio</th><th>Cómo funciona</th></tr>
+      <tr><td><img class="ball" src="img/pokeball.png"></td><td>Poké Ball</td><td>10 <svg class="coin"><use href="#coin"/></svg></td><td>Captura <strong>×1</strong>. La ball básica.</td></tr>
+      <tr><td><img class="ball" src="img/greatball.png"></td><td>Super Ball</td><td>30 <svg class="coin"><use href="#coin"/></svg></td><td>Captura <strong>×1,5</strong>.</td></tr>
+      <tr><td><img class="ball" src="img/ultraball.png"></td><td>Ultra Ball</td><td>70 <svg class="coin"><use href="#coin"/></svg></td><td>Captura <strong>×2</strong>.</td></tr>
+      <tr><td><img class="ball" src="img/quickball.png"></td><td>Quick Ball</td><td>80 <svg class="coin"><use href="#coin"/></svg></td><td><strong>×5</strong> en el primer lanzamiento del encuentro y ×1 después.</td></tr>
+      <tr><td><img class="ball" src="img/duskball.png"></td><td>Dusk Ball</td><td>40 <svg class="coin"><use href="#coin"/></svg></td><td><strong>×3</strong> de noche (de 20:00 a 06:00 según el reloj del ordenador) y ×1 de día.</td></tr>
+      <tr><td><img class="ball" src="img/repeatball.png"></td><td>Repeat Ball</td><td>50 <svg class="coin"><use href="#coin"/></svg></td><td><strong>×3,5</strong> si ya tienes esa especie en la mochila, ×1 si no.</td></tr>
+      <tr><td><img class="ball" src="img/timerball.png"></td><td>Timer Ball</td><td>40 <svg class="coin"><use href="#coin"/></svg></td><td>Empieza en ×1 y sube ×0,5 por cada lanzamiento previo, hasta <strong>×4</strong>.</td></tr>
+      <tr><td><img class="ball" src="img/masterball.png"></td><td>Master Ball</td><td>1000 <svg class="coin"><use href="#coin"/></svg></td><td><strong>Captura segura</strong>. Cuesta una fortuna.</td></tr>
+    </table>
+
+    <div class="callout yellow">
+      <div class="ct">Trucos de entrenador</div>
+      <p><strong>Quick Ball:</strong> contra cualquier Pokémon con ratio de captura de 51 o más, en el primer lanzamiento captura segura.</p>
+      <p><strong>Timer Ball:</strong> cuenta todos los lanzamientos del encuentro, no solo los suyos. Úsala después de haber fallado con otras balls.</p>
+      <p><strong>Repeat Ball:</strong> perfecta para conseguir repetidos, que luego puedes vender.</p>
+      <p><strong>Dusk Ball:</strong> si programas de noche, es la mejor relación calidad-precio.</p>
+    </div>
+  </div>
+  <div class="footer"><svg><use href="#pb"/></svg></div>
+</section>
+
+<!-- ================= 6a. POKÉDEX ================= -->
+<section class="page">
+  <div class="topbar"><svg><use href="#pb"/></svg> Ctrl+Catch &nbsp;·&nbsp; Guía del Entrenador</div>
+  <div class="content">
+    <h2 class="section"><svg><use href="#pb"/></svg> La Pokédex</h2>
+    <p>Pulsa el <strong>botón del libro</strong> de la cabecera de la Mochila (o el comando <em>Ctrl+Catch: Abrir Pokédex</em>) para ver tu colección en una pestaña grande, con todos los Pokémon de las generaciones que tienes desbloqueadas:</p>
+    <figure style="margin:3mm 0 3mm">
+      <img class="shot" style="width:100%" src="pokedex.png">
+      <figcaption>La Pokédex: los capturados en color y los que faltan como silueta</figcaption>
+    </figure>
+    <ul class="tight">
+      <li>Los que aún <strong>no has capturado</strong> aparecen como una silueta con <em>???</em>, para que sepas lo que te falta.</li>
+      <li>Una etiqueta <strong>xN</strong> indica los repetidos, y una <span class="star">★</span> que tienes su versión variocolor.</li>
+      <li>Cada generación tiene su barra de progreso y su contador (por ejemplo <em>39/151</em>). Las que aún no has desbloqueado salen como <em>Bloqueada</em>.</li>
+      <li>Los botones <strong>Todos</strong>, <strong>Capturados</strong> y <strong>Me faltan</strong> filtran la cuadrícula, y el filtro se recuerda.</li>
+      <li>Se actualiza sola mientras está abierta: cada captura, venta o evolución se ve al momento.</li>
+    </ul>
+    <div class="callout blue">
+      <div class="ct">Para completarla</div>
+      <p>Usa el filtro <strong>Me faltan</strong> para ver solo lo que te falta. Si evolucionas la única copia de un Pokémon, la especie de partida deja de estar capturada y volverá a salir como silueta.</p>
+    </div>
+  </div>
+  <div class="footer"><svg><use href="#pb"/></svg></div>
+</section>
+
+<!-- ================= 6b. LOGROS ================= -->
+<section class="page">
+  <div class="topbar"><svg><use href="#pb"/></svg> Ctrl+Catch &nbsp;·&nbsp; Guía del Entrenador</div>
+  <div class="content">
+    <h2 class="section"><svg><use href="#pb"/></svg> Los logros</h2>
+    <p>Hay <strong>32 logros</strong> repartidos en nueve grupos. Pulsa el <strong>botón del trofeo</strong> de la cabecera de la Mochila (junto al del libro), o la línea <em>Logros</em>, para abrir la pestaña: cada tarjeta muestra qué piden, cuánto te falta y qué recompensa dan.</p>
+    <figure style="margin:2mm 0 3mm">
+      <img class="shot" style="width:100%" src="logros.png">
+      <figcaption>La pestaña de logros: conseguidos (con borde de color) y por conseguir (con su progreso)</figcaption>
+    </figure>
+
+    <h3>Cada logro da un Pokémon de recompensa</h3>
+    <p>Cuanto más difícil es el logro (de una a cuatro estrellas), más raro es el Pokémon que aparece:</p>
+    <div class="tiers">
+      <div class="tier" style="--c:#4caf50"><img src="img/pokeball.png"><b>★☆☆☆</b>Común<br><span class="muted">Fáciles de capturar</span></div>
+      <div class="tier" style="--c:#2f9ae0"><img src="img/greatball.png"><b>★★☆☆</b>Poco común<br><span class="muted">Dificultad media</span></div>
+      <div class="tier" style="--c:#9b5fd0"><img src="img/ultraball.png"><b>★★★☆</b>Raro<br><span class="muted">Difíciles</span></div>
+      <div class="tier" style="--c:#d9a400"><img src="img/masterball.png"><b>★★★★</b>Legendario<br><span class="muted">Los más esquivos</span></div>
+    </div>
+    <ul class="tight small">
+      <li>La recompensa sale como un <strong>encuentro especial</strong> en el siguiente guardado que dé monedas (o unos segundos después, si el logro lo completó una captura). No tiene descanso.</li>
+      <li>Ese Pokémon <strong>no huye</strong> si fallas: puedes intentarlo con calma. Si lo dejas escapar (por ejemplo, no respondes en 45 segundos), la recompensa <strong>sigue pendiente</strong> y vuelve a salir.</li>
+      <li>Necesitas tener <strong>al menos una ball</strong> y el juego no puede estar en pausa.</li>
+    </ul>
+  </div>
+  <div class="footer"><svg><use href="#pb"/></svg></div>
+</section>
+
+<!-- ================= 6c. LISTA DE LOGROS ================= -->
+<section class="page">
+  <div class="topbar"><svg><use href="#pb"/></svg> Ctrl+Catch &nbsp;·&nbsp; Guía del Entrenador</div>
+  <div class="content">
+    <h2 class="section"><svg><use href="#pb"/></svg> Todos los logros</h2>
+    <p>Cada grupo tiene varios niveles; consigues el siguiente al llegar a su objetivo.</p>
+    <table class="tbl">
+      <tr><th style="width:30mm">Grupo</th><th>Qué cuenta</th><th style="width:62mm">Objetivos (de fácil a difícil)</th></tr>
+      <tr><td>Capturas</td><td>Pokémon capturados en total (incluye los vendidos)</td><td>1 · 25 · 100 · 500</td></tr>
+      <tr><td>Especies</td><td>Especies distintas que tienes ahora</td><td>10 · 50 · 150 · 400</td></tr>
+      <tr><td>Constancia</td><td>Mejor racha de días seguidos programando</td><td>3 · 7 · 30 · 100 días</td></tr>
+      <tr><td>Código</td><td>Caracteres escritos que han dado monedas</td><td>2.000 · 25.000 · 150.000 · 1.000.000</td></tr>
+      <tr><td>Monedas</td><td>Monedas ganadas en total</td><td>500 · 5.000 · 30.000</td></tr>
+      <tr><td>Encuentros</td><td>Encuentros vividos, y balls lanzadas</td><td>10 · 100 · 500 encuentros<br>50 · 500 balls</td></tr>
+      <tr><td>Evoluciones</td><td>Pokémon evolucionados</td><td>1 · 10 · 40</td></tr>
+      <tr><td>Variocolores</td><td>Especies variocolor distintas</td><td>1 · 5</td></tr>
+      <tr><td>Generaciones</td><td>Generaciones desbloqueadas</td><td>2.ª · 5.ª · 9.ª</td></tr>
+    </table>
+
+    <div class="callout yellow">
+      <div class="ct">Consejos de entrenador</div>
+      <p><strong>Los logros que ya cumples se dan al actualizar.</strong> Si instalas la versión con logros en una partida avanzada, varios se completan de golpe y cada uno deja su recompensa pendiente: irán saliendo de una en una en los siguientes guardados.</p>
+      <p><strong>La racha cuenta días, no horas.</strong> Un día cuenta si algún guardado te dio monedas. Si dejas pasar un día entero, la racha vuelve a empezar (tu mejor racha se conserva).</p>
+      <p><strong>Se comparten entre ordenadores.</strong> Un logro conseguido (o su recompensa cobrada) en uno vale también en el otro.</p>
+    </div>
+  </div>
+  <div class="footer"><svg><use href="#pb"/></svg></div>
+</section>
+
+<!-- ================= 7. EVOLUCIONES Y ESTADÍSTICAS ================= -->
+<section class="page">
+  <div class="topbar"><svg><use href="#pb"/></svg> Ctrl+Catch &nbsp;·&nbsp; Guía del Entrenador</div>
+  <div class="content">
+    <h2 class="section"><svg><use href="#pb"/></svg> Evoluciones</h2>
+    <p>Los Pokémon de la Mochila que pueden evolucionar muestran un botón con una <strong>flecha hacia arriba</strong>. La primera vez tarda un momento en aparecer, mientras la extensión consulta la PokéAPI. Al pulsarlo:</p>
+    <div class="step"><div class="num">1</div><div><div class="title">Elige la evolución</div>
+      <p>Si solo tiene una, se te muestra directamente con su precio. Si tiene varias (como Eevee) eliges cuál.</p></div></div>
+    <div class="step"><div class="num">2</div><div><div class="title">Paga con monedas</div>
+      <p>Cuesta entre <strong>30 y 150</strong> <svg class="coin"><use href="#coin"/></svg>, según lo difícil que sea de capturar la evolución.</p></div></div>
+    <div class="step"><div class="num">3</div><div><div class="title">Se gasta una copia</div>
+      <p>La copia que evolucionas se convierte en la evolución. Si era <strong>variocolor</strong>, la evolución también lo es.</p></div></div>
+
+    <ul class="tight small">
+      <li>Solo puedes evolucionar a Pokémon de las <strong>generaciones que ya has desbloqueado</strong>.</li>
+      <li>No hacen falta los requisitos de los juegos (nivel, intercambio u objeto): cualquier evolución se compra con monedas.</li>
+      <li>Una evolución nueva cuenta como especie capturada, así que puede <strong>desbloquear una generación</strong> y avanzar logros.</li>
+      <li>Puedes evolucionar incluso tu única copia; en ese caso la especie de partida pasa a figurar como no capturada.</li>
+    </ul>
+
+    <h2 class="section" style="margin-top:7mm"><svg><use href="#pb"/></svg> Estadísticas</h2>
+    <p>La sección plegable <strong>Estadísticas</strong> de la Mochila resume tu partida:</p>
+    <table class="tbl">
+      <tr><th style="width:52mm">Dato</th><th>Qué significa</th></tr>
+      <tr><td>Racha</td><td>Días seguidos programando (y tu mejor racha). Un día cuenta si algún guardado te dio monedas.</td></tr>
+      <tr><td>Días programando</td><td>Días distintos con algún guardado que dio monedas.</td></tr>
+      <tr><td>Caracteres escritos</td><td>Caracteres que han dado monedas.</td></tr>
+      <tr><td>Monedas ganadas y gastadas</td><td>Lo que has ganado (escribiendo, capturando, vendiendo) y gastado (balls y evoluciones).</td></tr>
+      <tr><td>Encuentros y huidas</td><td>Cuántos has vivido y cuántos terminaron sin captura.</td></tr>
+      <tr><td>Capturas</td><td>Incluye los que vendiste después; el porcentaje es sobre los encuentros.</td></tr>
+      <tr><td>Balls lanzadas, Evoluciones, Variocolores</td><td>Los contadores correspondientes.</td></tr>
+    </table>
+    <p class="muted">Las estadísticas se cuentan desde la versión 0.3.0; en partidas anteriores empiezan en cero.</p>
+  </div>
+  <div class="footer"><svg><use href="#pb"/></svg></div>
+</section>
+
+<!-- ================= 8. GENERACIONES ================= -->
+<section class="page">
+  <div class="topbar"><svg><use href="#pb"/></svg> Ctrl+Catch &nbsp;·&nbsp; Guía del Entrenador</div>
+  <div class="content">
+    <h2 class="section"><svg><use href="#pb"/></svg> Generaciones y colección</h2>
+    <p>Empiezas con la primera generación (Kanto). Para desbloquear la siguiente tienes que haber capturado Pokémon <strong>distintos</strong>: el 25 % de los que ya están disponibles. Los repetidos no cuentan, y como solo puedes vender repetidos, vender nunca te hace perder progreso.</p>
+    <p>La Mochila te dice siempre cuántos te faltan, y al desbloquear una generación sale un aviso. A partir de ese momento los encuentros pueden ser de cualquiera de las generaciones que tengas.</p>
+
+    <table class="tbl">
+      <tr><th style="width:16mm">Gen.</th><th>Región</th><th>Pokédex</th><th>Para desbloquearla necesitas</th></tr>
+      <tr><td>1</td><td>Kanto</td><td>1 – 151</td><td>Desde el principio</td></tr>
+      <tr><td>2</td><td>Johto</td><td>152 – 251</td><td>38 Pokémon distintos</td></tr>
+      <tr><td>3</td><td>Hoenn</td><td>252 – 386</td><td>63 Pokémon distintos</td></tr>
+      <tr><td>4</td><td>Sinnoh</td><td>387 – 493</td><td>97 Pokémon distintos</td></tr>
+      <tr><td>5</td><td>Teselia</td><td>494 – 649</td><td>124 Pokémon distintos</td></tr>
+      <tr><td>6</td><td>Kalos</td><td>650 – 721</td><td>163 Pokémon distintos</td></tr>
+      <tr><td>7</td><td>Alola</td><td>722 – 809</td><td>181 Pokémon distintos</td></tr>
+      <tr><td>8</td><td>Galar</td><td>810 – 905</td><td>203 Pokémon distintos</td></tr>
+      <tr><td>9</td><td>Paldea</td><td>906 – 1025</td><td>227 Pokémon distintos</td></tr>
+    </table>
+    <p class="muted">Los Pokémon de las primeras cinco generaciones se muestran con su sprite animado. Los de la sexta en adelante usan un sprite fijo con un suave balanceo.</p>
+
+    <div class="callout yellow" style="margin-top:6mm">
+      <div class="ct">Pokémon variocolor <span class="star">★</span></div>
+      <p>De vez en cuando (1 de cada 50 encuentros) aparece un Pokémon <strong>variocolor</strong>: el mismo Pokémon con los colores cambiados. Lo reconocerás por los <strong>destellos</strong> que parpadean a su alrededor y por la <span class="star">★</span> junto a su nombre.</p>
+      <p>Se captura con las mismas probabilidades que uno normal, pero te da <strong>50 monedas extra</strong> de premio. En la Mochila y en la Pokédex aparece aparte del normal, con su <span class="star">★</span> y la etiqueta <em>variocolor</em>. <strong>No se puede vender</strong>, y para desbloquear generaciones cuenta como la misma especie que el normal.</p>
+    </div>
+  </div>
+  <div class="footer"><svg><use href="#pb"/></svg></div>
+</section>
+
+<!-- ================= 9a. VARIOS ORDENADORES Y AJUSTES ================= -->
+<section class="page">
+  <div class="topbar"><svg><use href="#pb"/></svg> Ctrl+Catch &nbsp;·&nbsp; Guía del Entrenador</div>
+  <div class="content">
+    <h2 class="section"><svg><use href="#pb"/></svg> Varios ordenadores y ajustes</h2>
+    <h3>Jugar en varios ordenadores</h3>
+    <p>Tu partida se guarda en Visual Studio Code. Si tienes <strong>OneDrive</strong>, además se copia en un archivo <code>PokemonCompanion/partida.json</code> dentro de tu carpeta de OneDrive: se escribe unos segundos después de cada cambio y se lee al abrir VS Code y al volver a la ventana. Así puedes continuar en otro ordenador con la misma cuenta. Tu partida es solo tuya: cada persona usa su propio OneDrive.</p>
+    <div class="callout blue">
+      <div class="ct">Para no perder progreso</div>
+      <p>Si cambias la partida en los dos ordenadores por separado, la extensión te pregunta qué hacer y muestra un resumen de cada una: <strong>Combinar las dos</strong> (se juntan las capturas, se suman las monedas y balls ganadas o gastadas en cada uno, y también las estadísticas y los logros), <strong>Usar la de OneDrive</strong> o <strong>Mantener esta</strong>. Combinar es lo más seguro.</p>
+      <p>Cierra VS Code en un ordenador y espera a que OneDrive termine de subir antes de abrirlo en el otro.</p>
+      <p>Si no usas OneDrive en Windows, o estás en Mac o Linux, la copia no se hace sola: indica una carpeta en Ajustes (<span class="kbd">Ctrl+,</span>) &gt; <code>pokemonCompanion.syncFolder</code>.</p>
+    </div>
+
+    <h3>Ajustes</h3>
+    <p>Abre los ajustes con <span class="kbd">Ctrl+,</span> y escribe <strong>Ctrl+Catch</strong> en el buscador. Los cambios valen al momento, sin recargar:</p>
+    <table class="tbl compact">
+      <tr><th style="width:60mm">Ajuste</th><th>Qué hace</th></tr>
+      <tr><td><code>pokemonCompanion.encounterChance</code></td><td>Probabilidad de que aparezca un Pokémon tras un guardado que da monedas. De 0,05 a 1; por defecto <strong>0,25</strong> (un 25 %).</td></tr>
+      <tr><td><code>pokemonCompanion.encounterCooldownSeconds</code></td><td>Segundos mínimos entre un encuentro y el siguiente. De 10 a 3600; por defecto <strong>60</strong>.</td></tr>
+      <tr><td><code>pokemonCompanion.syncFolder</code></td><td>Carpeta para la copia de la partida. Si está vacía, se usa la carpeta <code>PokemonCompanion</code> de tu OneDrive.</td></tr>
+    </table>
+
+    <h3>Comandos</h3>
+    <p>Se ejecutan con <span class="kbd">Ctrl+Shift+P</span> y escribiendo su nombre:</p>
+    <table class="tbl compact">
+      <tr><th style="width:68mm">Comando</th><th>Para qué sirve</th></tr>
+      <tr><td>Ctrl+Catch: Abrir tienda</td><td>Abre la tienda de balls.</td></tr>
+      <tr><td>Ctrl+Catch: Abrir Pokédex</td><td>Abre la pestaña con tu colección.</td></tr>
+      <tr><td>Ctrl+Catch: Abrir logros</td><td>Abre la pestaña de logros.</td></tr>
+      <tr><td>Ctrl+Catch: Pausar o reanudar</td><td>Esconde el juego y detiene monedas y encuentros. Es lo mismo que el botón de pausa de la barra de estado.</td></tr>
+      <tr><td>Ctrl+Catch: Sincronizar partida ahora</td><td>Sincroniza y te dice dónde está el archivo de la partida.</td></tr>
+      <tr><td>Ctrl+Catch: Reiniciar progreso</td><td>Empieza una partida nueva desde cero (pide confirmación).</td></tr>
+    </table>
+
+  </div>
+  <div class="footer"><svg><use href="#pb"/></svg></div>
+</section>
+
+<!-- ================= 9b. PROBLEMAS ================= -->
+<section class="page">
+  <div class="topbar"><svg><use href="#pb"/></svg> Ctrl+Catch &nbsp;·&nbsp; Guía del Entrenador</div>
+  <div class="content">
+
+    <h2 class="section"><svg><use href="#pb"/></svg> Problemas frecuentes</h2>
+    <table class="tbl">
+      <tr><th style="width:46mm">Problema</th><th>Qué hacer</th></tr>
+      <tr><td>Las monedas no suben</td><td>Hace falta añadir al menos 20 caracteres nuevos antes de guardar. Borrar, deshacer y rehacer no cuentan, y comprueba que el juego no está en pausa (el botón de la barra de estado).</td></tr>
+      <tr><td>No me sale ningún Pokémon</td><td>Comprueba que las monedas suben al guardar, que tienes internet y que ha pasado el descanso desde el último encuentro (por defecto, un minuto). Es cuestión de probabilidad: pueden hacer falta varios guardados. Puedes subirla en los ajustes.</td></tr>
+      <tr><td>Aparece el Pokémon pero no tengo balls</td><td>Abre la tienda con el contador de monedas y compra más. Sin balls, el Pokémon se va.</td></tr>
+      <tr><td>No veo el panel Encuentro</td><td>Pulsa el icono de la Poké Ball de la barra lateral. Es la primera sección, encima de la Mochila.</td></tr>
+      <tr><td>No me salen los botones de evolucionar</td><td>Hace falta internet y un momento de espera la primera vez. Solo salen en los Pokémon con una evolución disponible en las generaciones que tienes desbloqueadas.</td></tr>
+      <tr><td>La recompensa de un logro no aparece</td><td>Necesitas al menos una ball y que el juego no esté en pausa. Sale en el siguiente guardado que dé monedas. Si la dejaste escapar, sigue pendiente.</td></tr>
+      <tr><td>No se sincroniza con el otro ordenador</td><td>Ejecuta <em>Ctrl+Catch: Sincronizar partida ahora</em> para ver dónde está el archivo. Comprueba que OneDrive ha terminado de subirlo o indica una carpeta en los ajustes.</td></tr>
+      <tr><td>Quiero empezar de cero</td><td>Ejecuta <span class="kbd">Ctrl+Shift+P</span> y busca <strong>Ctrl+Catch: Reiniciar progreso</strong>. Borra monedas, balls, Pokémon, logros y estadísticas, también en los demás ordenadores sincronizados.</td></tr>
+    </table>
+
+    <div class="callout yellow" style="margin-top:7mm">
+      <div class="ct">¿Algo más?</div>
+      <p>Si encuentras un fallo o tienes una idea, puedes contarlo en la página del proyecto: <code>github.com/pablofdez-git/pokemon-companion/issues</code>. Esta guía se corresponde con la versión <strong>0.6.0</strong>; si instalas una más nueva, puede haber novedades que aún no aparezcan aquí.</p>
+    </div>
+    <p style="text-align:center;margin-top:12mm" class="muted">¡Buena caza, entrenador!</p>
+  </div>
+  <div class="footer"><svg><use href="#pb"/></svg></div>
+</section>
+
+<script>
+  // Ajusta el ancho de las páginas (A4 = 210 mm = 794 px) al de la ventana
+  (function () {
+    var A4_WIDTH_PX = 794;
+    var MAX_ZOOM = 1.5; // ampliación máxima en pantallas grandes: sube o baja este valor a tu gusto
+    function ajustar() {
+      if (window.matchMedia('print').matches) {
+        return;
+      }
+      var ajuste = document.documentElement.clientWidth / A4_WIDTH_PX;
+      document.body.style.zoom = Math.max(1, Math.min(MAX_ZOOM, ajuste));
+    }
+    window.addEventListener('resize', ajustar);
+    ajustar();
+  })();
+</script>
+</body>
+</html>

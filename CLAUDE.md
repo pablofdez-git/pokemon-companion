@@ -40,7 +40,7 @@ npm run package  # genera pokemon-companion-<versión>.vsix (vsce, con out/ limp
 
 - Para probar: **F5** en VS Code (`.vscode/launch.json`) abre una ventana *Extension Development Host*.
 - Entrada: `out/extension.js` (compilado desde `src/extension.ts`). Activación: `onStartupFinished`.
-- VS Code mínimo: `^1.138.0`. Node con `fetch` global (se usa directamente, sin librerías HTTP).
+- VS Code mínimo: `^1.90.0` (campo `engines.vscode` de `package.json`). Node con `fetch` global (se usa directamente, sin librerías HTTP).
 - Tests en `src/test/*.test.ts` (Mocha, estilo `suite`/`test`), uno por módulo de `game/` y `data/syncFile.ts`. Se ejecutan dentro de un VS Code de prueba con `npm test`. Para lo que usa `StateManager`, se usa `FakeMemento` (`src/test/fakeMemento.ts`).
 
 ## Estructura
@@ -78,6 +78,7 @@ src/
     evolution.ts          evolveFromBackpack(): QuickPick de evoluciones
     pokedexPanel.ts       WebviewPanel de la Pokédex (pestaña del editor, se refresca con onDidChange)
     achievementsPanel.ts  WebviewPanel de los Logros (misma estructura que la Pokédex)
+docs/guia/                Guía del entrenador en PDF (código fuente, ver más abajo)
 media/
   encounter.js / .css     Código del webview del encuentro (JS plano, sin bundler) y estilos
   pokedex.js / .css       Webview de la Pokédex (cuadrícula, filtros; recuerda el filtro con vscode.setState)
@@ -146,6 +147,15 @@ media/
 - Para añadir un logro: una entrada en `ACHIEVEMENTS` con id **estable** (se guarda en las partidas). Se combinan en `mergeStates` por unión.
 - **Pestaña de Logros** (`ui/achievementsPanel.ts`, `media/achievements.*`, como la Pokédex): se abre con `pokemonCompanion.openAchievements` (botón `$(trophy)` junto al de la Pokédex en la cabecera de la Mochila, o la línea "Logros" de la Mochila). `buildAchievements(state)` (pura, testeada) agrupa los logros (`ACHIEVEMENT_GROUPS`) con su progreso; protocolo igual que la Pokédex: panel → `ready`; extensión → `update` con `achievements` y `tierBalls` (URL de la ball de cada nivel: Poké, Super, Ultra y Master). Filtros Todos / Conseguidos / Por conseguir, recordados con `vscode.setState`.
 - Cada logro lleva `group` (uno de `ACHIEVEMENT_GROUPS`).
+
+### Guía del entrenador en PDF (`docs/guia/`)
+- Guía para usuarios (instalación, primera partida, mochila, balls, Pokédex, logros, evoluciones, ajustes y problemas frecuentes). El PDF final es `Ctrl-Catch-Guia-del-Entrenador.pdf` en la raíz (fuera de git y del `.vsix`; `docs/**` y `*.pdf` están en `.vscodeignore`).
+- Se escribe en `docs/guia/guia.html` (A4, una `<section class="page">` por página, con cabecera y pie dentro de cada una: **cada página tiene alto fijo y lo que sobra se recorta**, así que hay que mirar el PDF después de tocar el texto). El número de página sale de un contador CSS; si se mueve contenido, revisar las referencias del tipo "ver página 10".
+- Para generarla hace falta Chrome, Edge o Chromium (`navegador.js` lo busca):
+  - `npm run compile` y `node docs/guia/capturas.js`: regenera `logros.png`, `pokedex.png` e `img/` (sprites de las balls) pintando las pestañas reales (`media/*.css` y `*.js`) con una partida de ejemplo. Necesita internet (PokéAPI).
+  - `node docs/guia/construir.js`: genera el PDF en la raíz.
+- Las capturas de la Mochila y el Encuentro son reales y salen de `media/screenshots/` (las mismas del README); no se pueden generar desde el código, así que hay que sustituirlas a mano si cambia mucho la interfaz (la de la Mochila no incluye todavía las líneas Logros y Estadísticas).
+- **Hay que actualizarla en cada versión que cambie algo visible** (instalación, pantallas, precios, ajustes, comandos). Los datos que cita salen del código: precios de `game/items.ts`, umbrales de `game/generations.ts` y `game/achievements.ts`, probabilidades de `game/encounter.ts`, versión mínima de `package.json`. Sin emojis, como el resto del proyecto (la moneda de la guía es un SVG dibujado).
 
 ### Generaciones (`game/generations.ts`)
 - Para desbloquear la siguiente hay que tener `ceil(maxPokemonId(actual) × UNLOCK_FRACTION)` especies **distintas** (los repetidos no cuentan). Puede subir más de una de golpe.
@@ -217,7 +227,7 @@ Publicada en el Marketplace como `pablofdez.pokemon-companion`; la versión actu
 **Cómo se trabaja cada novedad:**
 1. Implementar con su test. La lógica pura va en `game/`.
 2. Probar con F5. No instalar el `.vsix` local si tiene la misma versión que la de la tienda.
-3. Añadirla a `## [Sin publicar]` en el CHANGELOG y al README.
+3. Añadirla a `## [Sin publicar]` en el CHANGELOG y al README, y a la guía (`docs/guia/guia.html`) si cambia algo que ve el usuario.
 4. Hacer commit y push, y esperar a que pase el CI.
-5. Para publicar: subir `version`, renombrar `## [Sin publicar]` a `## [x.y.z] - fecha`, hacer commit y `git tag vx.y.z && git push origin main vx.y.z`. El CI crea la Release.
+5. Para publicar: actualizar la versión de la guía (portada, y el nombre del `.vsix` de la instalación), regenerar el PDF, subir `version`, renombrar `## [Sin publicar]` a `## [x.y.z] - fecha`, hacer commit y `git tag vx.y.z && git push origin main vx.y.z`. El CI crea la Release.
 6. El usuario sube el `.vsix` al Marketplace a mano (*Update* en marketplace.visualstudio.com/manage).

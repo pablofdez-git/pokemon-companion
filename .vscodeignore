@@ -10,6 +10,8 @@ CLAUDE.md
 **/eslint.config.mjs
 **/*.map
 media/screenshots/**
+docs/**
+*.pdf
 desktop.ini
 out/test/**
 **/*.ts
