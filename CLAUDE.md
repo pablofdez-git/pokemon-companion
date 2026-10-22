@@ -61,7 +61,8 @@ src/
     encounterView.ts      runEncounter(): bucle de un encuentro completo
 media/
   encounter.js / .css     Código del webview (JS plano, sin bundler) y estilos
-  backpack.svg, sell-*.svg  Iconos
+  sidebar.svg, sell-*.svg   Iconos (sidebar = barra de actividad; icon.png = icono de la tienda)
+  screenshots/              Capturas para el README (no se empaquetan)
 ```
 
 ## Cómo funciona

@@ -4,6 +4,10 @@
 
 > Proyecto de fans, no oficial y gratuito. No está afiliado ni respaldado por Nintendo, Game Freak ni The Pokémon Company. Pokémon y sus imágenes son marcas y material de sus respectivos propietarios. Los datos y sprites se cargan desde [PokéAPI](https://pokeapi.co) y no vienen incluidos en la extensión.
 
+| ¡Aparece un Pokémon salvaje! | Lanzas una ball… | ¡Capturado! |
+|:---:|:---:|:---:|
+| ![Un Kabuto salvaje aparece en el panel Encuentro](media/screenshots/encuentro.png) | ![La Quick Ball se sacude con el Pokémon dentro](media/screenshots/lanzamiento.png) | ![Kabuto capturado: +26 monedas](media/screenshots/capturado.png) |
+
 ## Cómo se juega
 
 1. **Programa y guarda.** Cada vez que guardas un archivo con texto nuevo escrito por ti, ganas monedas 🪙 (1 por cada 20 caracteres).

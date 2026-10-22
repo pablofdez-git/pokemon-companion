@@ -89,7 +89,7 @@
         {
           "id": "pokemonCompanion",
           "title": "Ctrl+Catch",
-          "icon": "media/backpack.svg"
+          "icon": "media/sidebar.svg"
         }
       ]
     },
@@ -99,13 +99,13 @@
           "type": "webview",
           "id": "pokemonCompanion.encounter",
           "name": "Encuentro",
-          "icon": "media/backpack.svg",
+          "icon": "media/sidebar.svg",
           "when": "!pokemonCompanion.paused"
         },
         {
           "id": "pokemonCompanion.backpack",
           "name": "Mochila",
-          "icon": "media/backpack.svg",
+          "icon": "media/sidebar.svg",
           "when": "!pokemonCompanion.paused"
         }
       ]

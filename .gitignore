@@ -3,3 +3,7 @@ dist
 node_modules
 .vscode-test/
 *.vsix
+
+# Capturas originales sin recortar (contienen apuntes personales)
+media/screenshots/Captura de pantalla*
+desktop.ini

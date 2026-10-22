@@ -9,6 +9,8 @@ CLAUDE.md
 **/tsconfig.json
 **/eslint.config.mjs
 **/*.map
+media/screenshots/**
+desktop.ini
 out/test/**
 **/*.ts
 **/.vscode-test.*
