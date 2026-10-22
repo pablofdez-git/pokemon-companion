@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { StateManager } from './data/state';
 import { SyncService } from './data/syncService';
-import { fetchPokemon } from './data/pokeapi';
+import { PokemonData, fetchPokemon } from './data/pokeapi';
 import { rewardForSave } from './game/economy';
 import { sellDuplicate } from './game/shop';
 import { maxPokemonId } from './game/generations';
@@ -41,9 +41,22 @@ export function activate(context: vscode.ExtensionContext) {
     }
 
     gate.start();
+
+    let pokemon: PokemonData;
     try {
       const maxId = maxPokemonId(state.get().generationsUnlocked);
-      const pokemon = await fetchPokemon(randomPokemonId(maxId));
+      pokemon = await fetchPokemon(randomPokemonId(maxId));
+    } catch (error) {
+      console.error('No se pudo cargar el Pokémon:', error);
+      vscode.window.setStatusBarMessage(
+        'Un Pokémon salvaje se ha escapado: no hay conexión con la PokéAPI',
+        5000
+      );
+      gate.cancel();
+      return;
+    }
+
+    try {
       const shiny = rollShiny(Boolean(pokemon.shinySpriteUrl));
       await runEncounter(state, encounterPanel, pokemon, shiny);
     } catch (error) {
@@ -128,6 +141,15 @@ export function activate(context: vscode.ExtensionContext) {
     ),
 
     vscode.commands.registerCommand('pokemonCompanion.resetProgress', async () => {
+      const confirm = 'Reiniciar';
+      const choice = await vscode.window.showWarningMessage(
+        '¿Seguro que quieres reiniciar el progreso? Perderás tus monedas, balls y Pokémon, también en los demás ordenadores sincronizados.',
+        { modal: true },
+        confirm
+      );
+      if (choice !== confirm) {
+        return;
+      }
       await state.reset();
       vscode.window.showInformationMessage('Progreso reiniciado');
     })

@@ -1,107 +1,130 @@
 {
   "name": "pokemon-companion",
-  "displayName": "Pokémon Companion",
+  "displayName": "Ctrl+Catch",
+  "description": "Juego de fans: gana monedas al guardar tu código y captura Pokémon salvajes mientras programas.",
   "publisher": "pablofdez",
   "repository": {
-  "type": "git",
-  "url": "https://github.com/pablofdez-git/pokemon-companion.git"
-},
-  "version": "0.0.5",
+    "type": "git",
+    "url": "https://github.com/pablofdez-git/pokemon-companion.git"
+  },
+  "version": "0.1.0",
+  "icon": "media/icon.png",
+  "license": "MIT",
+  "pricing": "Free",
+  "galleryBanner": {
+    "color": "#312e81",
+    "theme": "dark"
+  },
+  "keywords": [
+    "pokemon",
+    "game",
+    "gamification",
+    "juego",
+    "productivity",
+    "fun"
+  ],
+  "bugs": {
+    "url": "https://github.com/pablofdez-git/pokemon-companion/issues"
+  },
+  "homepage": "https://github.com/pablofdez-git/pokemon-companion#readme",
   "engines": {
-    "vscode": "^1.138.0"
+    "vscode": "^1.90.0"
   },
   "categories": [
     "Other"
   ],
-  "activationEvents": ["onStartupFinished"],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "main": "./out/extension.js",
   "contributes": {
-  "commands": [
-    {
-      "command": "pokemonCompanion.resetProgress",
-      "title": "Pokémon Companion: Reiniciar progreso"
-    },
-        {
-      "command": "pokemonCompanion.togglePause",
-      "title": "Pokémon Companion: Pausar o reanudar"
-    },
-    {
-      "command": "pokemonCompanion.openShop",
-      "title": "Pokémon Companion: Abrir tienda"
-    },
-    {
-      "command": "pokemonCompanion.sellDuplicate",
-      "title": "Vender un repetido",
-      "icon": {
-        "light": "media/sell-light.svg",
-        "dark": "media/sell-dark.svg"
-      }
-    },
-    {
-      "command": "pokemonCompanion.syncNow",
-      "title": "Pokémon Companion: Sincronizar partida ahora"
-    }
-  ],
-  "menus": {
-    "commandPalette": [
+    "commands": [
+      {
+        "command": "pokemonCompanion.resetProgress",
+        "title": "Ctrl+Catch: Reiniciar progreso"
+      },
+      {
+        "command": "pokemonCompanion.togglePause",
+        "title": "Ctrl+Catch: Pausar o reanudar"
+      },
+      {
+        "command": "pokemonCompanion.openShop",
+        "title": "Ctrl+Catch: Abrir tienda"
+      },
       {
         "command": "pokemonCompanion.sellDuplicate",
-        "when": "false"
+        "title": "Vender un repetido",
+        "icon": {
+          "light": "media/sell-light.svg",
+          "dark": "media/sell-dark.svg"
+        }
+      },
+      {
+        "command": "pokemonCompanion.syncNow",
+        "title": "Ctrl+Catch: Sincronizar partida ahora"
       }
     ],
-    "view/item/context": [
-      {
-        "command": "pokemonCompanion.sellDuplicate",
-        "when": "view == pokemonCompanion.backpack && viewItem == duplicatePokemon",
-        "group": "inline"
-      },
-      {
-        "command": "pokemonCompanion.sellDuplicate",
-        "when": "view == pokemonCompanion.backpack && viewItem == duplicatePokemon",
-        "group": "1_sell"
-      }
-    ]
-  },
-  "viewsContainers": {
-    "activitybar": [
-      {
-        "id": "pokemonCompanion",
-        "title": "Pokémon Companion",
-        "icon": "media/backpack.svg"
-      }
-    ]
-  },
-  "views": {
-    "pokemonCompanion": [
-      {
-        "type": "webview",
-        "id": "pokemonCompanion.encounter",
-        "name": "Encuentro",
-        "icon": "media/backpack.svg",
-        "when": "!pokemonCompanion.paused"
-      },
-      {
-        "id": "pokemonCompanion.backpack",
-        "name": "Mochila",
-        "icon": "media/backpack.svg",
-        "when": "!pokemonCompanion.paused"
-      }
-    ]
-  },
-  "configuration": {
-    "title": "Pokémon Companion",
-    "properties": {
-      "pokemonCompanion.syncFolder": {
-        "type": "string",
-        "default": "",
-        "scope": "machine",
-        "markdownDescription": "Carpeta donde guardar la copia de la partida para compartirla entre ordenadores. Si está vacía, se usa la carpeta `PokemonCompanion` dentro del OneDrive de este equipo."
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "pokemonCompanion.sellDuplicate",
+          "when": "false"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "pokemonCompanion.sellDuplicate",
+          "when": "view == pokemonCompanion.backpack && viewItem == duplicatePokemon",
+          "group": "inline"
+        },
+        {
+          "command": "pokemonCompanion.sellDuplicate",
+          "when": "view == pokemonCompanion.backpack && viewItem == duplicatePokemon",
+          "group": "1_sell"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "pokemonCompanion",
+          "title": "Ctrl+Catch",
+          "icon": "media/backpack.svg"
+        }
+      ]
+    },
+    "views": {
+      "pokemonCompanion": [
+        {
+          "type": "webview",
+          "id": "pokemonCompanion.encounter",
+          "name": "Encuentro",
+          "icon": "media/backpack.svg",
+          "when": "!pokemonCompanion.paused"
+        },
+        {
+          "id": "pokemonCompanion.backpack",
+          "name": "Mochila",
+          "icon": "media/backpack.svg",
+          "when": "!pokemonCompanion.paused"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Ctrl+Catch",
+      "properties": {
+        "pokemonCompanion.syncFolder": {
+          "type": "string",
+          "default": "",
+          "scope": "machine",
+          "markdownDescription": "Carpeta donde guardar la copia de la partida para compartirla entre ordenadores. Si está vacía, se usa la carpeta `PokemonCompanion` dentro del OneDrive de este equipo."
+        }
       }
     }
-  }
-},
+  },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
+    "vscode:prepublish": "npm run clean && npm run compile",
+    "clean": "node -e \"require('fs').rmSync('out',{recursive:true,force:true})\"",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
@@ -109,14 +132,14 @@
     "test": "vscode-test"
   },
   "devDependencies": {
-    "@types/vscode": "^1.138.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "24.x",
-    "typescript-eslint": "^8.61.1",
+    "@types/vscode": "^1.90.0",
+    "@vscode/test-cli": "^0.0.15",
+    "@vscode/test-electron": "^3.0.0",
     "eslint": "^10.5.0",
     "typescript": "^6.0.3",
-    "@vscode/test-cli": "^0.0.15",
-    "@vscode/test-electron": "^3.0.0"
+    "typescript-eslint": "^8.61.1"
   },
   "overrides": {
     "diff": "^8.0.4",

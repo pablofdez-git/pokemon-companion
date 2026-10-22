@@ -1,8 +1,8 @@
 import { BallType, CatchContext } from './items';
 
 // Ajusta estos valores a tu gusto
-export const ENCOUNTER_CHANCE = 0.25;              // 15% por guardado con recompensa   0.15
-export const ENCOUNTER_COOLDOWN_MS = 60 * 1000; // mínimo 2 min entre encuentros
+export const ENCOUNTER_CHANCE = 0.25;           // 25% por guardado con recompensa
+export const ENCOUNTER_COOLDOWN_MS = 60 * 1000; // mínimo 1 min entre encuentros
 export const FLEE_CHANCE_AFTER_FAIL = 0.3;         // 30% de huir tras un fallo
 
 export function rollEncounter(): boolean {
@@ -48,6 +48,11 @@ export class EncounterGate {
   end(): void {
     this.active = false;
     this.lastEnd = Date.now();
+  }
+
+  // El encuentro no llegó a empezar (por ejemplo, sin conexión): no gasta el cooldown
+  cancel(): void {
+    this.active = false;
   }
 }
 

@@ -27,10 +27,13 @@ interface PokemonResponse {
 }
 
 const BASE_URL = 'https://pokeapi.co/api/v2';
+const REQUEST_TIMEOUT_MS = 8000; // sin respuesta en este tiempo, se da por perdida
 const cache = new Map<number, PokemonData>();
 
 async function getJson<T>(url: string): Promise<T> {
-  const response = await fetch(url);
+  const response = await fetch(url, {
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+  });
   if (!response.ok) {
     throw new Error(`PokéAPI respondió ${response.status} en ${url}`);
   }

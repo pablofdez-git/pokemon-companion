@@ -184,7 +184,7 @@ export class EncounterPanel
     this.post({ type: 'idle' });
   }
 
-    // Corta el encuentro en curso (por ejemplo, al pausar el juego): el Pokémon se va
+  // Corta el encuentro en curso (por ejemplo, al pausar el juego): el Pokémon se va
   abort(): void {
     this.settle({ kind: 'flee' });
     this.showIdle();

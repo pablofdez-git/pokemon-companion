@@ -17,7 +17,7 @@ export class PauseController implements vscode.Disposable {
       vscode.StatusBarAlignment.Right,
       100
     );
-    this.item.name = 'Pokémon Companion: pausa';
+    this.item.name = 'Ctrl+Catch: pausa';
     this.item.command = 'pokemonCompanion.togglePause';
     this.apply();
     this.item.show();
@@ -40,11 +40,11 @@ export class PauseController implements vscode.Disposable {
 
     if (this.paused) {
       this.item.text = '$(play) Pokémon en pausa';
-      this.item.tooltip = 'Reanudar Pokémon Companion';
+      this.item.tooltip = 'Reanudar Ctrl+Catch';
     } else {
       this.item.text = '$(debug-pause)';
       this.item.tooltip =
-        'Pausar Pokémon Companion: sin monedas, encuentros ni paneles';
+        'Pausar Ctrl+Catch: sin monedas, encuentros ni paneles';
     }
   }
 

@@ -7,18 +7,24 @@ const BURST_CHARS = 200; // lo que puede contarse de golpe (un pegado, un autoco
 
 export class ActivityTracker implements vscode.Disposable {
   private readonly changedChars = new Map<string, number>();
-  private readonly subscription: vscode.Disposable;
+  private readonly subscriptions: vscode.Disposable[];
   private allowance = BURST_CHARS;
   private lastRefill = Date.now();
 
   constructor() {
-    this.subscription = vscode.workspace.onDidChangeTextDocument((e) => {
+    const onChange = vscode.workspace.onDidChangeTextDocument((e) => {
       // Solo archivos reales (ignora consola de depuración, salida, etc.)
       if (e.document.uri.scheme !== 'file') {
         return;
       }
       // Cambios sin contenido (por ejemplo, solo el estado "modificado")
       if (e.contentChanges.length === 0) {
+        return;
+      }
+      // Si el documento no queda modificado, el cambio viene del disco
+      // (git checkout, git pull, otro programa): no lo has escrito tú.
+      // Lo que añade el formateador al guardar sí cuenta, pero lo frena el límite de velocidad.
+      if (!e.document.isDirty) {
         return;
       }
       // Deshacer y rehacer no son trabajo nuevo: así no se puede repetir el truco
@@ -43,6 +49,13 @@ export class ActivityTracker implements vscode.Disposable {
       const key = e.document.uri.toString();
       this.changedChars.set(key, (this.changedChars.get(key) ?? 0) + counted);
     });
+
+    // Al cerrar un archivo se olvida lo que tenía acumulado
+    const onClose = vscode.workspace.onDidCloseTextDocument((document) => {
+      this.changedChars.delete(document.uri.toString());
+    });
+
+    this.subscriptions = [onChange, onClose];
   }
 
   // Rellena el depósito según el tiempo pasado y descuenta lo que se cuenta ahora
@@ -74,6 +87,6 @@ export class ActivityTracker implements vscode.Disposable {
   }
 
   dispose(): void {
-    this.subscription.dispose();
+    this.subscriptions.forEach((s) => s.dispose());
   }
 }

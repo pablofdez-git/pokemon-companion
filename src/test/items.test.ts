@@ -1,0 +1,97 @@
+import * as assert from 'assert';
+import {
+  EncounterGate,
+  catchProbability,
+  failedShakes,
+  rollShiny,
+} from '../game/encounter';
+import { BALLS, BallType, CatchContext, describeMultiplier } from '../game/items';
+
+function ball(id: string): BallType {
+  const found = BALLS.find((b) => b.id === id);
+  assert.ok(found, `no existe la ball ${id}`);
+  return found;
+}
+
+function ctx(overrides: Partial<CatchContext> = {}): CatchContext {
+  return { throwNumber: 1, alreadyOwned: false, hour: 12, ...overrides };
+}
+
+suite('balls', () => {
+  test('cada ball tiene un id distinto', () => {
+    assert.strictEqual(new Set(BALLS.map((b) => b.id)).size, BALLS.length);
+  });
+
+  test('Quick Ball solo en el primer lanzamiento', () => {
+    assert.strictEqual(ball('quickball').multiplier(ctx({ throwNumber: 1 })), 5);
+    assert.strictEqual(ball('quickball').multiplier(ctx({ throwNumber: 2 })), 1);
+  });
+
+  test('Dusk Ball de 20:00 a 06:00', () => {
+    const dusk = ball('duskball');
+    assert.strictEqual(dusk.multiplier(ctx({ hour: 20 })), 3);
+    assert.strictEqual(dusk.multiplier(ctx({ hour: 5 })), 3);
+    assert.strictEqual(dusk.multiplier(ctx({ hour: 6 })), 1);
+    assert.strictEqual(dusk.multiplier(ctx({ hour: 19 })), 1);
+  });
+
+  test('Repeat Ball si ya tienes la especie', () => {
+    assert.strictEqual(ball('repeatball').multiplier(ctx({ alreadyOwned: true })), 3.5);
+    assert.strictEqual(ball('repeatball').multiplier(ctx()), 1);
+  });
+
+  test('Timer Ball sube con los lanzamientos hasta ×4', () => {
+    const timer = ball('timerball');
+    assert.strictEqual(timer.multiplier(ctx({ throwNumber: 1 })), 1);
+    assert.strictEqual(timer.multiplier(ctx({ throwNumber: 3 })), 2);
+    assert.strictEqual(timer.multiplier(ctx({ throwNumber: 7 })), 4);
+    assert.strictEqual(timer.multiplier(ctx({ throwNumber: 20 })), 4);
+  });
+
+  test('describeMultiplier', () => {
+    assert.strictEqual(describeMultiplier(1), '×1');
+    assert.strictEqual(describeMultiplier(1.5), '×1.5');
+    assert.strictEqual(describeMultiplier(Infinity), 'captura segura');
+  });
+});
+
+suite('encuentros', () => {
+  test('catchProbability nunca pasa de 1 y la Master Ball es segura', () => {
+    assert.strictEqual(catchProbability(45, ball('pokeball'), ctx()), 45 / 255);
+    assert.strictEqual(catchProbability(255, ball('ultraball'), ctx()), 1);
+    assert.strictEqual(catchProbability(3, ball('masterball'), ctx()), 1);
+  });
+
+  test('failedShakes está entre 0 y 2', () => {
+    for (let i = 0; i < 200; i += 1) {
+      const shakes = failedShakes(Math.random());
+      assert.ok(shakes >= 0 && shakes <= 2);
+    }
+  });
+
+  test('sin sprite variocolor no puede salir variocolor', () => {
+    for (let i = 0; i < 200; i += 1) {
+      assert.strictEqual(rollShiny(false), false);
+    }
+  });
+
+  test('EncounterGate: un encuentro a la vez y cooldown al terminar', () => {
+    const gate = new EncounterGate();
+    assert.ok(gate.canStart());
+
+    gate.start();
+    assert.ok(!gate.canStart());
+    assert.ok(!gate.canStart(true));
+
+    gate.end();
+    assert.ok(!gate.canStart());
+    assert.ok(gate.canStart(true));
+  });
+
+  test('EncounterGate: cancelar no gasta el cooldown', () => {
+    const gate = new EncounterGate();
+    gate.start();
+    gate.cancel();
+    assert.ok(gate.canStart());
+  });
+});

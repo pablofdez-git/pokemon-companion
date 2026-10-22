@@ -39,7 +39,7 @@ export class SyncService implements vscode.Disposable {
 
   async start(): Promise<void> {
     if (!this.filePath) {
-      console.log('Pokémon Companion: sincronización desactivada (sin carpeta)');
+      console.log('Ctrl+Catch: sincronización desactivada (sin carpeta)');
       return;
     }
 
@@ -170,7 +170,7 @@ export class SyncService implements vscode.Disposable {
   }
 
   private report(error: unknown): void {
-    console.error('Pokémon Companion: error al sincronizar', error);
+    console.error('Ctrl+Catch: error al sincronizar', error);
     if (!this.warned) {
       this.warned = true;
       void vscode.window.showWarningMessage(

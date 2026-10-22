@@ -18,7 +18,7 @@ export const GENERATIONS: Generation[] = [
 ];
 
 // Parte de los Pokémon disponibles (distintos) que hay que capturar para desbloquear la siguiente
-export const UNLOCK_FRACTION = 0.25; //0.4
+export const UNLOCK_FRACTION = 0.25; // 25% de los disponibles
 
 // Número de Pokédex más alto que puede aparecer con esas generaciones desbloqueadas
 export function maxPokemonId(unlocked: number): number {
