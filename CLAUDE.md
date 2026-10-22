@@ -185,7 +185,7 @@ Publicada en el Marketplace como `pablofdez.pokemon-companion`; la versión actu
 - 0.2.0: Pokédex visual.
 - 0.3.0: estadísticas en la Mochila.
 - 0.4.0: combinar partidas en un conflicto de sincronización.
-- Sin publicar: ajustes de equilibrio (probabilidad y cooldown de encuentros) y evoluciones.
+- 0.5.0: ajustes de equilibrio (probabilidad y cooldown de encuentros) y evoluciones.
 
 **Próximos pasos (en este orden):**
 1. **Traducción al inglés** (opcional): `vscode.l10n`, `package.nls.json` y `package.nls.es.json`. Todos los textos están escritos a mano en español en `src/` y `media/*.js`.
