@@ -10,6 +10,21 @@ body {
   margin: 0 auto;
 }
 
+/* Iconos SVG en línea: del tamaño del texto y del mismo color */
+.icon {
+  width: 1.1em;
+  height: 1.1em;
+  margin-right: 0.35em;
+  vertical-align: -0.2em;
+}
+
+h1 .icon {
+  width: 1.2em;
+  height: 1.2em;
+  margin-right: 0.4em;
+  vertical-align: -0.15em;
+}
+
 /* Color de cada nivel: el de la ball de la recompensa */
 .tier-1 { --tier: #6fbf73; }
 .tier-2 { --tier: #4aa3df; }

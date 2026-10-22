@@ -33,6 +33,33 @@
     return node;
   }
 
+  // Candado SVG en línea (sin emojis)
+  function lockIcon() {
+    const SVG_NS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(SVG_NS, 'svg');
+    const attrs = {
+      viewBox: '0 0 24 24',
+      fill: 'none',
+      stroke: 'currentColor',
+      'stroke-width': 2,
+      'stroke-linecap': 'round',
+      'stroke-linejoin': 'round',
+      class: 'icon',
+      'aria-hidden': 'true',
+    };
+    for (const [key, value] of Object.entries(attrs)) {
+      svg.setAttribute(key, value);
+    }
+    const body = document.createElementNS(SVG_NS, 'rect');
+    for (const [key, value] of Object.entries({ x: 5, y: 11, width: 14, height: 10, rx: 2 })) {
+      body.setAttribute(key, value);
+    }
+    const shackle = document.createElementNS(SVG_NS, 'path');
+    shackle.setAttribute('d', 'M8 11V7a4 4 0 0 1 8 0v4');
+    svg.append(body, shackle);
+    return svg;
+  }
+
   function number(id) {
     return `#${String(id).padStart(3, '0')}`;
   }
@@ -119,10 +146,9 @@
   function generationNode(gen) {
     const title = el('h2', {}, [
       el('span', { text: `Gen ${gen.number} · ${gen.name}` }),
-      el('span', {
-        className: 'gen-count',
-        text: gen.unlocked ? `${gen.caught}/${gen.total}` : '🔒 Bloqueada',
-      }),
+      gen.unlocked
+        ? el('span', { className: 'gen-count', text: `${gen.caught}/${gen.total}` })
+        : el('span', { className: 'gen-count' }, [lockIcon(), document.createTextNode('Bloqueada')]),
     ]);
 
     if (!gen.unlocked) {

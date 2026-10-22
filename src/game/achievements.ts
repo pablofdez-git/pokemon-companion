@@ -23,17 +23,18 @@ export const TIER_CAPTURE_RATES: Record<Tier, [min: number, max: number]> = {
   4: [0, 10],
 };
 
-// Secciones en las que se agrupan los logros, en el orden en que se muestran
+// Secciones en las que se agrupan los logros, en el orden en que se muestran.
+// `icon` es el nombre de un icono SVG de media/achievements.js
 export const ACHIEVEMENT_GROUPS = [
-  { name: 'Capturas', icon: '🎯' },
-  { name: 'Especies', icon: '📖' },
-  { name: 'Constancia', icon: '🔥' },
-  { name: 'Código', icon: '⌨️' },
-  { name: 'Monedas', icon: '🪙' },
-  { name: 'Encuentros', icon: '🌿' },
-  { name: 'Evoluciones', icon: '⬆️' },
-  { name: 'Variocolores', icon: '✨' },
-  { name: 'Generaciones', icon: '🗺️' },
+  { name: 'Capturas', icon: 'target' },
+  { name: 'Especies', icon: 'book' },
+  { name: 'Constancia', icon: 'flame' },
+  { name: 'Código', icon: 'code' },
+  { name: 'Monedas', icon: 'coin' },
+  { name: 'Encuentros', icon: 'leaf' },
+  { name: 'Evoluciones', icon: 'arrow-up' },
+  { name: 'Variocolores', icon: 'sparkle' },
+  { name: 'Generaciones', icon: 'map' },
 ] as const;
 
 export interface Achievement {

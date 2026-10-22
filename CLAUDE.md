@@ -178,6 +178,13 @@ media/
 
 ## Convenciones
 - Código, comentarios, mensajes y nombres visibles **en español**; identificadores en inglés.
+- **Sin emojis** (los pictogramas de colores del teclado de emojis, como trofeos, regalos o cohetes) en ninguna parte: ni en la interfaz, ni en mensajes, ni en el código, ni en README, CHANGELOG o CLAUDE.md. No encajan con el aspecto de VS Code. En su lugar:
+  - Barra de estado, QuickPick, botones y vistas de árbol: iconos de VS Code (codicons): `$(nombre)` en textos que los admiten, `vscode.ThemeIcon` en `TreeItem.iconPath` y `"icon": "$(nombre)"` en `package.json`.
+  - Webviews: iconos **SVG en línea** que usan `currentColor` (ver `ICONS` y `icon()` en `media/achievements.js`, y `.icon` en el CSS). Sin librerías de iconos ni fuentes.
+  - Notificaciones, tooltips y mensajes (no admiten iconos): texto plano.
+  - **Excepción:** la moneda 🪙 se mantiene tal cual, como símbolo de las monedas (contador de la barra de estado, tienda, precios y recompensas). Es el único emoji permitido.
+  - Se permiten los símbolos tipográficos normales (`★` para el variocolor y la dificultad, `·`, `×`, `−`, `…`), que no son emojis.
+  - Antes de dar algo por terminado, buscar emojis en los archivos tocados.
 - Comentarios cortos que explican el *porqué*. Mantener esa densidad.
 - La lógica del juego va en `game/` como funciones puras con las constantes de equilibrio exportadas arriba del archivo ("Ajusta estos valores a tu gusto"). La UI en `ui/`; el acceso a datos en `data/`.
 - Resultados de operaciones que pueden fallar como uniones discriminadas (`{ ok: true, ... } | { ok: false, reason }`), no excepciones.
@@ -200,7 +207,7 @@ Publicada en el Marketplace como `pablofdez.pokemon-companion`; la versión actu
 - 0.3.0: estadísticas en la Mochila.
 - 0.4.0: combinar partidas en un conflicto de sincronización.
 - 0.5.0: ajustes de equilibrio (probabilidad y cooldown de encuentros) y evoluciones.
-- Sin publicar: el botón ⬆ solo en los que evolucionan, y logros con recompensa.
+- Sin publicar: el botón de evolucionar solo en los que evolucionan, logros con recompensa y la interfaz sin emojis.
 
 **Próximos pasos (en este orden):**
 1. **Traducción al inglés** (opcional): `vscode.l10n`, `package.nls.json` y `package.nls.es.json`. Todos los textos están escritos a mano en español en `src/` y `media/*.js`.

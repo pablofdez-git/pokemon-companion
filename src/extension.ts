@@ -79,9 +79,9 @@ export function activate(context: vscode.ExtensionContext) {
     }
     const text =
       unlocked.length > 3
-        ? `🏆 Has conseguido ${unlocked.length} logros. Cada uno trae un Pokémon de recompensa.`
+        ? `Has conseguido ${unlocked.length} logros. Cada uno trae un Pokémon de recompensa.`
         : unlocked
-            .map((a) => `🏆 Logro: ${a.name}. Recompensa: un Pokémon ${TIER_LABELS[a.tier]}.`)
+            .map((a) => `Logro conseguido: ${a.name}. Recompensa: un Pokémon ${TIER_LABELS[a.tier]}.`)
             .join(' ');
     void vscode.window.showInformationMessage(text, 'Ver logros').then((choice) => {
       if (choice === 'Ver logros') {

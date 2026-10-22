@@ -85,6 +85,13 @@ h2 {
   font-size: 1.15em;
 }
 
+.icon {
+  width: 1.1em;
+  height: 1.1em;
+  margin-right: 0.35em;
+  vertical-align: -0.2em;
+}
+
 .gen-count {
   font-size: 0.85em;
   font-weight: normal;

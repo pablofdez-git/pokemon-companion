@@ -66,7 +66,7 @@ export function announceUnlocks(generations: Generation[]): void {
   for (const generation of generations) {
     void vscode.window
       .showInformationMessage(
-        `🎉 ¡Has desbloqueado la generación ${generation.number} (${generation.name})! Ya pueden aparecer Pokémon del #${generation.firstId} al #${generation.lastId}.`,
+        `¡Has desbloqueado la generación ${generation.number} (${generation.name})! Ya pueden aparecer Pokémon del #${generation.firstId} al #${generation.lastId}.`,
         'Ver mochila'
       )
       .then((choice) => {
@@ -111,7 +111,7 @@ async function playEncounter(
   const view = toView(pokemon, shiny);
   const label = shiny ? `${pokemon.name} variocolor` : pokemon.name;
   let message = options.rewardFor
-    ? `🏆 Recompensa por «${options.rewardFor}»: ¡ha aparecido un ${label}!`
+    ? `Recompensa por «${options.rewardFor}»: ¡ha aparecido un ${label}!`
     : `¡Ha aparecido un ${label} salvaje!`;
   let throwNumber = 1;
 

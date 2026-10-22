@@ -2,12 +2,13 @@
 
 ## [Sin publicar]
 
-- Logros: 32 retos (capturas, especies, rachas, código escrito, monedas, evoluciones, variocolores, generaciones…) en una pestaña propia (botón 🏆 junto a la Pokédex) con su progreso, agrupados y con el color de su dificultad. Cada logro da como recompensa un encuentro con un Pokémon más raro cuanto más difícil sea; si lo dejas escapar, sigue pendiente.
-- El botón ⬆ de la Mochila solo aparece en los Pokémon que pueden evolucionar ahora, y su descripción lo indica.
+- Interfaz sin emojis (salvo la moneda 🪙): iconos propios de VS Code y SVG en las pestañas.
+- Logros: 32 retos (capturas, especies, rachas, código escrito, monedas, evoluciones, variocolores, generaciones…) en una pestaña propia (botón del trofeo junto a la Pokédex) con su progreso, agrupados y con el color de su dificultad. Cada logro da como recompensa un encuentro con un Pokémon más raro cuanto más difícil sea; si lo dejas escapar, sigue pendiente.
+- El botón de evolucionar de la Mochila solo aparece en los Pokémon que pueden evolucionar ahora, y su descripción lo indica.
 
 ## [0.5.0] - 2026-10-22
 
-- Evoluciones: botón ⬆ en la Mochila para evolucionar un Pokémon pagando monedas. Si tiene varias evoluciones, eliges. Se cuentan en las estadísticas.
+- Evoluciones: botón con una flecha hacia arriba en la Mochila para evolucionar un Pokémon pagando monedas. Si tiene varias evoluciones, eliges. Se cuentan en las estadísticas.
 - Ajustes de equilibrio: `pokemonCompanion.encounterChance` (probabilidad de encuentro) y `pokemonCompanion.encounterCooldownSeconds` (tiempo mínimo entre encuentros).
 
 ## [0.4.0] - 2026-10-22

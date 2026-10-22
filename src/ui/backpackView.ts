@@ -84,7 +84,7 @@ function pokemonTooltip(
     );
   }
   if (evolvable) {
-    tooltip.appendMarkdown('\n\nPuede evolucionar: pulsa ⬆');
+    tooltip.appendMarkdown('\n\nPuede evolucionar: usa el botón de la flecha hacia arriba');
   }
   return tooltip;
 }
@@ -245,7 +245,8 @@ export class BackpackProvider
       const done = ACHIEVEMENTS.filter((a) => game.achievements.includes(a.id)).length;
       const rewards = pendingRewards(game).length;
       const achievementsLine = new BackpackItem('Logros', None);
-      achievementsLine.description = `${done}/${ACHIEVEMENTS.length}${rewards > 0 ? ` · 🎁 ${rewards}` : ''}`;
+      const pending = rewards === 1 ? '1 recompensa pendiente' : `${rewards} recompensas pendientes`;
+      achievementsLine.description = `${done}/${ACHIEVEMENTS.length}${rewards > 0 ? ` · ${pending}` : ''}`;
       achievementsLine.iconPath = new vscode.ThemeIcon('trophy');
       achievementsLine.tooltip = 'Abrir los logros';
       achievementsLine.command = {
@@ -300,7 +301,7 @@ export class BackpackProvider
         const evolvable =
           availableEvolutions(cachedEvolutionIds(pokemon.id) ?? [], generationsUnlocked)
             .length > 0;
-        // Solo los repetidos normales muestran vender y solo los que evolucionan, el ⬆ (ver package.json)
+        // Solo los repetidos normales muestran vender y solo los que evolucionan, el de evolucionar (ver package.json)
         item.contextValue = [
           !pokemon.shiny && count > 1 ? 'duplicatePokemon' : 'singlePokemon',
           evolvable ? 'evolvable' : '',
