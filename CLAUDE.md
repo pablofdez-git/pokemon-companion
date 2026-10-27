@@ -223,6 +223,7 @@ Publicada en el Marketplace como `pablofdez.pokemon-companion`; la versión actu
 - 0.4.0: combinar partidas en un conflicto de sincronización.
 - 0.5.0: ajustes de equilibrio (probabilidad y cooldown de encuentros) y evoluciones.
 - 0.6.0: el botón de evolucionar solo en los que evolucionan, logros con recompensa y la interfaz sin emojis.
+- 0.6.1: mantener una tecla pulsada ya no da monedas ni encuentros, los espacios no cuentan y 1 moneda cada 15 caracteres.
 
 **Próximos pasos (en este orden):**
 1. **Traducción al inglés** (opcional): `vscode.l10n`, `package.nls.json` y `package.nls.es.json`. Todos los textos están escritos a mano en español en `src/` y `media/*.js`.
