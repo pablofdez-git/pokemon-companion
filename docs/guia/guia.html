@@ -217,7 +217,7 @@
       <li><b>9</b> Ajustes, varios ordenadores y soluciones</li>
     </ol>
   </div>
-  <div class="ver">Versión 0.6.0 &nbsp;·&nbsp; Extensión para Visual Studio Code &nbsp;·&nbsp; Proyecto de aficionados</div>
+  <div class="ver">Versión 0.6.1 &nbsp;·&nbsp; Extensión para Visual Studio Code &nbsp;·&nbsp; Proyecto de aficionados</div>
 </section>
 
 <!-- ================= 1. QUÉ ES ================= -->
@@ -232,7 +232,7 @@
     <div class="flow">
       <div class="box"><em>1</em><b>Programas y guardas</b><span>texto nuevo = monedas</span></div>
       <div class="arr" style="color:var(--red)"><svg><use href="#arrow"/></svg></div>
-      <div class="box"><em>2</em><b>Ganas monedas</b><span>una por cada 20 caracteres</span></div>
+      <div class="box"><em>2</em><b>Ganas monedas</b><span>una por cada 15 caracteres</span></div>
       <div class="arr" style="color:var(--red)"><svg><use href="#arrow"/></svg></div>
       <div class="box"><em>3</em><b>Aparece un Pokémon</b><span>salvaje, en el panel</span></div>
 
@@ -287,7 +287,7 @@
 
     <h3>Sin Marketplace: con un archivo .vsix</h3>
     <p>Si no puedes usar el Marketplace (por ejemplo, un ordenador sin acceso), descarga el archivo <code>.vsix</code> de la última versión en la página de <em>Releases</em> del proyecto (<code>github.com/pablofdez-git/pokemon-companion/releases</code>) y cópialo al ordenador. Después, en el panel de extensiones, pulsa los tres puntos (<code>···</code>) de la esquina superior derecha, elige <strong>Instalar desde VSIX…</strong> (en inglés, <em>Install from VSIX…</em>) y selecciona el archivo. O desde la terminal, en la carpeta donde esté:</p>
-    <div style="background:var(--dark);color:#e8eaed;border-radius:1mm;padding:3mm 4mm;font-family:'DejaVu Sans Mono',Consolas,monospace;font-size:9pt;margin-bottom:3mm">code --install-extension pokemon-companion-0.6.0.vsix</div>
+    <div style="background:var(--dark);color:#e8eaed;border-radius:1mm;padding:3mm 4mm;font-family:'DejaVu Sans Mono',Consolas,monospace;font-size:9pt;margin-bottom:3mm">code --install-extension pokemon-companion-0.6.1.vsix</div>
 
     <div class="callout red">
       <div class="ct">Si algo falla</div>
@@ -311,7 +311,7 @@
 
     <div class="step"><div class="num">1</div><div>
       <div class="title">Programa y guarda</div>
-      <p>Cada vez que guardas un archivo con texto nuevo ganas monedas <svg class="coin"><use href="#coin"/></svg>: una por cada 20 caracteres que hayas añadido (hace falta añadir al menos 20). Borrar texto, deshacer y rehacer <strong>no</strong> dan monedas, y pegar o autocompletar en bucle paga muy poco.</p></div></div>
+      <p>Cada vez que guardas un archivo con texto nuevo ganas monedas <svg class="coin"><use href="#coin"/></svg>: una por cada 15 caracteres que hayas añadido (hace falta añadir al menos 20), sin contar espacios ni saltos de línea. Borrar texto, deshacer, rehacer y mantener una tecla pulsada <strong>no</strong> dan monedas, y pegar o autocompletar en bucle paga muy poco.</p></div></div>
     <div class="step"><div class="num">2</div><div>
       <div class="title">Aparece un Pokémon</div>
       <p>Cuando un guardado te da monedas hay una probabilidad (un 25 % de fábrica, ajustable) de que aparezca un Pokémon salvaje. Se abre solo el panel <strong>Encuentro</strong>, sin quitarte el foco del editor, y abajo sale un aviso. Después de un encuentro hay un descanso de un minuto (también ajustable).</p></div></div>
@@ -599,7 +599,7 @@
     <h2 class="section"><svg><use href="#pb"/></svg> Problemas frecuentes</h2>
     <table class="tbl">
       <tr><th style="width:46mm">Problema</th><th>Qué hacer</th></tr>
-      <tr><td>Las monedas no suben</td><td>Hace falta añadir al menos 20 caracteres nuevos antes de guardar. Borrar, deshacer y rehacer no cuentan, y comprueba que el juego no está en pausa (el botón de la barra de estado).</td></tr>
+      <tr><td>Las monedas no suben</td><td>Hace falta añadir al menos 20 caracteres nuevos antes de guardar (los espacios no cuentan). Borrar, deshacer, rehacer y mantener una tecla pulsada no cuentan, y comprueba que el juego no está en pausa (el botón de la barra de estado).</td></tr>
       <tr><td>No me sale ningún Pokémon</td><td>Comprueba que las monedas suben al guardar, que tienes internet y que ha pasado el descanso desde el último encuentro (por defecto, un minuto). Es cuestión de probabilidad: pueden hacer falta varios guardados. Puedes subirla en los ajustes.</td></tr>
       <tr><td>Aparece el Pokémon pero no tengo balls</td><td>Abre la tienda con el contador de monedas y compra más. Sin balls, el Pokémon se va.</td></tr>
       <tr><td>No veo el panel Encuentro</td><td>Pulsa el icono de la Poké Ball de la barra lateral. Es la primera sección, encima de la Mochila.</td></tr>
@@ -611,7 +611,7 @@
 
     <div class="callout yellow" style="margin-top:7mm">
       <div class="ct">¿Algo más?</div>
-      <p>Si encuentras un fallo o tienes una idea, puedes contarlo en la página del proyecto: <code>github.com/pablofdez-git/pokemon-companion/issues</code>. Esta guía se corresponde con la versión <strong>0.6.0</strong>; si instalas una más nueva, puede haber novedades que aún no aparezcan aquí.</p>
+      <p>Si encuentras un fallo o tienes una idea, puedes contarlo en la página del proyecto: <code>github.com/pablofdez-git/pokemon-companion/issues</code>. Esta guía se corresponde con la versión <strong>0.6.1</strong>; si instalas una más nueva, puede haber novedades que aún no aparezcan aquí.</p>
     </div>
     <p style="text-align:center;margin-top:12mm" class="muted">¡Buena caza, entrenador!</p>
   </div>

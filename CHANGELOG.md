@@ -1,5 +1,10 @@
 # Cambios
 
+## [0.6.1] - 2026-10-27
+
+- Mantener una tecla pulsada ya no da monedas ni encuentros: solo cuentan las dos primeras repeticiones seguidas del mismo texto (también con paréntesis y comillas que se cierran solos).
+- Los espacios, tabuladores y saltos de línea ya no cuentan para las monedas. Para compensarlo, ahora se gana 1 moneda por cada 15 caracteres (antes 20).
+
 ## [0.6.0] - 2026-10-22
 
 - Interfaz sin emojis (salvo la moneda 🪙): iconos propios de VS Code y SVG en las pestañas.
