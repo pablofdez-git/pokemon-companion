@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { RepeatFilter } from '../game/typing';
 
 // Velocidad máxima a la que se cuentan caracteres. Escribir de verdad casi nunca
 // llega a este ritmo, pero pegar o autocompletar en bucle sí, y entonces deja de pagar.
@@ -7,6 +8,7 @@ const BURST_CHARS = 200; // lo que puede contarse de golpe (un pegado, un autoco
 
 export class ActivityTracker implements vscode.Disposable {
   private readonly changedChars = new Map<string, number>();
+  private readonly repeats = new RepeatFilter();
   private readonly subscriptions: vscode.Disposable[];
   private allowance = BURST_CHARS;
   private lastRefill = Date.now();
@@ -35,24 +37,24 @@ export class ActivityTracker implements vscode.Disposable {
         return;
       }
 
-      // Solo cuenta lo que se añade; borrar no da monedas
-      let added = 0;
-      for (const change of e.contentChanges) {
-        added += change.text.length;
-      }
+      // Solo cuenta lo que se añade (borrar no da monedas), sin espacios
+      // y sin lo que se repite al mantener una tecla pulsada
+      const key = e.document.uri.toString();
+      const inserted = e.contentChanges.map((c) => c.text).join('');
+      const added = this.repeats.countable(key, inserted);
 
       const counted = this.takeFromAllowance(added);
       if (counted <= 0) {
         return;
       }
 
-      const key = e.document.uri.toString();
       this.changedChars.set(key, (this.changedChars.get(key) ?? 0) + counted);
     });
 
     // Al cerrar un archivo se olvida lo que tenía acumulado
     const onClose = vscode.workspace.onDidCloseTextDocument((document) => {
       this.changedChars.delete(document.uri.toString());
+      this.repeats.forget(document.uri.toString());
     });
 
     this.subscriptions = [onChange, onClose];

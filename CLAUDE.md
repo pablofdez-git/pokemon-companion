@@ -64,6 +64,7 @@ src/
     pokedex.ts            buildPokedex(): agrupa capturas por especie y generación (siluetas, shiny)
     shop.ts               buyBall / sellDuplicate
     stats.ts              GameStats (contadores) y racha de días: recordActivity, currentStreak
+    typing.ts             Qué cuenta al escribir: sin espacios (countableChars) y sin teclas mantenidas (RepeatFilter)
     syncRules.ts          decideSync(): push / pull / conflict / none
     evolution.ts          nextEvolutionIds(), evolutionCost(), evolvePokemon()
     achievements.ts       Lista de logros, comprobación, recompensas pendientes y pickRewardPokemon()
@@ -98,8 +99,12 @@ media/
 
 ### Monedas (`events/activityTracker.ts` + `game/economy.ts`)
 - `ActivityTracker` escucha `onDidChangeTextDocument` y solo cuenta **caracteres añadidos** en archivos `file:`; ignora borrados, deshacer y rehacer.
+- Antes del limitador pasa por `RepeatFilter` (`game/typing.ts`):
+  - No cuenta espacios, tabuladores ni saltos de línea.
+  - Si un archivo recibe el mismo texto varias veces seguidas, como al mantener una tecla (o `()` que se cierra solo), solo cuentan las `MAX_IDENTICAL_INSERTS` primeras (2).
+  - Las inserciones vacías (borrados) no cortan la racha de repeticiones; así no vale alternar con Retroceso.
 - Un limitador (ráfaga de 200 caracteres, recarga a 8 car/s) evita que pegar o autocompletar en bucle dé monedas sin fin.
-- Al guardar: `peek()` → `rewardForSave()` (1 moneda cada 20 caracteres, mínimo 20). Solo si se ganan monedas se hace `consume()`; así lo escrito sigue acumulándose hasta llegar al mínimo. En pausa, se descarta lo escrito.
+- Al guardar: `peek()` → `rewardForSave()` (1 moneda cada 15 caracteres, mínimo 20). Solo si se ganan monedas se hace `consume()`; así lo escrito sigue acumulándose hasta llegar al mínimo. En pausa, se descarta lo escrito.
 
 ### Encuentros (`game/encounter.ts`, `ui/encounterView.ts`, `ui/encounterPanel.ts`)
 1. Tras un guardado con recompensa, `rollEncounter(chance)`. `EncounterGate` impide encuentros simultáneos y aplica el cooldown. Ambos valores salen de los ajustes `pokemonCompanion.encounterChance` y `encounterCooldownSeconds` (scope `application`), leídos en cada uso en `extension.ts` y limitados con `clampEncounterChance` / `cooldownMsFromSeconds`; `ENCOUNTER_CHANCE` y `ENCOUNTER_COOLDOWN_MS` son los valores por defecto. Si cambias los límites, hazlo también en `package.json`.

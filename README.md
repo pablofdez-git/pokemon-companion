@@ -10,7 +10,7 @@
 
 ## Cómo se juega
 
-1. **Programa y guarda.** Cada vez que guardas un archivo con texto nuevo escrito por ti, ganas monedas 🪙 (1 por cada 20 caracteres).
+1. **Programa y guarda.** Cada vez que guardas un archivo con texto nuevo escrito por ti, ganas monedas 🪙 (1 por cada 15 caracteres, sin contar espacios ni saltos de línea; hacen falta al menos 20). Mantener una tecla pulsada no sirve: solo cuentan las primeras repeticiones.
 2. **Aparece un Pokémon salvaje.** A veces, al guardar, sale uno en el panel *Encuentro* de la barra lateral. Tienes 45 segundos para decidir.
 3. **Lanza una ball.** Elige cuál: cada botón muestra la probabilidad de captura de ese lanzamiento. Si falla, puede que el Pokémon siga ahí… o que huya.
 4. **Compra más balls.** Pulsa el contador de monedas de la barra de estado para abrir la tienda.

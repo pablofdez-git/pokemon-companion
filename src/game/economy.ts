@@ -5,7 +5,7 @@ import { dayKey, recordActivity } from './stats';
 
 // Ajusta estos valores a tu gusto para equilibrar el juego
 export const MIN_CHARS_TO_REWARD = 20; // por debajo de esto, no hay moneda
-export const CHARS_PER_COIN = 20;      // cuántos caracteres valen 1 moneda
+export const CHARS_PER_COIN = 15;      // cuántos caracteres valen 1 moneda (sin contar espacios)
 
 export function coinsForChanges(changedChars: number): number {
   if (changedChars < MIN_CHARS_TO_REWARD) {
