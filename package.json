@@ -80,6 +80,18 @@
         "icon": "$(play)"
       },
       {
+        "command": "pokemonCompanion.chooseFavorite",
+        "title": "Ctrl+Catch: Elegir Pokémon favorito"
+      },
+      {
+        "command": "pokemonCompanion.clearFavorite",
+        "title": "Ctrl+Catch: Quitar Pokémon favorito"
+      },
+      {
+        "command": "pokemonCompanion.setFavorite",
+        "title": "Elegir como favorito"
+      },
+      {
         "command": "pokemonCompanion.syncNow",
         "title": "Ctrl+Catch: Sincronizar partida ahora"
       }
@@ -97,9 +109,23 @@
         {
           "command": "pokemonCompanion.useObject",
           "when": "false"
+        },
+        {
+          "command": "pokemonCompanion.setFavorite",
+          "when": "false"
         }
       ],
       "view/item/context": [
+        {
+          "command": "pokemonCompanion.setFavorite",
+          "when": "view == pokemonCompanion.backpack && viewItem =~ /Pokemon/",
+          "group": "3_favorite"
+        },
+        {
+          "command": "pokemonCompanion.clearFavorite",
+          "when": "view == pokemonCompanion.backpack && viewItem == favorite",
+          "group": "3_favorite"
+        },
         {
           "command": "pokemonCompanion.useObject",
           "when": "view == pokemonCompanion.backpack && viewItem == usableObject",

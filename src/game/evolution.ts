@@ -126,8 +126,19 @@ export async function evolvePokemon(
       name: target.name,
       spriteUrl: shiny ? target.shinySpriteUrl ?? target.spriteUrl : target.spriteUrl,
       captureRate: target.captureRate,
+      types: target.types,
       ...(shiny ? { shiny: true } : {}),
     });
+    // Si evoluciona la última copia del favorito, él evoluciona también (y toma su tipo)
+    const favorite = s.favorite;
+    if (
+      favorite &&
+      favorite.id === fromId &&
+      favorite.shiny === shiny &&
+      !s.captured.some((c) => c.id === fromId && Boolean(c.shiny) === shiny)
+    ) {
+      s.favorite = { id: target.id, shiny, type: target.types[0] ?? favorite.type };
+    }
     if (stone) {
       s.items[stone] -= 1;
     }

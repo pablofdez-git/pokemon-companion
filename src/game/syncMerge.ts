@@ -1,4 +1,4 @@
-import { CapturedPokemon, GameState } from '../data/state';
+import { CapturedPokemon, Favorite, GameState } from '../data/state';
 import { unlockedAfterCaptures } from './generations';
 import { GameStats } from './stats';
 
@@ -108,6 +108,28 @@ function mergeStats(
   return merged;
 }
 
+function sameFavorite(a?: Favorite, b?: Favorite): boolean {
+  return a?.id === b?.id && Boolean(a?.shiny) === Boolean(b?.shiny);
+}
+
+// Quien lo cambió desde la última sincronización manda; si lo cambiaron los dos, el más reciente
+function mergeFavorite(
+  base: GameState | undefined,
+  local: GameState,
+  remote: GameState
+): Favorite | undefined {
+  if (sameFavorite(local.favorite, remote.favorite)) {
+    return local.favorite;
+  }
+  if (base && sameFavorite(local.favorite, base.favorite)) {
+    return remote.favorite;
+  }
+  if (base && sameFavorite(remote.favorite, base.favorite)) {
+    return local.favorite;
+  }
+  return local.updatedAt >= remote.updatedAt ? local.favorite : remote.favorite;
+}
+
 function union(a: string[], b: string[]): string[] {
   return [...new Set([...a, ...b])];
 }
@@ -120,6 +142,7 @@ export function mergeStates(
   remote: GameState
 ): GameState {
   const captured = mergeCaptured(base?.captured, local.captured, remote.captured);
+  const favorite = mergeFavorite(base, local, remote);
   return {
     coins: mergeNumber(base?.coins, local.coins, remote.coins),
     balls: mergeCounts(base?.balls, local.balls, remote.balls),
@@ -135,5 +158,6 @@ export function mergeStates(
     // Un logro conseguido (o su recompensa cobrada) en cualquier ordenador vale para los dos
     achievements: union(local.achievements, remote.achievements),
     achievementsClaimed: union(local.achievementsClaimed, remote.achievementsClaimed),
+    ...(favorite ? { favorite } : {}),
   };
 }

@@ -11,6 +11,7 @@ import {
   unlockAchievements,
 } from './game/achievements';
 import { rewardForSave } from './game/economy';
+import { clearFavorite, perkValue } from './game/favorite';
 import { sellDuplicate } from './game/shop';
 import { maxPokemonId } from './game/generations';
 import {
@@ -27,6 +28,7 @@ import { ActivityTracker } from './events/activityTracker';
 import { AchievementsPanel } from './ui/achievementsPanel';
 import { BackpackProvider } from './ui/backpackView';
 import { EncounterPanel } from './ui/encounterPanel';
+import { chooseFavorite, setFavoriteFor } from './ui/favorite';
 import { runEncounter } from './ui/encounterView';
 import { BALLS } from './game/items';
 import {
@@ -67,6 +69,12 @@ export function activate(context: vscode.ExtensionContext) {
   const settings = () => vscode.workspace.getConfiguration('pokemonCompanion');
   const encounterChance = () =>
     clampEncounterChance(settings().get<number>('encounterChance', ENCOUNTER_CHANCE));
+  // Con el Incienso encendido y el efecto del favorito, si los hay
+  const currentEncounterChance = () => {
+    const game = state.get();
+    const chance = encounterChanceWithIncense(encounterChance(), incenseActive(game));
+    return Math.min(1, chance * perkValue(game, 'encounter'));
+  };
   const gate = new EncounterGate(() =>
     cooldownMsFromSeconds(
       settings().get<number>('encounterCooldownSeconds', ENCOUNTER_COOLDOWN_MS / 1000)
@@ -144,7 +152,9 @@ export function activate(context: vscode.ExtensionContext) {
 
     try {
       const shiny =
-        source.kind === 'recall' ? source.shiny : rollShiny(Boolean(pokemon.shinySpriteUrl));
+        source.kind === 'recall'
+          ? source.shiny
+          : rollShiny(Boolean(pokemon.shinySpriteUrl), perkValue(state.get(), 'shiny'));
       const outcome = await runEncounter(state, encounterPanel, pokemon, shiny, {
         rewardFor: reward?.name,
         recalled: source.kind === 'recall',
@@ -254,7 +264,7 @@ export function activate(context: vscode.ExtensionContext) {
           // Las recompensas pendientes van antes que el azar
           void startEncounter({ kind: 'reward', achievement: reward });
         } else if (
-          rollEncounter(encounterChanceWithIncense(encounterChance(), incenseActive(state.get())))
+          rollEncounter(currentEncounterChance())
         ) {
           // Sin await: el encuentro espera tu respuesta y no debe bloquear el guardado
           void startEncounter();
@@ -327,6 +337,25 @@ export function activate(context: vscode.ExtensionContext) {
         }
       }
     ),
+
+    vscode.commands.registerCommand('pokemonCompanion.chooseFavorite', () =>
+      chooseFavorite(state)
+    ),
+
+    vscode.commands.registerCommand(
+      'pokemonCompanion.setFavorite',
+      async (item?: { pokemonId?: number; shiny?: boolean }) => {
+        if (item?.pokemonId === undefined) {
+          return;
+        }
+        await setFavoriteFor(state, item.pokemonId, Boolean(item.shiny));
+      }
+    ),
+
+    vscode.commands.registerCommand('pokemonCompanion.clearFavorite', async () => {
+      await clearFavorite(state);
+      vscode.window.showInformationMessage('Ya no tienes Pokémon favorito.');
+    }),
 
     vscode.commands.registerCommand('pokemonCompanion.syncNow', () =>
       sync.syncNow()

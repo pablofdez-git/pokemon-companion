@@ -16,6 +16,7 @@ import {
   ballSpriteUrl,
   describeMultiplier,
 } from '../game/items';
+import { perkValue } from '../game/favorite';
 import { findObject, rollStoneDrop } from '../game/objects';
 import { BallOption, EncounterPanel, PokemonView } from './encounterPanel';
 
@@ -133,6 +134,7 @@ async function playEncounter(
     const ctx: CatchContext = {
       throwNumber,
       hour: new Date().getHours(),
+      captureBonus: perkValue(state.get(), 'capture'),
     };
 
     const choice = await panel.ask(
@@ -175,7 +177,7 @@ async function playEncounter(
         state,
         pokemon,
         shiny,
-        rollStoneDrop(pokemon.types)
+        rollStoneDrop(pokemon.types, Math.random, perkValue(state.get(), 'stone'))
       );
       const found = stone ? ` Llevaba una ${findObject(stone)?.name ?? stone}.` : '';
       panel.showEnd(view, 'captured', `¡Has capturado a ${label}! +${coins} 🪙${found}`);

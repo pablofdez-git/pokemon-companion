@@ -2,6 +2,7 @@
 
 ## [Sin publicar]
 
+- **Pokémon favorito**: elige uno de tus Pokémon (clic derecho en la Mochila) y su tipo te da un pequeño efecto: más monedas al guardar o al capturar, más encuentros, más probabilidad de captura o de variocolor, o más piedras. Una línea nueva de la Mochila muestra cuál es y qué hace.
 - Nueva **Premier Ball** (captura ×1,25): no se vende, te regalan una por cada 10 Poké Balls que compres de una vez.
 - **Objetos**, en la tienda y en una sección nueva de la Mochila:
   - **Incienso** (60): durante 10 min, el doble de probabilidad de encuentro.

@@ -1,6 +1,7 @@
 import { StateManager } from '../data/state';
 import { PokemonData } from '../data/pokeapi';
 import { GENERATIONS, Generation, unlockedAfterCaptures } from './generations';
+import { perkValue } from './favorite';
 import { amuletBonus } from './objects';
 import { dayKey, recordActivity } from './stats';
 
@@ -23,7 +24,11 @@ export async function rewardForSave(
   changedChars: number,
   now: Date = new Date()
 ): Promise<number> {
-  const coins = coinsForChanges(changedChars, amuletBonus(state.get()));
+  const game = state.get();
+  const coins = coinsForChanges(
+    changedChars,
+    amuletBonus(game) + perkValue(game, 'coinsSave')
+  );
   if (coins > 0) {
     await state.update((s) => {
       s.coins += coins;
@@ -64,8 +69,8 @@ export async function rewardForCapture(
   shiny: boolean,
   stone: string | null = null // lo decide rollStoneDrop() al capturar
 ): Promise<CaptureResult> {
-  const coins =
-    captureReward(pokemon.captureRate) + (shiny ? SHINY_BONUS_COINS : 0);
+  const base = captureReward(pokemon.captureRate) + (shiny ? SHINY_BONUS_COINS : 0);
+  const coins = Math.round(base * (1 + perkValue(state.get(), 'coinsCapture')));
   let newGenerations: Generation[] = [];
 
   await state.update((s) => {
@@ -74,6 +79,7 @@ export async function rewardForCapture(
       name: pokemon.name,
       spriteUrl: shiny ? pokemon.shinySpriteUrl : pokemon.spriteUrl,
       captureRate: pokemon.captureRate,
+      types: pokemon.types,
       ...(shiny ? { shiny: true } : {}),
     });
     s.coins += coins;

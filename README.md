@@ -52,6 +52,21 @@ En la barra de actividad, el icono de Ctrl+Catch abre la *Mochila*, con:
 - Tus estadísticas: tu **racha** de días seguidos programando, caracteres escritos, monedas ganadas y gastadas, encuentros, porcentaje de captura…
 - Tus Pokémon capturados. Los repetidos tienen un botón para **venderlos** y recuperar monedas, y los que pueden evolucionar, otro para **evolucionarlos** (una flecha hacia arriba).
 
+## Pokémon favorito
+
+Elige uno de tus Pokémon como **favorito** (clic derecho sobre él en la *Mochila* → *Elegir como favorito*, o el comando *Ctrl+Catch: Elegir Pokémon favorito*). Su **tipo** te da un pequeño efecto mientras lo tengas:
+
+| Tipos | Efecto |
+|---|---|
+| Eléctrico, acero, normal | +5 % de monedas al guardar |
+| Tierra, roca, dragón | +20 % de monedas al capturar |
+| Fuego, volador, bicho | +15 % de probabilidad de encuentro |
+| Lucha, siniestro, veneno | +10 % de probabilidad de captura |
+| Psíquico, hada, fantasma | ×1,5 de probabilidad de variocolor |
+| Planta, agua, hielo | el doble de probabilidad de que un capturado lleve una piedra |
+
+La línea **Favorito** de la Mochila te recuerda cuál es y qué efecto tiene. Si su última copia evoluciona, él evoluciona también y toma el efecto de su nuevo tipo. Los efectos se suman a los de los objetos (por ejemplo, la Moneda Amuleto).
+
 ## Logros
 
 Pulsa el botón del trofeo de la cabecera de la *Mochila* (junto al de la Pokédex), o la línea **Logros**, para abrir una pestaña con todos los retos (capturas, especies distintas, días seguidos, código escrito, evoluciones, variocolores, generaciones…) con lo que te falta para cada uno. Al conseguir uno aparece un **Pokémon de recompensa**: cuanto más difícil el logro, más raro es (común, poco común, raro o legendario). No huye si fallas, y si lo dejas escapar sigue esperándote en el siguiente guardado. Necesitas tener alguna ball.

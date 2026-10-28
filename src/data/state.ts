@@ -8,6 +8,14 @@ export interface CapturedPokemon {
   spriteUrl: string | null;
   captureRate?: number; // dificultad; no existe en capturas antiguas
   shiny?: boolean;      // variocolor; no existe en capturas antiguas
+  types?: string[];     // tipos en inglés (fire, water…); no existe en capturas antiguas
+}
+
+// El Pokémon favorito: su primer tipo decide el efecto pasivo (ver game/favorite.ts)
+export interface Favorite {
+  id: number;
+  shiny: boolean;
+  type: string;
 }
 
 export interface GameState {
@@ -21,6 +29,7 @@ export interface GameState {
   stats: GameStats;
   achievements: string[];        // ids de los logros conseguidos
   achievementsClaimed: string[]; // ids de los logros cuya recompensa ya capturaste
+  favorite?: Favorite;           // opcional: las partidas antiguas no lo tienen
 }
 
 const KEY = 'pokemonCompanion.state';

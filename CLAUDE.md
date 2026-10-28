@@ -60,6 +60,7 @@ src/
     economy.ts            Monedas por guardar, por capturar y precio de venta
     encounter.ts          Probabilidades de encuentro, captura, huida, shiny; EncounterGate (cooldown)
     generations.ts        Tabla de generaciones y reglas de desbloqueo
+    favorite.ts           Pokémon favorito: efecto pasivo según su tipo (PERK_BY_TYPE), elegir/quitar
     items.ts              Catálogo de balls (precio, regla, multiplicador según contexto)
     objects.ts            Catálogo de objetos (Incienso, Pokéflauta, Moneda Amuleto, piedras) y sus efectos
     pokedex.ts            buildPokedex(): agrupa capturas por especie y generación (siluetas, shiny)
@@ -67,7 +68,7 @@ src/
     stats.ts              GameStats (contadores) y racha de días: recordActivity, currentStreak
     typing.ts             Qué cuenta al escribir: sin espacios (countableChars) y sin teclas mantenidas (RepeatFilter)
     syncRules.ts          decideSync(): push / pull / conflict / none
-    evolution.ts          nextEvolutionIds(), evolutionCost(), evolvePokemon()
+    evolution.ts          nextEvolutions(), evolutionCost(), evolvePokemon()
     achievements.ts       Lista de logros, comprobación, recompensas pendientes y pickRewardPokemon()
     syncMerge.ts          mergeStates(): combina dos partidas en un conflicto (con o sin base)
   ui/                     Todo lo que toca la interfaz de VS Code
@@ -78,6 +79,7 @@ src/
     encounterPanel.ts     WebviewViewProvider del panel Encuentro (protocolo de mensajes)
     encounterView.ts      runEncounter(): bucle de un encuentro completo
     evolution.ts          evolveFromBackpack(): QuickPick de evoluciones
+    favorite.ts           chooseFavorite() / setFavoriteFor(): QuickPick y elección con el tipo
     pokedexPanel.ts       WebviewPanel de la Pokédex (pestaña del editor, se refresca con onDidChange)
     achievementsPanel.ts  WebviewPanel de los Logros (misma estructura que la Pokédex)
 docs/guia/                Guía del entrenador en PDF (código fuente, ver más abajo)
@@ -93,7 +95,7 @@ media/
 
 ### Estado (`data/state.ts`)
 - Todo el progreso es un único objeto `GameState` guardado en `context.globalState` con la clave `pokemonCompanion.state`:
-  `coins`, `balls` (id → cantidad), `items` (objetos: id → cantidad), `incenseUntil` (ms; 0 = apagado), `captured` (lista de `CapturedPokemon`, con repetidos), `generationsUnlocked`, `updatedAt`, `stats`, `achievements` y `achievementsClaimed`.
+  `coins`, `balls` (id → cantidad), `items` (objetos: id → cantidad), `incenseUntil` (ms; 0 = apagado), `captured` (lista de `CapturedPokemon`, con repetidos; las nuevas guardan `types`), `generationsUnlocked`, `updatedAt`, `stats`, `achievements`, `achievementsClaimed` y `favorite` (opcional).
 - **Siempre se modifica con `state.update(s => { ... })`**: hace copia profunda, aplica el cambio, pone `updatedAt = Date.now()`, guarda y dispara `onDidChange`. La UI (barra de estado, mochila) y la sincronización se suscriben a ese evento.
 - `get()` normaliza partidas antiguas (campos que faltan, capturas guardadas en formato viejo). Los campos nuevos del estado deben ser opcionales o tener un valor por defecto aquí, para no romper partidas existentes ni las sincronizadas.
 - `replaceWith()` aplica una partida remota **sin tocar** `updatedAt`.
@@ -140,7 +142,7 @@ media/
 ### Evoluciones (`game/evolution.ts`, `ui/evolution.ts`)
 - Botón en línea (`$(arrow-circle-up)`) → comando oculto `pokemonCompanion.evolve`. Solo sale en los Pokémon con `evolvable` en su `contextValue` (que es una lista de palabras: `duplicatePokemon`/`singlePokemon` + `evolvable`; los `when` de `package.json` usan `=~`).
 - La mochila es síncrona, así que `BackpackProvider.prefetchEvolutions()` consulta en segundo plano (de una en una) las especies que no están en la caché de `cachedEvolutionIds()` y refresca el árbol al terminar. Si falla, no reintenta hasta pasado 1 min. Sin conexión, el botón no sale.
-- `fetchEvolutionIds(id)` (`data/pokeapi.ts`): `pokemon-species/{id}` → `evolution_chain.url`, y `nextEvolutionIds()` (pura) saca las evoluciones directas del árbol. Con caché. Las ramificadas (Eevee) se eligen en un QuickPick.
+- `fetchEvolutions(id)` (`data/pokeapi.ts`): `pokemon-species/{id}` → `evolution_chain.url`, y `nextEvolutions()` (pura) saca del árbol las evoluciones directas, cada una con la piedra que necesita (`{ id, stone }`). Con caché. Las ramificadas (Eevee) se eligen en un QuickPick.
 - `evolvePokemon()` cambia **una copia** (normal o variocolor, la que se elija) por la evolución y cobra `evolutionCost(captureRate de la evolución)`: 30–150 monedas. Se puede evolucionar la única copia (la base deja de estar capturada). El variocolor se conserva.
 - Solo se ofrecen evoluciones de generaciones ya desbloqueadas (`availableEvolutions`; la Pokédex solo muestra esas). Las que en la API se hacen con una piedra de la tienda necesitan esa piedra en lugar de monedas (ver Objetos); las demás condiciones (nivel, intercambio, otros objetos) no se comprueban y se pagan con monedas.
 - Cuenta en `stats.evolutions` (sumable en `mergeStates`) y `coinsSpent`; puede desbloquear generaciones como una captura.
@@ -161,7 +163,7 @@ media/
   - `npm run compile` y `node docs/guia/capturas.js`: regenera `logros.png`, `pokedex.png` e `img/` (sprites de las balls) pintando las pestañas reales (`media/*.css` y `*.js`) con una partida de ejemplo. Necesita internet (PokéAPI).
   - `node docs/guia/construir.js`: genera el PDF en la raíz.
 - Las capturas de la Mochila y el Encuentro son reales y salen de `media/screenshots/` (las mismas del README); no se pueden generar desde el código, así que hay que sustituirlas a mano si cambia mucho la interfaz (la de la Mochila no incluye todavía las líneas Logros y Estadísticas).
-- **Hay que actualizarla en cada versión que cambie algo visible** (instalación, pantallas, precios, ajustes, comandos). Los datos que cita salen del código: precios de `game/items.ts`, umbrales de `game/generations.ts` y `game/achievements.ts`, probabilidades de `game/encounter.ts`, versión mínima de `package.json`. Sin emojis, como el resto del proyecto (la moneda de la guía es un SVG dibujado).
+- **Hay que actualizarla en cada versión que cambie algo visible** (instalación, pantallas, precios, ajustes, comandos). Los datos que cita salen del código: precios de `game/items.ts` y `game/objects.ts`, umbrales de `game/generations.ts` y `game/achievements.ts`, probabilidades de `game/encounter.ts`, versión mínima de `package.json`. Sin emojis, como el resto del proyecto (la moneda de la guía es un SVG dibujado).
 
 ### Objetos (`game/objects.ts`, sección Objetos de `ui/backpackView.ts`)
 - Catálogo `OBJECTS` (como `BALLS`): `id`, `price`, `rule`, `spriteSlug` (sprite de PokéAPI), `kind` y `unique`. Los ids de las piedras son los nombres de la PokéAPI (`fire-stone`…), para casarlos con la cadena evolutiva.
@@ -171,6 +173,14 @@ media/
 - **Piedras**: `nextEvolutions()` (`game/evolution.ts`) devuelve `{ id, stone }`; `stone` sale de `evolution_details` (`trigger: use-item` con una piedra de `STONE_IDS`). Esas evoluciones gastan la piedra en lugar de monedas (`evolvePokemon(..., stone)`). Al capturar, `rollStoneDrop(types)` (5 %) da la piedra de su tipo (`STONE_BY_TYPE`) o una al azar; por eso `PokemonData` lleva `types`.
 - **Pokéflauta**: el último Pokémon que huyó de un encuentro normal (`lastFled` en `extension.ts`, solo en memoria, no se sincroniza) se puede llamar durante `FLUTE_WINDOW_MINUTES` con `startEncounter({ kind: 'recall' })`: sin cooldown y con el mismo variocolor. La flauta solo se gasta si el encuentro empieza, y a cada Pokémon solo se le llama una vez.
 - El botón de usar (comando oculto `pokemonCompanion.useObject`, `$(play)`) sale en las líneas con `contextValue == usableObject`: el Incienso si no hay uno encendido y la Pokéflauta si hay a quién llamar.
+
+### Pokémon favorito (`game/favorite.ts`, `ui/favorite.ts`)
+- Solo cambia números, no pone nada en pantalla. `state.favorite = { id, shiny, type }` apunta a una de tus capturas y **guarda su primer tipo**: las capturas nuevas llevan `types` (de `PokemonData`), y para las antiguas `setFavoriteFor()` lo pide a la PokéAPI al elegirlo (necesita conexión solo en ese momento).
+- `PERK_BY_TYPE` da un efecto a cada uno de los 18 tipos, tres tipos por efecto: monedas al guardar +5 % (eléctrico, acero, normal), monedas al capturar +20 % (tierra, roca, dragón), probabilidad de encuentro +15 % (fuego, volador, bicho), de captura +10 % (lucha, siniestro, veneno), de variocolor ×1,5 (psíquico, hada, fantasma) y de que un capturado lleve piedra ×2 (planta, agua, hielo). Los valores son constantes `FAVORITE_*` arriba del archivo.
+- `perkValue(state, kind)` devuelve el valor si ese efecto es el activo y el neutro si no (0 para los que se suman, 1 para los que multiplican), así que los puntos de uso no necesitan comprobar nada: `rewardForSave` (suma al bonus de la Moneda Amuleto), `rewardForCapture`, `currentEncounterChance()` en `extension.ts` (junto al Incienso), `CatchContext.captureBonus` en `catchProbability`, `rollShiny(…, multiplier)` y `rollStoneDrop(…, multiplier)`.
+- Si ya no tienes al favorito (por ejemplo, tras sincronizar), `findFavorite()` no lo encuentra y no da efecto. Si evoluciona su **última copia**, `evolvePokemon` lo mueve a la evolución y actualiza su tipo; si quedan copias se queda. Vender no necesita regla extra: solo se venden repetidos normales, y el variocolor no se vende.
+- Se elige con clic derecho en un Pokémon de la Mochila (`setFavorite`, oculto en la paleta) o con `chooseFavorite` (QuickPick); `clearFavorite` lo quita (también desde el clic derecho en la línea Favorito). La Mochila tiene una línea "Favorito" (`$(heart)`, `contextValue` `favorite` / `noFavorite`) con su efecto, y el Pokémon elegido lleva "favorito" en la descripción.
+- En `mergeStates` gana el lado que cambió de favorito desde la base; si cambiaron los dos, el de `updatedAt` más reciente.
 
 ### Generaciones (`game/generations.ts`)
 - Para desbloquear la siguiente hay que tener `ceil(maxPokemonId(actual) × UNLOCK_FRACTION)` especies **distintas** (los repetidos no cuentan). Puede subir más de una de golpe.
@@ -199,7 +209,7 @@ media/
   - `normalizeState()` (`data/state.ts`) prepara las partidas remota y base antes de combinarlas.
 
 ## Contribuciones en `package.json`
-- Comandos: `useObject` (oculto; botón en línea en los objetos usables de la Mochila), `resetProgress`, `togglePause`, `openShop`, `openPokedex` y `openAchievements` (botones en la cabecera de la Mochila), `evolve` (oculto en la paleta; botón en línea en cada Pokémon de la mochila), `sellDuplicate` (oculto en la paleta; botón en línea en la mochila cuando el `contextValue` contiene `duplicatePokemon`), `syncNow`.
+- Comandos: `chooseFavorite` y `clearFavorite` (paleta), `setFavorite` (oculto; menú contextual de los Pokémon de la Mochila), `useObject` (oculto; botón en línea en los objetos usables de la Mochila), `resetProgress`, `togglePause`, `openShop`, `openPokedex` y `openAchievements` (botones en la cabecera de la Mochila), `evolve` (oculto en la paleta; botón en línea en cada Pokémon de la mochila), `sellDuplicate` (oculto en la paleta; botón en línea en la mochila cuando el `contextValue` contiene `duplicatePokemon`), `syncNow`.
 - Contenedor en la barra de actividad `pokemonCompanion` con las vistas `pokemonCompanion.encounter` (webview) y `pokemonCompanion.backpack` (árbol).
 - Ajustes: `pokemonCompanion.syncFolder` (scope `machine`), `encounterChance` y `encounterCooldownSeconds` (scope `application`).
 
@@ -240,7 +250,7 @@ Publicada en el Marketplace como `pablofdez.pokemon-companion`; la versión actu
 **Próximos pasos (en este orden, de uno en uno):**
 1. **[Hecho, sin publicar] Balls:** quitar la Repeat Ball y la Timer Ball (las que tenga una partida se devuelven en monedas). Añadir la **Premier Ball**: no se vende, se regala 1 por cada 10 Poké Balls de una misma compra. Captura ×1.25, entre la Poké Ball y la Super Ball.
 2. **[Hecho, sin publicar] Zona de Objetos** (sección nueva en la Mochila y en la tienda): Incienso, Moneda Amuleto, piedras evolutivas y Pokéflauta. Incienso 60 (×2 encuentros, 10 min), Pokéflauta 80 (llama al último que huyó, hasta 10 min), Moneda Amuleto 1500 (+10 % al guardar, única), piedras 100 (sustituyen a las monedas en las evoluciones con piedra; 5 % de que un capturado lleve una).
-3. **Pokémon favorito:** eliges uno de tus Pokémon y da un efecto pasivo según su tipo. Sin nada en pantalla que moleste, pero el efecto activo tiene que verse en algún sitio (por ejemplo, en la Mochila).
+3. **[Hecho, sin publicar] Pokémon favorito:** eliges uno de tus Pokémon y su tipo da un efecto pasivo pequeño (monedas, encuentros, captura, variocolor o piedras). Sin nada en pantalla que moleste: el efecto se ve en una línea de la Mochila.
 4. **Pokédex con más detalle:** tipos, descripción y fecha de captura de cada especie.
 5. **Guardería:** dejas dos repetidos y con el tiempo sale un huevo. Da otro uso a los repetidos, además de venderlos.
 6. **Traducción al inglés** (opcional): `vscode.l10n`, `package.nls.json` y `package.nls.es.json`. Todos los textos están escritos a mano en español en `src/` y `media/*.js`.

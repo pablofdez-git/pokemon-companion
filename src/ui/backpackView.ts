@@ -1,9 +1,16 @@
 import * as vscode from 'vscode';
-import { CapturedPokemon, StateManager } from '../data/state';
+import { CapturedPokemon, GameState, StateManager } from '../data/state';
 import { cachedEvolutionIds, fetchEvolutions } from '../data/pokeapi';
 import { ACHIEVEMENTS, pendingRewards } from '../game/achievements';
 import { sellPrice } from '../game/economy';
 import { availableEvolutions } from '../game/evolution';
+import {
+  PERK_TEXTS,
+  activePerk,
+  findFavorite,
+  isFavorite,
+  typeName,
+} from '../game/favorite';
 import {
   GenerationProgress,
   generationProgress,
@@ -186,6 +193,28 @@ function progressItem(progress: GenerationProgress): BackpackItem {
   return item;
 }
 
+// Línea con el Pokémon favorito y su efecto (clic para elegir otro)
+function favoriteItem(state: GameState): BackpackItem {
+  const item = new BackpackItem('Favorito', vscode.TreeItemCollapsibleState.None);
+  item.iconPath = new vscode.ThemeIcon('heart');
+  item.command = { command: 'pokemonCompanion.chooseFavorite', title: 'Elegir favorito' };
+
+  const favorite = findFavorite(state);
+  const perk = activePerk(state);
+  if (!favorite || !state.favorite) {
+    item.description = 'ninguno';
+    item.tooltip =
+      'Elige un Pokémon favorito: su tipo te da un pequeño efecto. Haz clic aquí, o clic derecho sobre un Pokémon.';
+    item.contextValue = 'noFavorite';
+    return item;
+  }
+
+  item.description = `${favorite.name} · ${perk ? PERK_TEXTS[perk] : 'sin efecto'}`;
+  item.tooltip = `${favorite.name} (${typeName(state.favorite.type)}). Haz clic para elegir otro.`;
+  item.contextValue = 'favorite';
+  return item;
+}
+
 function formatNumber(n: number): string {
   return n.toLocaleString('es-ES');
 }
@@ -329,8 +358,11 @@ export class BackpackProvider
         title: 'Abrir logros',
       };
 
+      const favoriteLine = favoriteItem(game);
+
       return [
         progressItem(progress),
+        favoriteLine,
         new BackpackItem('Pokéballs', Expanded, 'balls'),
         new BackpackItem('Objetos', Expanded, 'objects'),
         achievementsLine,
@@ -378,6 +410,7 @@ export class BackpackProvider
     }
 
     if (element.section === 'pokemon') {
+      const game = this.state.get();
       const groups = groupCaptured(captured);
       if (groups.length === 0) {
         const empty = new BackpackItem('Aún no has capturado ninguno', None);
@@ -407,6 +440,7 @@ export class BackpackProvider
         const details = [
           count > 1 ? `x${count}` : '',
           pokemon.shiny ? 'variocolor' : '',
+          isFavorite(game, pokemon.id, Boolean(pokemon.shiny)) ? 'favorito' : '',
         ].filter(Boolean);
         if (details.length > 0) {
           item.description = details.join(' · ');

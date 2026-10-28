@@ -2,6 +2,7 @@
 export interface CatchContext {
   throwNumber: number; // 1 = primer lanzamiento del encuentro
   hour: number;        // hora local, de 0 a 23
+  captureBonus?: number; // multiplicador extra (efecto del Pokémon favorito); 1 si no hay
 }
 
 export interface BallType {

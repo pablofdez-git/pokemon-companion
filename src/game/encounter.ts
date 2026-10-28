@@ -44,7 +44,7 @@ export function catchProbability(
   ball: BallType,
   ctx: CatchContext
 ): number {
-  return Math.min(1, (captureRate / 255) * ball.multiplier(ctx));
+  return Math.min(1, (captureRate / 255) * ball.multiplier(ctx) * (ctx.captureBonus ?? 1));
 }
 
 export function tryCatch(probability: number): boolean {
@@ -98,6 +98,6 @@ export function failedShakes(probability: number): number {
 export const SHINY_CHANCE = 0.02;
 
 // Solo puede salir variocolor si la API tiene su sprite
-export function rollShiny(hasShinySprite: boolean): boolean {
-  return hasShinySprite && Math.random() < SHINY_CHANCE;
+export function rollShiny(hasShinySprite: boolean, chanceMultiplier = 1): boolean {
+  return hasShinySprite && Math.random() < SHINY_CHANCE * chanceMultiplier;
 }

@@ -136,8 +136,12 @@ const STONE_BY_TYPE: Record<string, string> = {
 };
 
 // La piedra que lleva un Pokémon recién capturado, o null (la mayoría no lleva nada)
-export function rollStoneDrop(types: string[], random: () => number = Math.random): string | null {
-  if (random() >= STONE_DROP_CHANCE) {
+export function rollStoneDrop(
+  types: string[],
+  random: () => number = Math.random,
+  chanceMultiplier = 1 // el favorito puede aumentarla
+): string | null {
+  if (random() >= STONE_DROP_CHANCE * chanceMultiplier) {
     return null;
   }
   const byType = types.map((t) => STONE_BY_TYPE[t]).find(Boolean);
