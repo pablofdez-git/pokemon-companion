@@ -16,6 +16,7 @@ const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'ctrlcatch-guia-'));
 const { buildAchievements } = require(path.join(PROJECT, 'out/game/achievements'));
 const { buildPokedex } = require(path.join(PROJECT, 'out/game/pokedex'));
 const { BALLS, ballSpriteUrl } = require(path.join(PROJECT, 'out/game/items'));
+const { OBJECTS, objectSpriteUrl } = require(path.join(PROJECT, 'out/game/objects'));
 const { EMPTY_STATS } = require(path.join(PROJECT, 'out/game/stats'));
 
 const url = (file) => pathToFileURL(file).href;
@@ -75,10 +76,13 @@ function capturar(htmlFile, png, ancho, alto) {
 }
 
 async function main() {
-  // Sprites de las balls para la tabla de la guía
+  // Sprites de las balls y los objetos para las tablas de la guía
   fs.mkdirSync(path.join(OUT, 'img'), { recursive: true });
   for (const ball of BALLS) {
     await descargar(ballSpriteUrl(ball), path.join(OUT, 'img', `${ball.id}.png`));
+  }
+  for (const object of OBJECTS) {
+    await descargar(objectSpriteUrl(object), path.join(OUT, 'img', `${object.id}.png`));
   }
 
   // Partida de ejemplo: 40 especies, un variocolor y varios logros conseguidos

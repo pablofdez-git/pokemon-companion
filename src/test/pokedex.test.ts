@@ -7,6 +7,8 @@ function state(captured: CapturedPokemon[], generationsUnlocked = 1): GameState 
   return {
     coins: 0,
     balls: {},
+    items: {},
+    incenseUntil: 0,
     captured,
     generationsUnlocked,
     updatedAt: 0,

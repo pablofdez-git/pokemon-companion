@@ -108,6 +108,7 @@ suite('estadísticas: contadores', () => {
       id: 19,
       name: 'Rattata',
       captureRate: 255,
+      types: [],
       spriteUrl: null,
       animatedSpriteUrl: null,
       shinySpriteUrl: null,
@@ -124,6 +125,6 @@ suite('estadísticas: contadores', () => {
     const { stats } = state.get();
     assert.strictEqual(stats.captures, 2);
     assert.strictEqual(stats.coinsEarned, first.coins + second.coins + sale.earned);
-    assert.strictEqual(stats.coinsSpent, pokeball.price);
+    assert.strictEqual(stats.coinsSpent, pokeball.price!);
   });
 });

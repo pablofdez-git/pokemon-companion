@@ -75,6 +75,11 @@
         "icon": "$(arrow-circle-up)"
       },
       {
+        "command": "pokemonCompanion.useObject",
+        "title": "Usar",
+        "icon": "$(play)"
+      },
+      {
         "command": "pokemonCompanion.syncNow",
         "title": "Ctrl+Catch: Sincronizar partida ahora"
       }
@@ -88,9 +93,23 @@
         {
           "command": "pokemonCompanion.evolve",
           "when": "false"
+        },
+        {
+          "command": "pokemonCompanion.useObject",
+          "when": "false"
         }
       ],
       "view/item/context": [
+        {
+          "command": "pokemonCompanion.useObject",
+          "when": "view == pokemonCompanion.backpack && viewItem == usableObject",
+          "group": "inline"
+        },
+        {
+          "command": "pokemonCompanion.useObject",
+          "when": "view == pokemonCompanion.backpack && viewItem == usableObject",
+          "group": "1_use"
+        },
         {
           "command": "pokemonCompanion.evolve",
           "when": "view == pokemonCompanion.backpack && viewItem =~ /evolvable/",

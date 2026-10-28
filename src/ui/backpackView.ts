@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { CapturedPokemon, StateManager } from '../data/state';
-import { cachedEvolutionIds, fetchEvolutionIds } from '../data/pokeapi';
+import { cachedEvolutionIds, fetchEvolutions } from '../data/pokeapi';
 import { ACHIEVEMENTS, pendingRewards } from '../game/achievements';
 import { sellPrice } from '../game/economy';
 import { availableEvolutions } from '../game/evolution';
@@ -11,19 +11,28 @@ import {
 } from '../game/generations';
 import { BALLS, BallType, ballSpriteUrl } from '../game/items';
 import {
+  FledPokemon,
+  GameObject,
+  OBJECTS,
+  canRecall,
+  incenseActive,
+  objectSpriteUrl,
+} from '../game/objects';
+import {
   GameStats,
   captureRate,
   currentStreak,
   dayKey,
 } from '../game/stats';
 
-type Section = 'balls' | 'pokemon' | 'stats';
+type Section = 'balls' | 'objects' | 'pokemon' | 'stats';
 
 const RETRY_AFTER_MS = 60 * 1000; // espera antes de volver a consultar una evolución que falló
 
 class BackpackItem extends vscode.TreeItem {
   pokemonId?: number;
   shiny?: boolean;
+  objectId?: string;
 
   constructor(
     label: string,
@@ -98,9 +107,60 @@ function ballTooltip(ball: BallType, count: number): vscode.MarkdownString {
     `<img src="${ballSpriteUrl(ball)}" width="90" height="90" alt="${ball.name}">\n\n`
   );
   tooltip.appendMarkdown(
-    `${ball.rule}\n\nTienes: ${count} · Precio: ${ball.price} 🪙`
+    `${ball.rule}\n\nTienes: ${count} · ` +
+      (ball.price === null ? 'No se vende' : `Precio: ${ball.price} 🪙`)
   );
   return tooltip;
+}
+
+function formatTime(ms: number): string {
+  return new Date(ms).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+}
+
+// Un objeto de la mochila. El Incienso y la Pokéflauta llevan el botón de usar (ver package.json)
+function objectItem(
+  object: GameObject,
+  count: number,
+  incenseUntil: number | null,
+  fled: FledPokemon | undefined
+): BackpackItem {
+  const item = new BackpackItem(object.name, vscode.TreeItemCollapsibleState.None);
+  item.objectId = object.id;
+  item.iconPath = vscode.Uri.parse(objectSpriteUrl(object));
+
+  const details = object.unique ? [] : [`x${count}`];
+  let status = '';
+  if (object.kind === 'incense' && incenseUntil !== null) {
+    details.push(`encendido hasta las ${formatTime(incenseUntil)}`);
+  } else if (object.kind === 'amulet') {
+    details.push('activa');
+  } else if (object.kind === 'flute') {
+    status = canRecall(fled)
+      ? `Puede llamar a ${fled.shiny ? `${fled.name} variocolor` : fled.name}, que huyó a las ${formatTime(fled.at)}`
+      : 'Ningún Pokémon ha huido hace poco';
+  }
+  item.description = details.join(' · ');
+
+  const usable =
+    (object.kind === 'incense' && incenseUntil === null) ||
+    (object.kind === 'flute' && canRecall(fled));
+  item.contextValue = usable ? 'usableObject' : 'object';
+
+  const tooltip = new vscode.MarkdownString();
+  tooltip.supportHtml = true;
+  tooltip.appendMarkdown(`**${object.name}**\n\n`);
+  tooltip.appendMarkdown(
+    `<img src="${objectSpriteUrl(object)}" width="90" height="90" alt="${object.name}">\n\n`
+  );
+  tooltip.appendMarkdown(object.rule);
+  if (status) {
+    tooltip.appendMarkdown(`\n\n${status}`);
+  }
+  if (usable) {
+    tooltip.appendMarkdown('\n\nÚsalo con el botón de esta línea');
+  }
+  item.tooltip = tooltip;
+  return item;
 }
 
 // Línea de progreso hacia la siguiente generación
@@ -182,9 +242,24 @@ export class BackpackProvider
   private readonly loading = new Set<number>();   // especies que se están consultando
   private readonly failedAt = new Map<number, number>(); // para reintentar sin insistir
   private disposed = false;
+  private incenseTimer: ReturnType<typeof setTimeout> | undefined;
 
-  constructor(private readonly state: StateManager) {
+  // fled: el último Pokémon que huyó (para la Pokéflauta), que no se guarda en la partida
+  constructor(
+    private readonly state: StateManager,
+    private readonly fled: () => FledPokemon | undefined
+  ) {
     this.subscription = state.onDidChange(() => this.emitter.fire());
+  }
+
+  refresh(): void {
+    this.emitter.fire();
+  }
+
+  // Refresca la mochila cuando se apaga el Incienso, para que vuelva a salir el botón
+  private refreshWhenIncenseEnds(until: number): void {
+    clearTimeout(this.incenseTimer);
+    this.incenseTimer = setTimeout(() => this.emitter.fire(), until - Date.now() + 1000);
   }
 
   // Consulta en segundo plano las evoluciones que aún no se conocen y refresca al terminar.
@@ -204,7 +279,7 @@ export class BackpackProvider
     pending.forEach((id) => this.loading.add(id));
     for (const id of pending) {
       try {
-        await fetchEvolutionIds(id);
+        await fetchEvolutions(id);
       } catch {
         this.failedAt.set(id, Date.now()); // sin conexión: el botón no sale
       }
@@ -257,6 +332,7 @@ export class BackpackProvider
       return [
         progressItem(progress),
         new BackpackItem('Pokéballs', Expanded, 'balls'),
+        new BackpackItem('Objetos', Expanded, 'objects'),
         achievementsLine,
         statsSection,
         new BackpackItem(
@@ -275,6 +351,25 @@ export class BackpackProvider
         item.tooltip = ballTooltip(ball, balls[ball.id] ?? 0);
         return item;
       });
+    }
+
+    if (element.section === 'objects') {
+      const game = this.state.get();
+      const incenseUntil = incenseActive(game) ? game.incenseUntil : null;
+      if (incenseUntil !== null) {
+        this.refreshWhenIncenseEnds(incenseUntil);
+      }
+      // Solo los que tienes (el Incienso también mientras está encendido)
+      const owned = OBJECTS.filter(
+        (o) => (game.items[o.id] ?? 0) > 0 || (o.kind === 'incense' && incenseUntil !== null)
+      );
+      if (owned.length === 0) {
+        const empty = new BackpackItem('No tienes objetos', None);
+        empty.description = 'Los venden en la tienda';
+        empty.command = { command: 'pokemonCompanion.openShop', title: 'Abrir tienda' };
+        return [empty];
+      }
+      return owned.map((o) => objectItem(o, game.items[o.id] ?? 0, incenseUntil, this.fled()));
     }
 
     if (element.section === 'stats') {
@@ -329,6 +424,7 @@ export class BackpackProvider
 
   dispose(): void {
     this.disposed = true;
+    clearTimeout(this.incenseTimer);
     this.subscription.dispose();
     this.emitter.dispose();
   }

@@ -16,6 +16,8 @@ const SNAPSHOT: Snapshot = {
   state: {
     coins: 42,
     balls: { pokeball: 3 },
+    items: {},
+    incenseUntil: 0,
     captured: [{ id: 1, name: 'Bulbasaur', spriteUrl: null }],
     generationsUnlocked: 1,
     updatedAt: 1234,

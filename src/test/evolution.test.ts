@@ -8,7 +8,7 @@ import {
   availableEvolutions,
   evolutionCost,
   evolvePokemon,
-  nextEvolutionIds,
+  nextEvolutions,
 } from '../game/evolution';
 import { FakeMemento } from './fakeMemento';
 
@@ -19,11 +19,19 @@ function node(id: number, ...next: EvolutionNode[]): EvolutionNode {
   };
 }
 
+// Evolución que se consigue usando un objeto (como en la PokéAPI)
+function withItem(evolution: EvolutionNode, item: string): EvolutionNode {
+  return { ...evolution, evolution_details: [{ trigger: { name: 'use-item' }, item: { name: item } }] };
+}
+
+const ids = (chain: EvolutionNode, id: number) => nextEvolutions(chain, id).map((s) => s.id);
+
 function data(id: number, name: string, captureRate: number): PokemonData {
   return {
     id,
     name,
     captureRate,
+    types: [],
     spriteUrl: `n${id}`,
     animatedSpriteUrl: null,
     shinySpriteUrl: `s${id}`,
@@ -47,17 +55,31 @@ async function stateWith(coins: number, captured: CapturedPokemon[]): Promise<St
 const charmeleon = data(5, 'Charmeleon', 45);
 
 suite('evoluciones', () => {
-  test('nextEvolutionIds: cadena lineal', () => {
+  test('nextEvolutions: cadena lineal', () => {
     const chain = node(4, node(5, node(6)));
-    assert.deepStrictEqual(nextEvolutionIds(chain, 4), [5]);
-    assert.deepStrictEqual(nextEvolutionIds(chain, 5), [6]);
-    assert.deepStrictEqual(nextEvolutionIds(chain, 6), []);
+    assert.deepStrictEqual(nextEvolutions(chain, 4), [{ id: 5, stone: null }]);
+    assert.deepStrictEqual(ids(chain, 5), [6]);
+    assert.deepStrictEqual(ids(chain, 6), []);
   });
 
-  test('nextEvolutionIds: ramificada y especie fuera de la cadena', () => {
+  test('nextEvolutions: ramificada y especie fuera de la cadena', () => {
     const chain = node(133, node(134), node(135), node(136));
-    assert.deepStrictEqual(nextEvolutionIds(chain, 133), [134, 135, 136]);
-    assert.deepStrictEqual(nextEvolutionIds(chain, 999), []);
+    assert.deepStrictEqual(ids(chain, 133), [134, 135, 136]);
+    assert.deepStrictEqual(ids(chain, 999), []);
+  });
+
+  test('nextEvolutions: las que se hacen con piedra la piden; otros objetos no', () => {
+    const chain = node(
+      133,
+      withItem(node(134), 'water-stone'),
+      withItem(node(196), 'king-rock'), // no es una piedra de la tienda: se paga con monedas
+      node(197)
+    );
+    assert.deepStrictEqual(nextEvolutions(chain, 133), [
+      { id: 134, stone: 'water-stone' },
+      { id: 196, stone: null },
+      { id: 197, stone: null },
+    ]);
   });
 
   test('availableEvolutions descarta las de generaciones bloqueadas', () => {
@@ -111,6 +133,31 @@ suite('evoluciones', () => {
     // Un variocolor no se confunde con la copia normal
     const wrongKind = await evolvePokemon(state, 4, true, charmeleon);
     assert.strictEqual(wrongKind.ok, false);
+  });
+
+  test('con piedra se gasta la piedra y no se cobran monedas', async () => {
+    const state = await stateWith(500, [mon(25, 'Pikachu')]);
+    await state.update((s) => {
+      s.items['thunder-stone'] = 1;
+    });
+    const raichu = data(26, 'Raichu', 75);
+    const result = await evolvePokemon(state, 25, false, raichu, 'thunder-stone');
+
+    assert.ok(result.ok && result.cost === 0 && result.stone === 'thunder-stone');
+    const s = state.get();
+    assert.strictEqual(s.coins, 500);
+    assert.strictEqual(s.items['thunder-stone'], 0);
+    assert.strictEqual(s.captured[0].id, 26);
+    assert.strictEqual(s.stats.evolutions, 1);
+  });
+
+  test('sin la piedra no evoluciona aunque sobren monedas', async () => {
+    const state = await stateWith(5000, [mon(25, 'Pikachu')]);
+    const result = await evolvePokemon(state, 25, false, data(26, 'Raichu', 75), 'thunder-stone');
+
+    assert.strictEqual(result.ok, false);
+    assert.strictEqual(state.get().coins, 5000);
+    assert.strictEqual(state.get().captured[0].id, 25);
   });
 
   test('una evolución nueva puede desbloquear la generación', async () => {

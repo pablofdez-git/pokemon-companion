@@ -1,14 +1,21 @@
 import * as vscode from 'vscode';
 import { StateManager } from '../data/state';
-import { PokemonData, fetchEvolutionIds, fetchPokemon } from '../data/pokeapi';
+import { PokemonData, fetchEvolutions, fetchPokemon } from '../data/pokeapi';
 import { availableEvolutions, evolutionCost, evolvePokemon } from '../game/evolution';
+import { findObject } from '../game/objects';
 import { announceUnlocks } from './encounterView';
 
+interface EvolutionTarget {
+  pokemon: PokemonData;
+  stone: string | null;
+}
+
 interface EvolutionPick extends vscode.QuickPickItem {
-  target: PokemonData;
+  target: EvolutionTarget;
 }
 
 // Pregunta a qué evoluciona el Pokémon elegido en la mochila y lo evoluciona pagando monedas
+// (o gastando una piedra, si esa evolución la necesita)
 export async function evolveFromBackpack(
   state: StateManager,
   pokemonId: number,
@@ -21,16 +28,23 @@ export async function evolveFromBackpack(
     return;
   }
 
-  let targets: PokemonData[];
+  let targets: EvolutionTarget[];
   let blocked = 0; // evoluciones de generaciones aún bloqueadas
   try {
     targets = await vscode.window.withProgress(
       { location: vscode.ProgressLocation.Notification, title: `Buscando evoluciones de ${owned.name}…` },
       async () => {
-        const ids = await fetchEvolutionIds(pokemonId);
-        const available = availableEvolutions(ids, state.get().generationsUnlocked);
-        blocked = ids.length - available.length;
-        return Promise.all(available.map((id) => fetchPokemon(id)));
+        const steps = await fetchEvolutions(pokemonId);
+        const available = availableEvolutions(
+          steps.map((step) => step.id),
+          state.get().generationsUnlocked
+        );
+        blocked = steps.length - available.length;
+        return Promise.all(
+          steps
+            .filter((step) => available.includes(step.id))
+            .map(async (step) => ({ pokemon: await fetchPokemon(step.id), stone: step.stone }))
+        );
       }
     );
   } catch (error) {
@@ -50,14 +64,22 @@ export async function evolveFromBackpack(
     return;
   }
 
-  const coins = state.get().coins;
-  const items: EvolutionPick[] = targets.map((target) => ({
-    label: target.name,
-    description: `${evolutionCost(target.captureRate)} 🪙`,
-    detail: `#${String(target.id).padStart(3, '0')}${shiny ? ' · conserva el variocolor' : ''}`,
-    iconPath: target.spriteUrl ? vscode.Uri.parse(target.spriteUrl) : undefined,
-    target,
-  }));
+  const { coins, items: objects } = state.get();
+  const items: EvolutionPick[] = targets.map((target) => {
+    const stoneName = target.stone ? findObject(target.stone)?.name ?? target.stone : null;
+    const details = [
+      `#${String(target.pokemon.id).padStart(3, '0')}`,
+      stoneName ? `necesita una ${stoneName} (tienes ${objects[target.stone!] ?? 0})` : '',
+      shiny ? 'conserva el variocolor' : '',
+    ].filter(Boolean);
+    return {
+      label: target.pokemon.name,
+      description: stoneName ?? `${evolutionCost(target.pokemon.captureRate)} 🪙`,
+      detail: details.join(' · '),
+      iconPath: target.pokemon.spriteUrl ? vscode.Uri.parse(target.pokemon.spriteUrl) : undefined,
+      target,
+    };
+  });
 
   const pick = await vscode.window.showQuickPick(items, {
     title: `Evolucionar a ${owned.name} · Tienes ${coins} 🪙`,
@@ -67,10 +89,19 @@ export async function evolveFromBackpack(
     return;
   }
 
-  const result = await evolvePokemon(state, pokemonId, shiny, pick.target);
+  const result = await evolvePokemon(
+    state,
+    pokemonId,
+    shiny,
+    pick.target.pokemon,
+    pick.target.stone
+  );
   if (result.ok) {
+    const paid = result.stone
+      ? `Has usado una ${findObject(result.stone)?.name ?? result.stone}.`
+      : `−${result.cost} 🪙`;
     vscode.window.showInformationMessage(
-      `¡${result.from} ha evolucionado a ${result.to}! −${result.cost} 🪙`
+      `¡${result.from} ha evolucionado a ${result.to}! ${paid}`
     );
     announceUnlocks(result.newGenerations);
   } else {

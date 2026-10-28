@@ -23,20 +23,32 @@ Si ves un Pokémon con destellos ★, es un **variocolor** (1 de cada 50): da 50
 | Ball | Precio | Efecto |
 |---|---|---|
 | Poké Ball | 10 | ×1 |
+| Premier Ball | Regalo | ×1.25. No se vende: 1 gratis por cada 10 Poké Balls de una compra |
 | Super Ball | 30 | ×1.5 |
 | Dusk Ball | 40 | ×3 de noche (20:00–06:00) |
-| Timer Ball | 40 | Sube ×0.5 por cada lanzamiento, hasta ×4 |
-| Repeat Ball | 50 | ×3.5 si ya tienes esa especie |
 | Ultra Ball | 70 | ×2 |
 | Quick Ball | 80 | ×5 en el primer lanzamiento |
 | Master Ball | 1000 | Captura segura |
+
+## Objetos
+
+También en la tienda. Los que tienes salen en la sección *Objetos* de la Mochila; el Incienso y la Pokéflauta se usan con el botón de su línea.
+
+| Objeto | Precio | Efecto |
+|---|---|---|
+| Incienso | 60 | Durante 10 min, el doble de probabilidad de encuentro |
+| Pokéflauta | 80 | Vuelve a llamar al último Pokémon que huyó (hasta 10 min después) |
+| Moneda Amuleto | 1500 | +10 % de monedas al guardar, para siempre. Solo una |
+| Piedras evolutivas | 100 | Fuego, Agua, Trueno, Hoja, Lunar, Solar, Día, Noche, Alba y Hielo. Hacen evolucionar a los que lo necesitan, en lugar de pagar monedas |
+
+A veces un Pokémon capturado lleva una piedra (5 %): la de su tipo o, si no tiene, una al azar.
 
 ## Mochila
 
 En la barra de actividad, el icono de Ctrl+Catch abre la *Mochila*, con:
 
 - El progreso hacia la siguiente generación.
-- Tus balls.
+- Tus balls y tus objetos.
 - Tus estadísticas: tu **racha** de días seguidos programando, caracteres escritos, monedas ganadas y gastadas, encuentros, porcentaje de captura…
 - Tus Pokémon capturados. Los repetidos tienen un botón para **venderlos** y recuperar monedas, y los que pueden evolucionar, otro para **evolucionarlos** (una flecha hacia arriba).
 
@@ -46,7 +58,7 @@ Pulsa el botón del trofeo de la cabecera de la *Mochila* (junto al de la Pokéd
 
 ## Evoluciones
 
-Los Pokémon de la *Mochila* que pueden evolucionar muestran un botón con una flecha hacia arriba (tarda un momento en aparecer la primera vez, mientras consulta la PokéAPI). Púlsalo para evolucionarlo pagando monedas (de 30 a 150, según lo difícil que sea la evolución). Si tiene varias (como Eevee), eliges cuál. Se gasta una copia, el variocolor se conserva, y solo puedes evolucionar a Pokémon de generaciones ya desbloqueadas.
+Los Pokémon de la *Mochila* que pueden evolucionar muestran un botón con una flecha hacia arriba (tarda un momento en aparecer la primera vez, mientras consulta la PokéAPI). Púlsalo para evolucionarlo pagando monedas (de 30 a 150, según lo difícil que sea la evolución). Los que en los juegos evolucionan con una piedra (Pikachu, Vulpix, Eevee…) necesitan esa piedra en lugar de monedas. Si tiene varias (como Eevee), eliges cuál. Se gasta una copia, el variocolor se conserva, y solo puedes evolucionar a Pokémon de generaciones ya desbloqueadas.
 
 ## Pokédex
 

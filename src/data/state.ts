@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { RETIRED_BALLS } from '../game/items';
 import { EMPTY_STATS, GameStats } from '../game/stats';
 
 export interface CapturedPokemon {
@@ -12,6 +13,8 @@ export interface CapturedPokemon {
 export interface GameState {
   coins: number;
   balls: Record<string, number>;
+  items: Record<string, number>; // objetos (Incienso, piedras…): id → cantidad
+  incenseUntil: number;          // hasta cuándo (ms) dura el Incienso encendido; 0 = apagado
   captured: CapturedPokemon[];
   generationsUnlocked: number;
   updatedAt: number; // momento (ms) del último cambio; sirve para sincronizar
@@ -25,6 +28,8 @@ const KEY = 'pokemonCompanion.state';
 const DEFAULT_STATE: GameState = {
   coins: 0,
   balls: { pokeball: 5 },
+  items: {},
+  incenseUntil: 0,
   captured: [],
   generationsUnlocked: 1,
   updatedAt: 0,
@@ -47,6 +52,19 @@ export function normalizeState(saved: GameState): GameState {
   // Las anteriores a los logros no tienen estas listas
   state.achievements = state.achievements ?? [];
   state.achievementsClaimed = state.achievementsClaimed ?? [];
+  // Las anteriores a los objetos (0.7.0) no tienen estos campos
+  state.items = state.items ?? {};
+  state.incenseUntil = state.incenseUntil ?? 0;
+  // La Moneda Amuleto es única (al combinar dos partidas podrían salir dos)
+  if ((state.items['amulet-coin'] ?? 0) > 1) {
+    state.items['amulet-coin'] = 1;
+  }
+  // Las balls retiradas (Repeat y Timer, hasta la 0.6.1) se devuelven en monedas.
+  // No cuenta como monedas ganadas: no debe dar logros
+  for (const [id, price] of Object.entries(RETIRED_BALLS)) {
+    state.coins += (state.balls[id] ?? 0) * price;
+    delete state.balls[id];
+  }
   return state;
 }
 

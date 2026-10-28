@@ -99,6 +99,7 @@
   .tbl.compact th { padding: 1.9mm 3mm; }
   .tbl td:first-child { font-weight: 700; }
   .tbl img.ball { width: 6mm; height: 6mm; vertical-align: middle; image-rendering: pixelated; }
+  .stones img { width: 8mm; height: 8mm; margin-right: 1.5mm; vertical-align: middle; image-rendering: pixelated; }
   .tbl.balls td:first-child { width: 11mm; }
 
   /* ---- Iconos ---- */
@@ -211,10 +212,11 @@
       <li><b>3</b> Tu primera partida</li>
       <li><b>4</b> La mochila y la tienda</li>
       <li><b>5</b> Las Poké Balls</li>
-      <li><b>6</b> La Pokédex y los logros</li>
-      <li><b>7</b> Evoluciones y estadísticas</li>
-      <li><b>8</b> Generaciones y colección</li>
-      <li><b>9</b> Ajustes, varios ordenadores y soluciones</li>
+      <li><b>6</b> Los objetos</li>
+      <li><b>7</b> La Pokédex y los logros</li>
+      <li><b>8</b> Evoluciones y estadísticas</li>
+      <li><b>9</b> Generaciones y colección</li>
+      <li><b>10</b> Ajustes, varios ordenadores y soluciones</li>
     </ol>
   </div>
   <div class="ver">Versión 0.6.1 &nbsp;·&nbsp; Extensión para Visual Studio Code &nbsp;·&nbsp; Proyecto de aficionados</div>
@@ -350,23 +352,23 @@
       <div class="grow">
         <p>Debajo del panel Encuentro está la <strong>Mochila</strong>, dividida en estas partes:</p>
         <p><strong>Progreso.</strong> La primera línea te dice cuántos Pokémon distintos te faltan para desbloquear la siguiente generación.</p>
-        <p><strong>Pokéballs.</strong> Todos los tipos, con las que tienes de cada uno. Pasa el ratón por encima para ver su dibujo grande y su regla.</p>
+        <p><strong>Pokéballs y Objetos.</strong> Todas las balls, con las que tienes de cada una, y los objetos que tengas (ver página 7). Pasa el ratón por encima para ver su dibujo grande y su regla.</p>
         <p><strong>Logros.</strong> Una línea con cuántos llevas (por ejemplo <em>5/32</em>) y si tienes recompensas pendientes. Al pulsarla se abre la pestaña de logros.</p>
-        <p><strong>Estadísticas.</strong> Una sección plegable con tu racha de días, caracteres escritos, monedas, encuentros, capturas y más (ver página 10).</p>
+        <p><strong>Estadísticas.</strong> Una sección plegable con tu racha de días, caracteres escritos, monedas, encuentros, capturas y más (ver página 11).</p>
         <p><strong>Pokémon capturados.</strong> Ordenados por número de Pokédex. Al pasar el ratón ves su sprite grande y cuántas veces lo has capturado. Los variocolor llevan una <span class="star">★</span>.</p>
         <p><strong>Botones de cada Pokémon.</strong> A la derecha de cada uno aparecen, según el caso, la flecha hacia arriba para <strong>evolucionarlo</strong> y el carrito para <strong>venderlo</strong>.</p>
       </div>
     </div>
 
     <h3>La tienda</h3>
-    <p>Pulsa el contador de monedas <svg class="coin"><use href="#coin"/></svg> de la barra de estado (abajo a la derecha), o usa el comando <em>Ctrl+Catch: Abrir tienda</em>. Eliges la ball y cuántas quieres; si no te llega el dinero, te dice cuánto te falta.</p>
+    <p>Pulsa el contador de monedas <svg class="coin"><use href="#coin"/></svg> de la barra de estado (abajo a la derecha), o usa el comando <em>Ctrl+Catch: Abrir tienda</em>. Tiene dos apartados, <strong>Pokéballs</strong> y <strong>Objetos</strong>: eliges qué quieres y cuántas unidades; si no te llega el dinero, te dice cuánto te falta.</p>
 
     <h3>Repetidos y venta</h3>
     <p>Si tienes el mismo Pokémon más de una vez, aparece <strong>xN</strong> a su lado y un botón de carrito: lo vendes por el 60 % de lo que pagaron al capturarlo. Siempre te quedas con una copia. Los variocolor <strong>no se pueden vender</strong>.</p>
 
     <div class="callout yellow">
       <div class="ct">Consejo de entrenador</div>
-      <p>No gastes todo en balls caras: con las monedas también evolucionas Pokémon (página 10). Y si te quedas sin balls, el Pokémon que aparezca se irá; las <strong>recompensas de logros</strong> esperan a que tengas alguna.</p>
+      <p>No gastes todo en balls caras: con las monedas también evolucionas Pokémon (página 11). Y si te quedas sin balls, el Pokémon que aparezca se irá; las <strong>recompensas de logros</strong> esperan a que tengas alguna.</p>
     </div>
   </div>
   <div class="footer"><svg><use href="#pb"/></svg></div>
@@ -382,21 +384,50 @@
     <table class="tbl balls">
       <tr><th></th><th>Ball</th><th>Precio</th><th>Cómo funciona</th></tr>
       <tr><td><img class="ball" src="img/pokeball.png"></td><td>Poké Ball</td><td>10 <svg class="coin"><use href="#coin"/></svg></td><td>Captura <strong>×1</strong>. La ball básica.</td></tr>
+      <tr><td><img class="ball" src="img/premierball.png"></td><td>Premier Ball</td><td>Regalo</td><td>Captura <strong>×1,25</strong>. No se vende: te regalan una por cada 10 Poké Balls que compres de una vez.</td></tr>
       <tr><td><img class="ball" src="img/greatball.png"></td><td>Super Ball</td><td>30 <svg class="coin"><use href="#coin"/></svg></td><td>Captura <strong>×1,5</strong>.</td></tr>
       <tr><td><img class="ball" src="img/ultraball.png"></td><td>Ultra Ball</td><td>70 <svg class="coin"><use href="#coin"/></svg></td><td>Captura <strong>×2</strong>.</td></tr>
       <tr><td><img class="ball" src="img/quickball.png"></td><td>Quick Ball</td><td>80 <svg class="coin"><use href="#coin"/></svg></td><td><strong>×5</strong> en el primer lanzamiento del encuentro y ×1 después.</td></tr>
       <tr><td><img class="ball" src="img/duskball.png"></td><td>Dusk Ball</td><td>40 <svg class="coin"><use href="#coin"/></svg></td><td><strong>×3</strong> de noche (de 20:00 a 06:00 según el reloj del ordenador) y ×1 de día.</td></tr>
-      <tr><td><img class="ball" src="img/repeatball.png"></td><td>Repeat Ball</td><td>50 <svg class="coin"><use href="#coin"/></svg></td><td><strong>×3,5</strong> si ya tienes esa especie en la mochila, ×1 si no.</td></tr>
-      <tr><td><img class="ball" src="img/timerball.png"></td><td>Timer Ball</td><td>40 <svg class="coin"><use href="#coin"/></svg></td><td>Empieza en ×1 y sube ×0,5 por cada lanzamiento previo, hasta <strong>×4</strong>.</td></tr>
       <tr><td><img class="ball" src="img/masterball.png"></td><td>Master Ball</td><td>1000 <svg class="coin"><use href="#coin"/></svg></td><td><strong>Captura segura</strong>. Cuesta una fortuna.</td></tr>
     </table>
 
     <div class="callout yellow">
       <div class="ct">Trucos de entrenador</div>
       <p><strong>Quick Ball:</strong> contra cualquier Pokémon con ratio de captura de 51 o más, en el primer lanzamiento captura segura.</p>
-      <p><strong>Timer Ball:</strong> cuenta todos los lanzamientos del encuentro, no solo los suyos. Úsala después de haber fallado con otras balls.</p>
-      <p><strong>Repeat Ball:</strong> perfecta para conseguir repetidos, que luego puedes vender.</p>
+      <p><strong>Premier Ball:</strong> compra las Poké Balls de 10 en 10. Pidiendo 20 de golpe te llevas 2 Premier Balls; en compras sueltas no se acumulan.</p>
       <p><strong>Dusk Ball:</strong> si programas de noche, es la mejor relación calidad-precio.</p>
+    </div>
+  </div>
+  <div class="footer"><svg><use href="#pb"/></svg></div>
+</section>
+
+<!-- ================= 5b. OBJETOS ================= -->
+<section class="page">
+  <div class="topbar"><svg><use href="#pb"/></svg> Ctrl+Catch &nbsp;·&nbsp; Guía del Entrenador</div>
+  <div class="content">
+    <h2 class="section"><svg><use href="#pb"/></svg> Los objetos</h2>
+    <p>Además de balls, en la tienda hay <strong>objetos</strong>. Los que tienes aparecen en la sección <strong>Objetos</strong> de la Mochila; pasa el ratón por encima para ver su dibujo y lo que hacen.</p>
+
+    <table class="tbl balls">
+      <tr><th></th><th>Objeto</th><th>Precio</th><th>Qué hace</th></tr>
+      <tr><td><img class="ball" src="img/incense.png"></td><td>Incienso</td><td>60 <svg class="coin"><use href="#coin"/></svg></td><td>Durante <strong>10 minutos</strong>, el <strong>doble</strong> de probabilidad de que aparezca un Pokémon al guardar. Se gasta al encenderlo y no puedes encender otro hasta que se apague.</td></tr>
+      <tr><td><img class="ball" src="img/poke-flute.png"></td><td>Pokéflauta</td><td>80 <svg class="coin"><use href="#coin"/></svg></td><td>Vuelve a llamar al <strong>último Pokémon que huyó</strong>, si fue hace 10 minutos o menos. Vuelve igual que se fue (si era variocolor, lo sigue siendo). Solo se le puede llamar una vez.</td></tr>
+      <tr><td><img class="ball" src="img/amulet-coin.png"></td><td>Moneda Amuleto</td><td>1500 <svg class="coin"><use href="#coin"/></svg></td><td><strong>+10 %</strong> de monedas al guardar, para siempre. Solo se puede tener una.</td></tr>
+      <tr><td><img class="ball" src="img/fire-stone.png"></td><td>Piedras evolutivas</td><td>100 <svg class="coin"><use href="#coin"/></svg></td><td>Hacen evolucionar a los Pokémon que lo necesitan, <strong>en lugar de pagar monedas</strong> (ver la página de Evoluciones).</td></tr>
+    </table>
+
+    <h3>Cómo se usan</h3>
+    <p>El Incienso y la Pokéflauta tienen un botón de <strong>usar</strong> (un triángulo) a la derecha de su línea en la Mochila. El del Incienso desaparece mientras está encendido, y la línea dice hasta qué hora dura. El de la Pokéflauta solo sale cuando hay algún Pokémon al que llamar. La Moneda Amuleto y las piedras no se usan a mano: funcionan solas.</p>
+
+    <h3>Las piedras evolutivas</h3>
+    <p class="stones"><img src="img/fire-stone.png"><img src="img/water-stone.png"><img src="img/thunder-stone.png"><img src="img/leaf-stone.png"><img src="img/moon-stone.png"><img src="img/sun-stone.png"><img src="img/shiny-stone.png"><img src="img/dusk-stone.png"><img src="img/dawn-stone.png"><img src="img/ice-stone.png"></p>
+    <p>Hay diez: Fuego, Agua, Trueno, Hoja, Lunar, Solar, Día, Noche, Alba y Hielo. Los Pokémon que en los juegos evolucionan con una piedra (Pikachu con la Piedra Trueno, Vulpix con la Fuego, Eevee con varias…) <strong>necesitan esa piedra</strong> para evolucionar aquí, y entonces no se pagan monedas. Los demás evolucionan con monedas, como siempre.</p>
+    <p>Además de comprarlas, a veces un Pokémon capturado <strong>lleva una piedra</strong> (5 de cada 100): la de su tipo (Fuego, Agua, Eléctrico, Planta, Hada, Hielo, Fantasma, Siniestro, Psíquico, Normal o Bicho) o, si su tipo no tiene ninguna, una al azar. Te lo dice el mensaje de la captura.</p>
+
+    <div class="callout yellow">
+      <div class="ct">Consejo de entrenador</div>
+      <p>Enciende el Incienso cuando vayas a programar un buen rato seguido: solo hay encuentros al guardar con monedas, y sigue habiendo un minuto de espera entre uno y otro. Y guarda una Pokéflauta para cuando se te escape un Pokémon raro o un variocolor.</p>
     </div>
   </div>
   <div class="footer"><svg><use href="#pb"/></svg></div>
@@ -492,14 +523,14 @@
     <p>Los Pokémon de la Mochila que pueden evolucionar muestran un botón con una <strong>flecha hacia arriba</strong>. La primera vez tarda un momento en aparecer, mientras la extensión consulta la PokéAPI. Al pulsarlo:</p>
     <div class="step"><div class="num">1</div><div><div class="title">Elige la evolución</div>
       <p>Si solo tiene una, se te muestra directamente con su precio. Si tiene varias (como Eevee) eliges cuál.</p></div></div>
-    <div class="step"><div class="num">2</div><div><div class="title">Paga con monedas</div>
-      <p>Cuesta entre <strong>30 y 150</strong> <svg class="coin"><use href="#coin"/></svg>, según lo difícil que sea de capturar la evolución.</p></div></div>
+    <div class="step"><div class="num">2</div><div><div class="title">Paga con monedas o con una piedra</div>
+      <p>Cuesta entre <strong>30 y 150</strong> <svg class="coin"><use href="#coin"/></svg>, según lo difícil que sea de capturar la evolución. Si en los juegos evoluciona con una piedra (Pikachu, Eevee…), en lugar de monedas gasta <strong>esa piedra</strong>; la lista te dice cuál y cuántas tienes.</p></div></div>
     <div class="step"><div class="num">3</div><div><div class="title">Se gasta una copia</div>
       <p>La copia que evolucionas se convierte en la evolución. Si era <strong>variocolor</strong>, la evolución también lo es.</p></div></div>
 
     <ul class="tight small">
       <li>Solo puedes evolucionar a Pokémon de las <strong>generaciones que ya has desbloqueado</strong>.</li>
-      <li>No hacen falta los requisitos de los juegos (nivel, intercambio u objeto): cualquier evolución se compra con monedas.</li>
+      <li>Del resto de requisitos de los juegos (nivel, intercambio, otros objetos…) no hace falta ninguno: esas evoluciones se pagan con monedas.</li>
       <li>Una evolución nueva cuenta como especie capturada, así que puede <strong>desbloquear una generación</strong> y avanzar logros.</li>
       <li>Puedes evolucionar incluso tu única copia; en ese caso la especie de partida pasa a figurar como no capturada.</li>
     </ul>

@@ -29,6 +29,14 @@ import { BackpackProvider } from './ui/backpackView';
 import { EncounterPanel } from './ui/encounterPanel';
 import { runEncounter } from './ui/encounterView';
 import { BALLS } from './game/items';
+import {
+  FledPokemon,
+  canRecall,
+  encounterChanceWithIncense,
+  incenseActive,
+  useFlute,
+  useIncense,
+} from './game/objects';
 import { evolveFromBackpack } from './ui/evolution';
 import { PauseController } from './ui/pauseToggle';
 import { PokedexPanel } from './ui/pokedexPanel';
@@ -39,11 +47,19 @@ let syncService: SyncService | undefined;
 
 const REWARD_DELAY_MS = 4000; // para que se vea el final de la captura antes de la recompensa
 
+// De dónde sale un encuentro
+type EncounterSource =
+  | { kind: 'random' }
+  | { kind: 'reward'; achievement: Achievement }           // recompensa de un logro
+  | { kind: 'recall'; pokemon: PokemonData; shiny: boolean }; // vuelve con la Pokéflauta
+
 export function activate(context: vscode.ExtensionContext) {
   const state = new StateManager(context.globalState);
   const pause = new PauseController(context.globalState);
   const statusBar = new CoinStatusBar(state);
-  const backpack = new BackpackProvider(state);
+  // El último Pokémon que huyó, para la Pokéflauta. Solo en memoria: dura unos minutos
+  let lastFled: FledPokemon | undefined;
+  const backpack = new BackpackProvider(state, () => lastFled);
   const encounterPanel = new EncounterPanel(context.extensionUri);
   const pokedex = new PokedexPanel(context.extensionUri, state);
   const achievementsPanel = new AchievementsPanel(context.extensionUri, state);
@@ -97,20 +113,25 @@ export function activate(context: vscode.ExtensionContext) {
     return hasBalls ? pendingRewards(state.get())[0] : undefined;
   }
 
-  // Un encuentro normal, o el de recompensa de un logro (sin cooldown, y se elige por su nivel)
-  async function startEncounter(reward?: Achievement): Promise<void> {
-    if (pause.isPaused || !gate.canStart(Boolean(reward))) {
+  // Un encuentro normal, el de recompensa de un logro (sin cooldown, y se elige por su nivel)
+  // o el de la Pokéflauta (sin cooldown, con el Pokémon que huyó)
+  async function startEncounter(source: EncounterSource = { kind: 'random' }): Promise<void> {
+    if (pause.isPaused || !gate.canStart(source.kind !== 'random')) {
       return;
     }
 
     gate.start();
+    const reward = source.kind === 'reward' ? source.achievement : undefined;
 
     let pokemon: PokemonData;
     try {
       const maxId = maxPokemonId(state.get().generationsUnlocked);
-      pokemon = reward
-        ? await pickRewardPokemon(reward.tier, maxId, fetchPokemon)
-        : await fetchPokemon(randomPokemonId(maxId));
+      pokemon =
+        source.kind === 'recall'
+          ? source.pokemon
+          : reward
+            ? await pickRewardPokemon(reward.tier, maxId, fetchPokemon)
+            : await fetchPokemon(randomPokemonId(maxId));
     } catch (error) {
       console.error('No se pudo cargar el Pokémon:', error);
       vscode.window.setStatusBarMessage(
@@ -122,12 +143,19 @@ export function activate(context: vscode.ExtensionContext) {
     }
 
     try {
-      const shiny = rollShiny(Boolean(pokemon.shinySpriteUrl));
+      const shiny =
+        source.kind === 'recall' ? source.shiny : rollShiny(Boolean(pokemon.shinySpriteUrl));
       const outcome = await runEncounter(state, encounterPanel, pokemon, shiny, {
         rewardFor: reward?.name,
+        recalled: source.kind === 'recall',
       });
       if (reward && outcome === 'captured') {
         await claimReward(state, reward.id);
+      }
+      // La Pokéflauta puede llamar a los que huyen de un encuentro normal (no a los ya llamados)
+      if (source.kind === 'random' && outcome === 'fled') {
+        lastFled = { id: pokemon.id, name: pokemon.name, shiny, at: Date.now() };
+        backpack.refresh();
       }
     } catch (error) {
       console.error('Error en el encuentro:', error);
@@ -143,9 +171,40 @@ export function activate(context: vscode.ExtensionContext) {
       const next = nextReward();
       if (next && pendingRewards(state.get()).length > pendingBefore) {
         await new Promise((resolve) => setTimeout(resolve, REWARD_DELAY_MS));
-        void startEncounter(next);
+        void startEncounter({ kind: 'reward', achievement: next });
       }
     }
+  }
+
+  // La Pokéflauta vuelve a llamar al último que huyó; solo se gasta si el encuentro empieza
+  async function playFlute(): Promise<void> {
+    const fled = lastFled;
+    if (!canRecall(fled)) {
+      vscode.window.showWarningMessage('Ningún Pokémon ha huido hace poco.');
+      return;
+    }
+    if (pause.isPaused || !gate.canStart(true)) {
+      vscode.window.showWarningMessage('Espera a que termine el encuentro que tienes en marcha.');
+      return;
+    }
+    if (!BALLS.some((b) => (state.get().balls[b.id] ?? 0) > 0)) {
+      vscode.window.showWarningMessage('No te quedan Pokéballs para capturarlo.');
+      return;
+    }
+
+    let pokemon: PokemonData;
+    try {
+      pokemon = await fetchPokemon(fled.id);
+    } catch {
+      vscode.window.showWarningMessage('No se pudo llamar al Pokémon: no hay conexión con la PokéAPI.');
+      return;
+    }
+    if (!(await useFlute(state))) {
+      vscode.window.showWarningMessage('No tienes ninguna Pokéflauta.');
+      return;
+    }
+    lastFled = undefined; // solo se le puede llamar una vez
+    void startEncounter({ kind: 'recall', pokemon, shiny: fled.shiny });
   }
 
   context.subscriptions.push(
@@ -192,8 +251,11 @@ export function activate(context: vscode.ExtensionContext) {
         await checkAchievements();
         const reward = nextReward();
         if (reward) {
-          void startEncounter(reward); // las recompensas pendientes van antes que el azar
-        } else if (rollEncounter(encounterChance())) {
+          // Las recompensas pendientes van antes que el azar
+          void startEncounter({ kind: 'reward', achievement: reward });
+        } else if (
+          rollEncounter(encounterChanceWithIncense(encounterChance(), incenseActive(state.get())))
+        ) {
           // Sin await: el encuentro espera tu respuesta y no debe bloquear el guardado
           void startEncounter();
         }
@@ -241,6 +303,28 @@ export function activate(context: vscode.ExtensionContext) {
           return;
         }
         await evolveFromBackpack(state, item.pokemonId, Boolean(item.shiny));
+      }
+    ),
+
+    vscode.commands.registerCommand(
+      'pokemonCompanion.useObject',
+      async (item?: { objectId?: string }) => {
+        if (item?.objectId === 'incense') {
+          const result = await useIncense(state);
+          if (result.ok) {
+            const until = new Date(result.until).toLocaleTimeString('es-ES', {
+              hour: '2-digit',
+              minute: '2-digit',
+            });
+            vscode.window.showInformationMessage(
+              `Incienso encendido hasta las ${until}: los Pokémon salvajes aparecen el doble.`
+            );
+          } else {
+            vscode.window.showWarningMessage(result.reason);
+          }
+        } else if (item?.objectId === 'poke-flute') {
+          await playFlute();
+        }
       }
     ),
 

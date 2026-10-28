@@ -1,5 +1,16 @@
 # Cambios
 
+## [Sin publicar]
+
+- Nueva **Premier Ball** (captura ×1,25): no se vende, te regalan una por cada 10 Poké Balls que compres de una vez.
+- **Objetos**, en la tienda y en una sección nueva de la Mochila:
+  - **Incienso** (60): durante 10 min, el doble de probabilidad de encuentro.
+  - **Pokéflauta** (80): vuelve a llamar al último Pokémon que huyó, hasta 10 min después.
+  - **Moneda Amuleto** (1500): +10 % de monedas al guardar, para siempre.
+  - **Piedras evolutivas** (100): los Pokémon que en los juegos evolucionan con piedra (Pikachu, Vulpix, Eevee…) la necesitan para evolucionar, en lugar de monedas. A veces un Pokémon capturado lleva una.
+- La tienda separa las Pokéballs de los objetos.
+- Se retiran la Repeat Ball y la Timer Ball. Las que tuvieras se te devuelven en monedas a su precio (50 y 40).
+
 ## [0.6.1] - 2026-10-27
 
 - Mantener una tecla pulsada ya no da monedas ni encuentros: solo cuentan las dos primeras repeticiones seguidas del mismo texto (también con paréntesis y comillas que se cierran solos).

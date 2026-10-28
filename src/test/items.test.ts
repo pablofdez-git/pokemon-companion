@@ -14,7 +14,7 @@ import {
   rollEncounter,
   rollShiny,
 } from '../game/encounter';
-import { BALLS, BallType, CatchContext, describeMultiplier } from '../game/items';
+import { BALLS, BallType, CatchContext, RETIRED_BALLS, describeMultiplier } from '../game/items';
 
 function ball(id: string): BallType {
   const found = BALLS.find((b) => b.id === id);
@@ -23,7 +23,7 @@ function ball(id: string): BallType {
 }
 
 function ctx(overrides: Partial<CatchContext> = {}): CatchContext {
-  return { throwNumber: 1, alreadyOwned: false, hour: 12, ...overrides };
+  return { throwNumber: 1, hour: 12, ...overrides };
 }
 
 suite('balls', () => {
@@ -44,22 +44,23 @@ suite('balls', () => {
     assert.strictEqual(dusk.multiplier(ctx({ hour: 19 })), 1);
   });
 
-  test('Repeat Ball si ya tienes la especie', () => {
-    assert.strictEqual(ball('repeatball').multiplier(ctx({ alreadyOwned: true })), 3.5);
-    assert.strictEqual(ball('repeatball').multiplier(ctx()), 1);
+  test('Premier Ball entre la Poké Ball y la Super Ball, y no se vende', () => {
+    const premier = ball('premierball');
+    assert.ok(premier.multiplier(ctx()) > ball('pokeball').multiplier(ctx()));
+    assert.ok(premier.multiplier(ctx()) < ball('greatball').multiplier(ctx()));
+    assert.strictEqual(premier.price, null);
   });
 
-  test('Timer Ball sube con los lanzamientos hasta ×4', () => {
-    const timer = ball('timerball');
-    assert.strictEqual(timer.multiplier(ctx({ throwNumber: 1 })), 1);
-    assert.strictEqual(timer.multiplier(ctx({ throwNumber: 3 })), 2);
-    assert.strictEqual(timer.multiplier(ctx({ throwNumber: 7 })), 4);
-    assert.strictEqual(timer.multiplier(ctx({ throwNumber: 20 })), 4);
+  test('las balls retiradas ya no están en el catálogo', () => {
+    for (const id of Object.keys(RETIRED_BALLS)) {
+      assert.ok(!BALLS.some((b) => b.id === id), id);
+    }
   });
 
   test('describeMultiplier', () => {
     assert.strictEqual(describeMultiplier(1), '×1');
     assert.strictEqual(describeMultiplier(1.5), '×1.5');
+    assert.strictEqual(describeMultiplier(1.25), '×1.25');
     assert.strictEqual(describeMultiplier(Infinity), 'captura segura');
   });
 });

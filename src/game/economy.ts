@@ -1,17 +1,20 @@
 import { StateManager } from '../data/state';
 import { PokemonData } from '../data/pokeapi';
 import { GENERATIONS, Generation, unlockedAfterCaptures } from './generations';
+import { amuletBonus } from './objects';
 import { dayKey, recordActivity } from './stats';
 
 // Ajusta estos valores a tu gusto para equilibrar el juego
 export const MIN_CHARS_TO_REWARD = 20; // por debajo de esto, no hay moneda
 export const CHARS_PER_COIN = 15;      // cuántos caracteres valen 1 moneda (sin contar espacios)
 
-export function coinsForChanges(changedChars: number): number {
+// bonus: extra en tanto por uno (la Moneda Amuleto). Se aplica antes de redondear,
+// para que en guardados pequeños no se lo coma el redondeo
+export function coinsForChanges(changedChars: number, bonus = 0): number {
   if (changedChars < MIN_CHARS_TO_REWARD) {
     return 0;
   }
-  return Math.floor(changedChars / CHARS_PER_COIN);
+  return Math.floor((changedChars * (1 + bonus)) / CHARS_PER_COIN);
 }
 
 // Paga las monedas de un guardado según los caracteres nuevos y apunta el día para la racha
@@ -20,7 +23,7 @@ export async function rewardForSave(
   changedChars: number,
   now: Date = new Date()
 ): Promise<number> {
-  const coins = coinsForChanges(changedChars);
+  const coins = coinsForChanges(changedChars, amuletBonus(state.get()));
   if (coins > 0) {
     await state.update((s) => {
       s.coins += coins;
@@ -50,6 +53,7 @@ export function sellPrice(captureRate: number = DEFAULT_CAPTURE_RATE): number {
 
 export interface CaptureResult {
   coins: number;
+  stone: string | null;         // piedra que llevaba el Pokémon, si llevaba alguna
   newGenerations: Generation[]; // generaciones que ha desbloqueado esta captura
 }
 
@@ -57,7 +61,8 @@ export interface CaptureResult {
 export async function rewardForCapture(
   state: StateManager,
   pokemon: PokemonData,
-  shiny: boolean
+  shiny: boolean,
+  stone: string | null = null // lo decide rollStoneDrop() al capturar
 ): Promise<CaptureResult> {
   const coins =
     captureReward(pokemon.captureRate) + (shiny ? SHINY_BONUS_COINS : 0);
@@ -74,6 +79,9 @@ export async function rewardForCapture(
     s.coins += coins;
     s.stats.coinsEarned += coins;
     s.stats.captures += 1;
+    if (stone) {
+      s.items[stone] = (s.items[stone] ?? 0) + 1;
+    }
 
     const before = s.generationsUnlocked;
     const after = unlockedAfterCaptures(
@@ -86,5 +94,5 @@ export async function rewardForCapture(
     );
   });
 
-  return { coins, newGenerations };
+  return { coins, stone, newGenerations };
 }

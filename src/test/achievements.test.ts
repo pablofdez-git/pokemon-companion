@@ -21,6 +21,8 @@ function game(overrides: Partial<GameState> = {}): GameState {
   return {
     coins: 0,
     balls: {},
+    items: {},
+    incenseUntil: 0,
     captured: [],
     generationsUnlocked: 1,
     updatedAt: 1,
@@ -125,6 +127,7 @@ function fakeFetch(captureRates: Record<number, number>) {
       id,
       name: `P${id}`,
       captureRate: captureRates[id],
+      types: [],
       spriteUrl: null,
       animatedSpriteUrl: null,
       shinySpriteUrl: null,

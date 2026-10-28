@@ -8,6 +8,8 @@ function game(overrides: Partial<GameState> = {}): GameState {
   return {
     coins: 100,
     balls: { pokeball: 5 },
+    items: {},
+    incenseUntil: 0,
     captured: [],
     generationsUnlocked: 1,
     updatedAt: 1,

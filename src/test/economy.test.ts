@@ -20,6 +20,7 @@ function pokemon(id: number, captureRate = 45): PokemonData {
     id,
     name: `Pokemon${id}`,
     captureRate,
+    types: [],
     spriteUrl: 'normal.png',
     animatedSpriteUrl: null,
     shinySpriteUrl: 'shiny.png',

@@ -61,6 +61,7 @@ src/
     encounter.ts          Probabilidades de encuentro, captura, huida, shiny; EncounterGate (cooldown)
     generations.ts        Tabla de generaciones y reglas de desbloqueo
     items.ts              Catálogo de balls (precio, regla, multiplicador según contexto)
+    objects.ts            Catálogo de objetos (Incienso, Pokéflauta, Moneda Amuleto, piedras) y sus efectos
     pokedex.ts            buildPokedex(): agrupa capturas por especie y generación (siluetas, shiny)
     shop.ts               buyBall / sellDuplicate
     stats.ts              GameStats (contadores) y racha de días: recordActivity, currentStreak
@@ -92,7 +93,7 @@ media/
 
 ### Estado (`data/state.ts`)
 - Todo el progreso es un único objeto `GameState` guardado en `context.globalState` con la clave `pokemonCompanion.state`:
-  `coins`, `balls` (id → cantidad), `captured` (lista de `CapturedPokemon`, con repetidos), `generationsUnlocked`, `updatedAt`, `stats`, `achievements` y `achievementsClaimed`.
+  `coins`, `balls` (id → cantidad), `items` (objetos: id → cantidad), `incenseUntil` (ms; 0 = apagado), `captured` (lista de `CapturedPokemon`, con repetidos), `generationsUnlocked`, `updatedAt`, `stats`, `achievements` y `achievementsClaimed`.
 - **Siempre se modifica con `state.update(s => { ... })`**: hace copia profunda, aplica el cambio, pone `updatedAt = Date.now()`, guarda y dispara `onDidChange`. La UI (barra de estado, mochila) y la sincronización se suscriben a ese evento.
 - `get()` normaliza partidas antiguas (campos que faltan, capturas guardadas en formato viejo). Los campos nuevos del estado deben ser opcionales o tener un valor por defecto aquí, para no romper partidas existentes ni las sincronizadas.
 - `replaceWith()` aplica una partida remota **sin tocar** `updatedAt`.
@@ -110,7 +111,7 @@ media/
 1. Tras un guardado con recompensa, `rollEncounter(chance)`. `EncounterGate` impide encuentros simultáneos y aplica el cooldown. Ambos valores salen de los ajustes `pokemonCompanion.encounterChance` y `encounterCooldownSeconds` (scope `application`), leídos en cada uso en `extension.ts` y limitados con `clampEncounterChance` / `cooldownMsFromSeconds`; `ENCOUNTER_CHANCE` y `ENCOUNTER_COOLDOWN_MS` son los valores por defecto. Si cambias los límites, hazlo también en `package.json`.
 2. Se elige un id aleatorio entre 1 y `maxPokemonId(generationsUnlocked)`, se pide a la PokéAPI y se decide si es shiny.
 3. `runEncounter()` hace un bucle: muestra las balls disponibles con su multiplicador y probabilidad → espera la elección (45 s de límite) → gasta la ball → tira la captura → anima el lanzamiento → captura (recompensa + posible desbloqueo de generación) o fallo (30 % de que huya).
-4. Probabilidad: `min(1, captureRate/255 × multiplicador_de_la_ball)`. El multiplicador depende de un `CatchContext` (número de lanzamiento, si ya tienes la especie, hora local), así funcionan Quick/Dusk/Repeat/Timer Ball.
+4. Probabilidad: `min(1, captureRate/255 × multiplicador_de_la_ball)`. El multiplicador depende de un `CatchContext` (número de lanzamiento, hora local), así funcionan la Quick Ball y la Dusk Ball.
 - El encuentro se lanza con `void startEncounter()` (sin `await`) para no bloquear el guardado.
 
 **Protocolo del webview** (`encounterPanel.ts` ↔ `media/encounter.js`, con `postMessage`):
@@ -141,7 +142,7 @@ media/
 - La mochila es síncrona, así que `BackpackProvider.prefetchEvolutions()` consulta en segundo plano (de una en una) las especies que no están en la caché de `cachedEvolutionIds()` y refresca el árbol al terminar. Si falla, no reintenta hasta pasado 1 min. Sin conexión, el botón no sale.
 - `fetchEvolutionIds(id)` (`data/pokeapi.ts`): `pokemon-species/{id}` → `evolution_chain.url`, y `nextEvolutionIds()` (pura) saca las evoluciones directas del árbol. Con caché. Las ramificadas (Eevee) se eligen en un QuickPick.
 - `evolvePokemon()` cambia **una copia** (normal o variocolor, la que se elija) por la evolución y cobra `evolutionCost(captureRate de la evolución)`: 30–150 monedas. Se puede evolucionar la única copia (la base deja de estar capturada). El variocolor se conserva.
-- Solo se ofrecen evoluciones de generaciones ya desbloqueadas (`availableEvolutions`; la Pokédex solo muestra esas). No se comprueban condiciones de la API (nivel, intercambio, objeto): cualquier evolución se compra con monedas.
+- Solo se ofrecen evoluciones de generaciones ya desbloqueadas (`availableEvolutions`; la Pokédex solo muestra esas). Las que en la API se hacen con una piedra de la tienda necesitan esa piedra en lugar de monedas (ver Objetos); las demás condiciones (nivel, intercambio, otros objetos) no se comprueban y se pagan con monedas.
 - Cuenta en `stats.evolutions` (sumable en `mergeStates`) y `coinsSpent`; puede desbloquear generaciones como una captura.
 
 ### Logros (`game/achievements.ts`)
@@ -162,11 +163,22 @@ media/
 - Las capturas de la Mochila y el Encuentro son reales y salen de `media/screenshots/` (las mismas del README); no se pueden generar desde el código, así que hay que sustituirlas a mano si cambia mucho la interfaz (la de la Mochila no incluye todavía las líneas Logros y Estadísticas).
 - **Hay que actualizarla en cada versión que cambie algo visible** (instalación, pantallas, precios, ajustes, comandos). Los datos que cita salen del código: precios de `game/items.ts`, umbrales de `game/generations.ts` y `game/achievements.ts`, probabilidades de `game/encounter.ts`, versión mínima de `package.json`. Sin emojis, como el resto del proyecto (la moneda de la guía es un SVG dibujado).
 
+### Objetos (`game/objects.ts`, sección Objetos de `ui/backpackView.ts`)
+- Catálogo `OBJECTS` (como `BALLS`): `id`, `price`, `rule`, `spriteSlug` (sprite de PokéAPI), `kind` y `unique`. Los ids de las piedras son los nombres de la PokéAPI (`fire-stone`…), para casarlos con la cadena evolutiva.
+- Se compran con `buyObject` (`game/shop.ts`); la tienda tiene dos apartados (separadores del QuickPick). Los `unique` (Moneda Amuleto) no preguntan cantidad y solo se tiene uno; `normalizeState()` lo limita a 1 (al combinar partidas podrían salir dos).
+- **Incienso**: `useIncense()` pone `incenseUntil`; mientras dure, `encounterChanceWithIncense()` multiplica la probabilidad de encuentro (el cooldown sigue). En `mergeStates` se toma el máximo. La Mochila se refresca sola al apagarse.
+- **Moneda Amuleto**: `amuletBonus()` → `coinsForChanges(chars, bonus)`. El bonus se aplica a los caracteres antes de redondear (si no, en guardados pequeños no daría nada); el mínimo de caracteres se mira sin bonus.
+- **Piedras**: `nextEvolutions()` (`game/evolution.ts`) devuelve `{ id, stone }`; `stone` sale de `evolution_details` (`trigger: use-item` con una piedra de `STONE_IDS`). Esas evoluciones gastan la piedra en lugar de monedas (`evolvePokemon(..., stone)`). Al capturar, `rollStoneDrop(types)` (5 %) da la piedra de su tipo (`STONE_BY_TYPE`) o una al azar; por eso `PokemonData` lleva `types`.
+- **Pokéflauta**: el último Pokémon que huyó de un encuentro normal (`lastFled` en `extension.ts`, solo en memoria, no se sincroniza) se puede llamar durante `FLUTE_WINDOW_MINUTES` con `startEncounter({ kind: 'recall' })`: sin cooldown y con el mismo variocolor. La flauta solo se gasta si el encuentro empieza, y a cada Pokémon solo se le llama una vez.
+- El botón de usar (comando oculto `pokemonCompanion.useObject`, `$(play)`) sale en las líneas con `contextValue == usableObject`: el Incienso si no hay uno encendido y la Pokéflauta si hay a quién llamar.
+
 ### Generaciones (`game/generations.ts`)
 - Para desbloquear la siguiente hay que tener `ceil(maxPokemonId(actual) × UNLOCK_FRACTION)` especies **distintas** (los repetidos no cuentan). Puede subir más de una de golpe.
 
 ### Tienda y venta (`game/shop.ts`, `ui/shop.ts`)
-- `buyBall` comprueba cantidad y monedas. `sellDuplicate` solo vende si queda al menos una copia **normal** (los shiny no se venden ni cuentan como copia). Precio de venta: 60 % de la recompensa de captura.
+- `buyBall` comprueba cantidad y monedas. Las balls con `price: null` (Premier) no se venden: la Premier se regala, 1 por cada `PREMIER_EVERY` Poké Balls de una misma compra.
+- Balls retiradas (`RETIRED_BALLS` en `game/items.ts`: Repeat y Timer): `normalizeState()` las quita y devuelve su precio en monedas (sin sumarlo a `coinsEarned`). Para retirar otra, añádela ahí.
+- `sellDuplicate` solo vende si queda al menos una copia **normal** (los shiny no se venden ni cuentan como copia). Precio de venta: 60 % de la recompensa de captura.
 - Recompensa de captura: de 5 a 30 monedas según la dificultad (`captureRate`), +50 si es shiny.
 
 ### Pausa (`ui/pauseToggle.ts`)
@@ -187,7 +199,7 @@ media/
   - `normalizeState()` (`data/state.ts`) prepara las partidas remota y base antes de combinarlas.
 
 ## Contribuciones en `package.json`
-- Comandos: `resetProgress`, `togglePause`, `openShop`, `openPokedex` y `openAchievements` (botones en la cabecera de la Mochila), `evolve` (oculto en la paleta; botón en línea en cada Pokémon de la mochila), `sellDuplicate` (oculto en la paleta; botón en línea en la mochila cuando el `contextValue` contiene `duplicatePokemon`), `syncNow`.
+- Comandos: `useObject` (oculto; botón en línea en los objetos usables de la Mochila), `resetProgress`, `togglePause`, `openShop`, `openPokedex` y `openAchievements` (botones en la cabecera de la Mochila), `evolve` (oculto en la paleta; botón en línea en cada Pokémon de la mochila), `sellDuplicate` (oculto en la paleta; botón en línea en la mochila cuando el `contextValue` contiene `duplicatePokemon`), `syncNow`.
 - Contenedor en la barra de actividad `pokemonCompanion` con las vistas `pokemonCompanion.encounter` (webview) y `pokemonCompanion.backpack` (árbol).
 - Ajustes: `pokemonCompanion.syncFolder` (scope `machine`), `encounterChance` y `encounterCooldownSeconds` (scope `application`).
 
@@ -225,8 +237,13 @@ Publicada en el Marketplace como `pablofdez.pokemon-companion`; la versión actu
 - 0.6.0: el botón de evolucionar solo en los que evolucionan, logros con recompensa y la interfaz sin emojis.
 - 0.6.1: mantener una tecla pulsada ya no da monedas ni encuentros, los espacios no cuentan y 1 moneda cada 15 caracteres.
 
-**Próximos pasos (en este orden):**
-1. **Traducción al inglés** (opcional): `vscode.l10n`, `package.nls.json` y `package.nls.es.json`. Todos los textos están escritos a mano en español en `src/` y `media/*.js`.
+**Próximos pasos (en este orden, de uno en uno):**
+1. **[Hecho, sin publicar] Balls:** quitar la Repeat Ball y la Timer Ball (las que tenga una partida se devuelven en monedas). Añadir la **Premier Ball**: no se vende, se regala 1 por cada 10 Poké Balls de una misma compra. Captura ×1.25, entre la Poké Ball y la Super Ball.
+2. **[Hecho, sin publicar] Zona de Objetos** (sección nueva en la Mochila y en la tienda): Incienso, Moneda Amuleto, piedras evolutivas y Pokéflauta. Incienso 60 (×2 encuentros, 10 min), Pokéflauta 80 (llama al último que huyó, hasta 10 min), Moneda Amuleto 1500 (+10 % al guardar, única), piedras 100 (sustituyen a las monedas en las evoluciones con piedra; 5 % de que un capturado lleve una).
+3. **Pokémon favorito:** eliges uno de tus Pokémon y da un efecto pasivo según su tipo. Sin nada en pantalla que moleste, pero el efecto activo tiene que verse en algún sitio (por ejemplo, en la Mochila).
+4. **Pokédex con más detalle:** tipos, descripción y fecha de captura de cada especie.
+5. **Guardería:** dejas dos repetidos y con el tiempo sale un huevo. Da otro uso a los repetidos, además de venderlos.
+6. **Traducción al inglés** (opcional): `vscode.l10n`, `package.nls.json` y `package.nls.es.json`. Todos los textos están escritos a mano en español en `src/` y `media/*.js`.
 
 **Descartado:** el *compañero Pokémon* (uno de los capturados visible en la barra de estado y en un panel lateral, con reacciones). Se implementó y se quitó por resultar un incordio; no hace falta volver a proponerlo.
 

@@ -68,7 +68,8 @@ function mergeCaptured(
   return merged;
 }
 
-function mergeBalls(
+// Balls y objetos: cantidades por id
+function mergeCounts(
   base: Record<string, number> | undefined,
   local: Record<string, number>,
   remote: Record<string, number>
@@ -121,7 +122,9 @@ export function mergeStates(
   const captured = mergeCaptured(base?.captured, local.captured, remote.captured);
   return {
     coins: mergeNumber(base?.coins, local.coins, remote.coins),
-    balls: mergeBalls(base?.balls, local.balls, remote.balls),
+    balls: mergeCounts(base?.balls, local.balls, remote.balls),
+    items: mergeCounts(base?.items, local.items, remote.items),
+    incenseUntil: Math.max(local.incenseUntil, remote.incenseUntil),
     captured,
     generationsUnlocked: unlockedAfterCaptures(
       Math.max(local.generationsUnlocked, remote.generationsUnlocked),

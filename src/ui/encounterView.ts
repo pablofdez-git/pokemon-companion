@@ -16,6 +16,7 @@ import {
   ballSpriteUrl,
   describeMultiplier,
 } from '../game/items';
+import { findObject, rollStoneDrop } from '../game/objects';
 import { BallOption, EncounterPanel, PokemonView } from './encounterPanel';
 
 const ENCOUNTER_TIMEOUT_MS = 45_000;
@@ -79,6 +80,7 @@ export function announceUnlocks(generations: Generation[]): void {
 
 export interface EncounterOptions {
   rewardFor?: string; // nombre del logro: es un encuentro de recompensa (no huye tras un fallo)
+  recalled?: boolean; // ha vuelto con la Pokéflauta
 }
 
 // Juega un encuentro completo y lo apunta en las estadísticas
@@ -112,7 +114,9 @@ async function playEncounter(
   const label = shiny ? `${pokemon.name} variocolor` : pokemon.name;
   let message = options.rewardFor
     ? `Recompensa por «${options.rewardFor}»: ¡ha aparecido un ${label}!`
-    : `¡Ha aparecido un ${label} salvaje!`;
+    : options.recalled
+      ? `Has tocado la Pokéflauta: ¡${label} ha vuelto!`
+      : `¡Ha aparecido un ${label} salvaje!`;
   let throwNumber = 1;
 
   // Aviso discreto por si el panel no está a la vista
@@ -128,7 +132,6 @@ async function playEncounter(
 
     const ctx: CatchContext = {
       throwNumber,
-      alreadyOwned: state.get().captured.some((c) => c.id === pokemon.id),
       hour: new Date().getHours(),
     };
 
@@ -168,12 +171,14 @@ async function playEncounter(
     );
 
     if (caught) {
-      const { coins, newGenerations } = await rewardForCapture(
+      const { coins, stone, newGenerations } = await rewardForCapture(
         state,
         pokemon,
-        shiny
+        shiny,
+        rollStoneDrop(pokemon.types)
       );
-      panel.showEnd(view, 'captured', `¡Has capturado a ${label}! +${coins} 🪙`);
+      const found = stone ? ` Llevaba una ${findObject(stone)?.name ?? stone}.` : '';
+      panel.showEnd(view, 'captured', `¡Has capturado a ${label}! +${coins} 🪙${found}`);
       announceUnlocks(newGenerations);
       return 'captured';
     }

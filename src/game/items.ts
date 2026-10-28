@@ -1,18 +1,26 @@
 // Situación de un lanzamiento: lo que miran las balls para calcular su efecto
 export interface CatchContext {
-  throwNumber: number;   // 1 = primer lanzamiento del encuentro
-  alreadyOwned: boolean; // ya tienes esa especie en la mochila
-  hour: number;          // hora local, de 0 a 23
+  throwNumber: number; // 1 = primer lanzamiento del encuentro
+  hour: number;        // hora local, de 0 a 23
 }
 
 export interface BallType {
   id: string;
   name: string;
-  price: number;
+  price: number | null; // null = no se vende en la tienda
   rule: string;       // explicación corta para la tienda y la mochila
   spriteSlug: string; // nombre del sprite en el repositorio de la PokéAPI
   multiplier: (ctx: CatchContext) => number;
 }
+
+// Ajusta estos valores a tu gusto
+export const PREMIER_EVERY = 10; // 1 Premier Ball de regalo por cada 10 Poké Balls de una compra
+
+// Balls retiradas: si una partida aún las tiene, se devuelven a este precio en monedas
+export const RETIRED_BALLS: Record<string, number> = {
+  repeatball: 50,
+  timerball: 40,
+};
 
 const NIGHT_START = 20; // la noche empieza a las 20:00...
 const NIGHT_END = 6;    // ...y termina a las 06:00
@@ -29,6 +37,14 @@ export const BALLS: BallType[] = [
     rule: 'Captura ×1',
     spriteSlug: 'poke-ball',
     multiplier: () => 1,
+  },
+  {
+    id: 'premierball',
+    name: 'Premier Ball',
+    price: null,
+    rule: `Captura ×1.25 · Regalo por cada ${PREMIER_EVERY} Poké Balls de una compra`,
+    spriteSlug: 'premier-ball',
+    multiplier: () => 1.25,
   },
   {
     id: 'greatball',
@@ -63,22 +79,6 @@ export const BALLS: BallType[] = [
     multiplier: (ctx) => (isNight(ctx.hour) ? 3 : 1),
   },
   {
-    id: 'repeatball',
-    name: 'Repeat Ball',
-    price: 50,
-    rule: '×3.5 si ya tienes esa especie, ×1 si no',
-    spriteSlug: 'repeat-ball',
-    multiplier: (ctx) => (ctx.alreadyOwned ? 3.5 : 1),
-  },
-  {
-    id: 'timerball',
-    name: 'Timer Ball',
-    price: 40,
-    rule: 'Sube ×0.5 por cada lanzamiento previo, hasta ×4',
-    spriteSlug: 'timer-ball',
-    multiplier: (ctx) => Math.min(4, 1 + 0.5 * (ctx.throwNumber - 1)),
-  },
-  {
     id: 'masterball',
     name: 'Master Ball',
     price: 1000,
@@ -93,7 +93,7 @@ export function describeMultiplier(multiplier: number): string {
   if (multiplier === Infinity) {
     return 'captura segura';
   }
-  return `×${Number.isInteger(multiplier) ? multiplier : multiplier.toFixed(1)}`;
+  return `×${Number(multiplier.toFixed(2))}`; // ×1, ×1.5, ×1.25
 }
 
 const SPRITES_BASE_URL =

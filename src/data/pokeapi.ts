@@ -1,9 +1,10 @@
-import { EvolutionNode, nextEvolutionIds } from '../game/evolution';
+import { EvolutionNode, EvolutionStep, nextEvolutions } from '../game/evolution';
 
 export interface PokemonData {
   id: number;
   name: string;
   captureRate: number;
+  types: string[];                       // en inglés, como en la PokéAPI (fire, water…)
   spriteUrl: string | null;
   animatedSpriteUrl: string | null;      // sprite animado; solo existe hasta el #649
   shinySpriteUrl: string | null;         // sprite variocolor
@@ -17,6 +18,7 @@ interface AnimatedSprites {
 
 interface PokemonResponse {
   name: string;
+  types: { type: { name: string } }[];
   sprites: {
     front_default: string | null;
     front_shiny: string | null;
@@ -46,15 +48,15 @@ function capitalize(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
-const evolutionCache = new Map<number, number[]>();
+const evolutionCache = new Map<number, EvolutionStep[]>();
 
 // Lo que ya se consultó, sin pedir nada: la mochila lo usa para saber qué Pokémon evolucionan
 export function cachedEvolutionIds(id: number): number[] | undefined {
-  return evolutionCache.get(id);
+  return evolutionCache.get(id)?.map((step) => step.id);
 }
 
-// Especies a las que puede evolucionar una especie: pokemon-species → evolution_chain
-export async function fetchEvolutionIds(id: number): Promise<number[]> {
+// Evoluciones de una especie, con la piedra que necesitan: pokemon-species → evolution_chain
+export async function fetchEvolutions(id: number): Promise<EvolutionStep[]> {
   const cached = evolutionCache.get(id);
   if (cached) {
     return cached;
@@ -64,9 +66,9 @@ export async function fetchEvolutionIds(id: number): Promise<number[]> {
     `${BASE_URL}/pokemon-species/${id}`
   );
   const chain = await getJson<{ chain: EvolutionNode }>(species.evolution_chain.url);
-  const ids = nextEvolutionIds(chain.chain, id);
-  evolutionCache.set(id, ids);
-  return ids;
+  const steps = nextEvolutions(chain.chain, id);
+  evolutionCache.set(id, steps);
+  return steps;
 }
 
 export async function fetchPokemon(id: number): Promise<PokemonData> {
@@ -87,6 +89,7 @@ export async function fetchPokemon(id: number): Promise<PokemonData> {
     id,
     name: capitalize(pokemon.name),
     captureRate: species.capture_rate,
+    types: pokemon.types.map((t) => t.type.name),
     spriteUrl: pokemon.sprites.front_default,
     animatedSpriteUrl: animated?.front_default ?? null,
     shinySpriteUrl: pokemon.sprites.front_shiny ?? null,

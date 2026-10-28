@@ -1,5 +1,6 @@
 import { StateManager } from '../data/state';
 import { PokemonData } from '../data/pokeapi';
+import { STONE_IDS, findObject } from './objects';
 import {
   GENERATIONS,
   Generation,
@@ -14,7 +15,14 @@ export const EVOLUTION_EXTRA_COST = 120; // extra para la más difícil (30 + 12
 // Nodo de la cadena evolutiva de la PokéAPI (solo lo que usamos)
 export interface EvolutionNode {
   species: { url: string };
+  evolution_details?: { trigger?: { name: string }; item?: { name: string } | null }[];
   evolves_to: EvolutionNode[];
+}
+
+// Una evolución posible: a qué especie, y la piedra que necesita (null = se paga con monedas)
+export interface EvolutionStep {
+  id: number;
+  stone: string | null;
 }
 
 // Número de especie a partir de su URL (.../pokemon-species/133/)
@@ -36,15 +44,28 @@ function findNode(node: EvolutionNode, speciesId: number): EvolutionNode | null 
   return null;
 }
 
-// Especies a las que puede evolucionar directamente (vacío si es la última etapa)
-export function nextEvolutionIds(chain: EvolutionNode, speciesId: number): number[] {
+// Si alguna forma de llegar a esta evolución es usar una piedra de la tienda, hace falta esa piedra
+function stoneFor(node: EvolutionNode): string | null {
+  const detail = (node.evolution_details ?? []).find(
+    (d) => d.trigger?.name === 'use-item' && d.item && STONE_IDS.includes(d.item.name)
+  );
+  return detail?.item?.name ?? null;
+}
+
+// Evoluciones directas de una especie (vacío si es la última etapa)
+export function nextEvolutions(chain: EvolutionNode, speciesId: number): EvolutionStep[] {
   const node = findNode(chain, speciesId);
   if (!node) {
     return [];
   }
-  return node.evolves_to
-    .map((next) => speciesIdFromUrl(next.species.url))
-    .filter((id): id is number => id !== null);
+  const steps: EvolutionStep[] = [];
+  for (const next of node.evolves_to) {
+    const id = speciesIdFromUrl(next.species.url);
+    if (id !== null) {
+      steps.push({ id, stone: stoneFor(next) });
+    }
+  }
+  return steps;
 }
 
 // Evoluciones que se pueden elegir ahora: las de generaciones ya desbloqueadas
@@ -60,15 +81,24 @@ export function evolutionCost(targetCaptureRate: number): number {
 }
 
 export type EvolveResult =
-  | { ok: true; from: string; to: string; cost: number; newGenerations: Generation[] }
+  | {
+      ok: true;
+      from: string;
+      to: string;
+      cost: number;          // monedas pagadas (0 si se usó una piedra)
+      stone: string | null;  // piedra gastada
+      newGenerations: Generation[];
+    }
   | { ok: false; reason: string };
 
-// Cambia una copia de la especie base por su evolución (conserva si era variocolor)
+// Cambia una copia de la especie base por su evolución (conserva si era variocolor).
+// Si la evolución necesita una piedra, se gasta la piedra en lugar de monedas.
 export async function evolvePokemon(
   state: StateManager,
   fromId: number,
   shiny: boolean,
-  target: PokemonData
+  target: PokemonData,
+  stone: string | null = null
 ): Promise<EvolveResult> {
   let result: EvolveResult = { ok: false, reason: 'No tienes ese Pokémon.' };
 
@@ -78,7 +108,12 @@ export async function evolvePokemon(
       return;
     }
 
-    const cost = evolutionCost(target.captureRate);
+    const cost = stone ? 0 : evolutionCost(target.captureRate);
+    if (stone && (s.items[stone] ?? 0) <= 0) {
+      const name = findObject(stone)?.name ?? stone;
+      result = { ok: false, reason: `Necesitas una ${name}. Las venden en la tienda.` };
+      return;
+    }
     if (s.coins < cost) {
       result = { ok: false, reason: `Te faltan ${cost - s.coins} monedas.` };
       return;
@@ -93,6 +128,9 @@ export async function evolvePokemon(
       captureRate: target.captureRate,
       ...(shiny ? { shiny: true } : {}),
     });
+    if (stone) {
+      s.items[stone] -= 1;
+    }
     s.coins -= cost;
     s.stats.coinsSpent += cost;
     s.stats.evolutions += 1;
@@ -108,6 +146,7 @@ export async function evolvePokemon(
       from: base.name,
       to: target.name,
       cost,
+      stone,
       newGenerations: GENERATIONS.filter((g) => g.number > before && g.number <= after),
     };
   });

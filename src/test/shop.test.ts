@@ -1,11 +1,14 @@
 import * as assert from 'assert';
-import { CapturedPokemon, StateManager } from '../data/state';
+import { CapturedPokemon, GameState, StateManager, normalizeState } from '../data/state';
 import { sellPrice } from '../game/economy';
-import { BALLS } from '../game/items';
+import { BALLS, PREMIER_EVERY, RETIRED_BALLS } from '../game/items';
 import { buyBall, sellDuplicate } from '../game/shop';
 import { FakeMemento } from './fakeMemento';
 
 const greatBall = BALLS.find((b) => b.id === 'greatball')!;
+const pokeBall = BALLS.find((b) => b.id === 'pokeball')!;
+const premierBall = BALLS.find((b) => b.id === 'premierball')!;
+const greatPrice = greatBall.price!;
 
 function pikachu(shiny = false): CapturedPokemon {
   return {
@@ -34,17 +37,17 @@ suite('tienda', () => {
     const state = await stateWith(100);
     const result = await buyBall(state, greatBall, 2);
 
-    assert.deepStrictEqual(result, { ok: true, spent: greatBall.price * 2 });
-    assert.strictEqual(state.get().coins, 100 - greatBall.price * 2);
+    assert.deepStrictEqual(result, { ok: true, spent: greatPrice * 2, premierGift: 0 });
+    assert.strictEqual(state.get().coins, 100 - greatPrice * 2);
     assert.strictEqual(state.get().balls.greatball, 2);
   });
 
   test('no se puede comprar sin monedas suficientes', async () => {
-    const state = await stateWith(greatBall.price - 1);
+    const state = await stateWith(greatPrice - 1);
     const result = await buyBall(state, greatBall, 1);
 
     assert.strictEqual(result.ok, false);
-    assert.strictEqual(state.get().coins, greatBall.price - 1);
+    assert.strictEqual(state.get().coins, greatPrice - 1);
     assert.strictEqual(state.get().balls.greatball, undefined);
   });
 
@@ -53,6 +56,44 @@ suite('tienda', () => {
     assert.strictEqual((await buyBall(state, greatBall, 0)).ok, false);
     assert.strictEqual((await buyBall(state, greatBall, 1.5)).ok, false);
     assert.strictEqual(state.get().coins, 1000);
+  });
+
+  test('regala una Premier Ball por cada 10 Poké Balls de una compra', async () => {
+    const state = await stateWith(1000);
+    const result = await buyBall(state, pokeBall, PREMIER_EVERY * 2 + 5);
+
+    assert.ok(result.ok && result.premierGift === 2);
+    assert.strictEqual(state.get().balls.premierball, 2);
+    // Comprar de menos en menos no suma para el regalo
+    await buyBall(state, pokeBall, PREMIER_EVERY - 1);
+    assert.strictEqual(state.get().balls.premierball, 2);
+  });
+
+  test('las demás balls no regalan Premier Balls', async () => {
+    const state = await stateWith(1000);
+    await buyBall(state, greatBall, PREMIER_EVERY);
+    assert.strictEqual(state.get().balls.premierball, undefined);
+  });
+
+  test('la Premier Ball no se puede comprar', async () => {
+    const state = await stateWith(1000);
+    assert.strictEqual((await buyBall(state, premierBall, 1)).ok, false);
+    assert.strictEqual(state.get().coins, 1000);
+  });
+});
+
+suite('balls retiradas', () => {
+  test('se devuelven en monedas sin contar como ganadas', async () => {
+    const state = await stateWith(10);
+    const old = state.get();
+    const saved: GameState = { ...old, balls: { pokeball: 3, repeatball: 2, timerball: 1 } };
+    const fixed = normalizeState(saved);
+
+    assert.strictEqual(fixed.coins, 10 + 2 * RETIRED_BALLS.repeatball + RETIRED_BALLS.timerball);
+    assert.deepStrictEqual(fixed.balls, { pokeball: 3 });
+    assert.strictEqual(fixed.stats.coinsEarned, old.stats.coinsEarned);
+    // Normalizar otra vez no las devuelve dos veces
+    assert.strictEqual(normalizeState(fixed).coins, fixed.coins);
   });
 });
 
