@@ -2,6 +2,10 @@
 
 ## [Sin publicar]
 
+## [0.7.0] - 2026-10-29
+
+- **Guardería**: deja dos repetidos (o cualquier Pokémon con un Ditto) y, tras 50 a 300 guardados con monedas según lo raros que sean, nace un Pokémon que no tengas de su misma categoría. Los padres no se pierden, pero no se pueden vender ni evolucionar mientras tanto. Línea nueva en la Mochila y estadística de huevos eclosionados.
+- **Pokédex con ficha**: al pulsar un Pokémon capturado se abre su ficha con tipos, categoría, descripción en español, veces capturado y fecha de la primera captura (esta solo se guarda en las capturas nuevas).
 - **Pokémon favorito**: elige uno de tus Pokémon (clic derecho en la Mochila) y su tipo te da un pequeño efecto: más monedas al guardar o al capturar, más encuentros, más probabilidad de captura o de variocolor, o más piedras. Una línea nueva de la Mochila muestra cuál es y qué hace.
 - Nueva **Premier Ball** (captura ×1,25): no se vende, te regalan una por cada 10 Poké Balls que compres de una vez.
 - **Objetos**, en la tienda y en una sección nueva de la Mochila:

@@ -1,4 +1,4 @@
-import { CapturedPokemon, Favorite, GameState } from '../data/state';
+import { CapturedPokemon, Favorite, GameState, Nursery } from '../data/state';
 import { unlockedAfterCaptures } from './generations';
 import { GameStats } from './stats';
 
@@ -12,6 +12,7 @@ const ADDITIVE_STATS = [
   'fled',
   'throws',
   'evolutions',
+  'eggs',
 ] as const;
 
 // Con la base (la partida en la última sincronización) se suman los cambios de los dos lados.
@@ -44,9 +45,19 @@ function mergeCaptured(
   remote: CapturedPokemon[]
 ): CapturedPokemon[] {
   const examples = new Map<string, CapturedPokemon>();
+  // Lo que se sabe de cada especie en cualquiera de las copias: su primera fecha y sus tipos
+  const earliest = new Map<string, number>();
+  const typesOf = new Map<string, string[]>();
   for (const pokemon of [...(base ?? []), ...local, ...remote]) {
-    if (!examples.has(captureKey(pokemon))) {
-      examples.set(captureKey(pokemon), pokemon);
+    const key = captureKey(pokemon);
+    if (!examples.has(key)) {
+      examples.set(key, pokemon);
+    }
+    if (pokemon.capturedAt !== undefined && pokemon.capturedAt < (earliest.get(key) ?? Infinity)) {
+      earliest.set(key, pokemon.capturedAt);
+    }
+    if (pokemon.types && !typesOf.has(key)) {
+      typesOf.set(key, pokemon.types);
     }
   }
 
@@ -62,7 +73,13 @@ function mergeCaptured(
       remoteCounts.get(key) ?? 0
     );
     for (let i = 0; i < count; i += 1) {
-      merged.push({ ...pokemon });
+      const capturedAt = earliest.get(key);
+      const types = typesOf.get(key);
+      merged.push({
+        ...pokemon,
+        ...(capturedAt !== undefined ? { capturedAt } : {}),
+        ...(types ? { types } : {}),
+      });
     }
   }
   return merged;
@@ -130,6 +147,32 @@ function mergeFavorite(
   return local.updatedAt >= remote.updatedAt ? local.favorite : remote.favorite;
 }
 
+function sameNursery(a?: Nursery, b?: Nursery): boolean {
+  return a?.a === b?.a && a?.b === b?.b;
+}
+
+// Quien la cambió desde la última sincronización manda (así un huevo que ya eclosionó en un
+// ordenador no se queda esperando en el otro). Con la misma pareja en los dos, el que va más avanzado.
+function mergeNursery(
+  base: GameState | undefined,
+  local: GameState,
+  remote: GameState
+): Nursery | undefined {
+  if (sameNursery(local.nursery, remote.nursery)) {
+    if (local.nursery && remote.nursery) {
+      return local.nursery.saves >= remote.nursery.saves ? local.nursery : remote.nursery;
+    }
+    return undefined;
+  }
+  if (base && sameNursery(local.nursery, base.nursery)) {
+    return remote.nursery;
+  }
+  if (base && sameNursery(remote.nursery, base.nursery)) {
+    return local.nursery;
+  }
+  return local.updatedAt >= remote.updatedAt ? local.nursery : remote.nursery;
+}
+
 function union(a: string[], b: string[]): string[] {
   return [...new Set([...a, ...b])];
 }
@@ -143,6 +186,7 @@ export function mergeStates(
 ): GameState {
   const captured = mergeCaptured(base?.captured, local.captured, remote.captured);
   const favorite = mergeFavorite(base, local, remote);
+  const nursery = mergeNursery(base, local, remote);
   return {
     coins: mergeNumber(base?.coins, local.coins, remote.coins),
     balls: mergeCounts(base?.balls, local.balls, remote.balls),
@@ -159,5 +203,6 @@ export function mergeStates(
     achievements: union(local.achievements, remote.achievements),
     achievementsClaimed: union(local.achievementsClaimed, remote.achievementsClaimed),
     ...(favorite ? { favorite } : {}),
+    ...(nursery ? { nursery } : {}),
   };
 }

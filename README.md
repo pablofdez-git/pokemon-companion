@@ -52,6 +52,25 @@ En la barra de actividad, el icono de Ctrl+Catch abre la *Mochila*, con:
 - Tus estadísticas: tu **racha** de días seguidos programando, caracteres escritos, monedas ganadas y gastadas, encuentros, porcentaje de captura…
 - Tus Pokémon capturados. Los repetidos tienen un botón para **venderlos** y recuperar monedas, y los que pueden evolucionar, otro para **evolucionarlos** (una flecha hacia arriba).
 
+## Guardería
+
+Los repetidos tienen otro uso además de venderlos. Pulsa la línea **Guardería** de la *Mochila* (o el comando *Ctrl+Catch: Abrir guardería*) y deja una pareja:
+
+- **Dos copias del mismo Pokémon**, o **cualquier Pokémon con un Ditto** (aunque solo tengas una copia).
+- Cada guardado que da monedas hace avanzar el huevo. Cuando está listo, **nace un Pokémon que no tienes**.
+- Sale de la **misma categoría** que los padres: de unos Pokémon comunes sale otro común, y de unos legendarios, otro legendario. Cuanto más raros, más tarda:
+
+| Categoría de los padres | Guardados con monedas |
+|---|---|
+| Común | 50 |
+| Poco común | 80 |
+| Raro | 150 |
+| Legendario | 300 |
+
+- Los padres **no se pierden**: siguen en tu mochila (con la etiqueta *en la guardería*), pero no puedes venderlos ni evolucionarlos hasta que nazca el huevo.
+- Hace falta conexión para ver qué nace; si no la hay, el huevo espera. Si no queda ninguna especie nueva de esa categoría, nace otro de la especie de los padres.
+- Puedes sacar a los Pokémon antes de tiempo, pero entonces se pierde el huevo.
+
 ## Pokémon favorito
 
 Elige uno de tus Pokémon como **favorito** (clic derecho sobre él en la *Mochila* → *Elegir como favorito*, o el comando *Ctrl+Catch: Elegir Pokémon favorito*). Su **tipo** te da un pequeño efecto mientras lo tengas:
@@ -82,6 +101,7 @@ Pulsa el botón del libro de la cabecera de la *Mochila* (o el comando *Ctrl+Cat
 - Las especies que has capturado aparecen en color, con cuántas tienes y una ★ si tienes su variocolor.
 - Las que te faltan se ven solo como silueta.
 - Progreso total y por generación, con filtros *Todos*, *Capturados* y *Me faltan*.
+- **Pulsa un Pokémon capturado para ver su ficha**: su sprite (y el variocolor, si lo tienes), sus tipos, la categoría y la descripción de la Pokédex de los juegos, cuántas veces lo has capturado y la fecha de la primera captura. Se cierra con la X, con *Esc* o pulsando fuera. La descripción necesita conexión; la fecha solo existe en los Pokémon que captures a partir de esta versión.
 
 ## Comandos
 

@@ -119,8 +119,14 @@ h2 {
   background: var(--vscode-editorWidget-background);
 }
 
-.card.caught:hover {
+.card.caught {
+  cursor: pointer;
+}
+
+.card.caught:hover,
+.card.caught:focus-visible {
   border-color: var(--vscode-focusBorder);
+  outline: none;
 }
 
 .card.shiny {
@@ -197,4 +203,192 @@ h2 {
 .empty {
   margin: 8px 0;
   opacity: 0.7;
+}
+
+/* --- Ficha de una especie (se abre al pulsar una tarjeta) --- */
+body.modal-open {
+  overflow: hidden;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.dialog {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 560px;
+  max-height: 100%;
+  overflow-y: auto;
+  padding: 20px 22px 18px;
+  border: 1px solid var(--vscode-widget-border, rgba(128, 128, 128, 0.4));
+  border-radius: 12px;
+  background: var(--vscode-editor-background);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+}
+
+.close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  padding: 4px;
+  border: none;
+  border-radius: 4px;
+  color: var(--vscode-foreground);
+  background: transparent;
+  cursor: pointer;
+}
+
+.close:hover,
+.close:focus-visible {
+  background: var(--vscode-toolbar-hoverBackground, rgba(128, 128, 128, 0.25));
+  outline: none;
+}
+
+.close .icon {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+}
+
+.detail-top {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+}
+
+.detail-sprites {
+  display: flex;
+  flex: none;
+  gap: 10px;
+}
+
+.detail-sprites figure {
+  margin: 0;
+  text-align: center;
+}
+
+.detail-sprites figcaption {
+  font-size: 0.8em;
+  opacity: 0.7;
+}
+
+.detail-sprites .shiny-figure figcaption {
+  color: var(--vscode-charts-yellow);
+  opacity: 1;
+}
+
+/* Los sprites son de 96 px: al doble se ven nítidos */
+.detail-sprite {
+  display: block;
+  width: 192px;
+  height: 192px;
+  margin: -24px -16px -22px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.detail-sprites:has(figure + figure) .detail-sprite {
+  width: 120px;
+  height: 120px;
+  margin: -14px -8px -12px;
+}
+
+.detail-info {
+  min-width: 0;
+  padding-right: 18px;
+}
+
+.detail-number {
+  margin: 0;
+  font-size: 0.85em;
+  opacity: 0.65;
+}
+
+.detail-name {
+  display: block;
+  margin: 0 0 2px;
+  font-size: 1.6em;
+}
+
+.genus {
+  margin: 0 0 8px;
+  opacity: 0.8;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  padding: 2px 12px;
+  border-radius: 12px;
+  color: #fff;
+  background: #777;
+  font-size: 0.85em;
+  font-weight: 600;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
+}
+
+.muted {
+  opacity: 0.65;
+}
+
+.description {
+  margin: 16px 0 14px;
+  line-height: 1.5;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 16px;
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--vscode-widget-border, rgba(128, 128, 128, 0.3));
+}
+
+.facts dt {
+  opacity: 0.7;
+}
+
+.facts dd {
+  margin: 0;
+}
+
+.type-normal { background: #8a8a59; }
+.type-fire { background: #e2661a; }
+.type-water { background: #4a78e0; }
+.type-electric { background: #c9a400; }
+.type-grass { background: #4f9f2a; }
+.type-ice { background: #4aa9a6; }
+.type-fighting { background: #c22e28; }
+.type-poison { background: #a33ea1; }
+.type-ground { background: #b08c2e; }
+.type-flying { background: #7a64d6; }
+.type-psychic { background: #e0356a; }
+.type-bug { background: #839412; }
+.type-rock { background: #94822a; }
+.type-ghost { background: #735797; }
+.type-dragon { background: #5a2bd6; }
+.type-dark { background: #705746; }
+.type-steel { background: #7e7e98; }
+.type-fairy { background: #c46a9a; }
+
+@media (max-width: 480px) {
+  .detail-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }

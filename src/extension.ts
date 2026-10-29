@@ -12,6 +12,7 @@ import {
 } from './game/achievements';
 import { rewardForSave } from './game/economy';
 import { clearFavorite, perkValue } from './game/favorite';
+import { HatchResult, advanceNursery, hatchEgg } from './game/nursery';
 import { sellDuplicate } from './game/shop';
 import { maxPokemonId } from './game/generations';
 import {
@@ -29,6 +30,7 @@ import { AchievementsPanel } from './ui/achievementsPanel';
 import { BackpackProvider } from './ui/backpackView';
 import { EncounterPanel } from './ui/encounterPanel';
 import { chooseFavorite, setFavoriteFor } from './ui/favorite';
+import { announceHatch, openNursery } from './ui/nursery';
 import { runEncounter } from './ui/encounterView';
 import { BALLS } from './game/items';
 import {
@@ -119,6 +121,34 @@ export function activate(context: vscode.ExtensionContext) {
     const { balls } = state.get();
     const hasBalls = BALLS.some((ball) => (balls[ball.id] ?? 0) > 0);
     return hasBalls ? pendingRewards(state.get())[0] : undefined;
+  }
+
+  // El huevo de la guardería: solo avanza con guardados que dan monedas. Si está listo y no hay
+  // conexión, espera y se vuelve a intentar en el siguiente guardado.
+  let hatching = false;
+  async function tryHatch(): Promise<HatchResult | undefined> {
+    if (hatching) {
+      return undefined;
+    }
+    hatching = true;
+    try {
+      const result = await hatchEgg(state, fetchPokemon);
+      if (result.ok) {
+        announceHatch(result);
+      }
+      return result;
+    } finally {
+      hatching = false;
+    }
+  }
+
+  async function tickNursery(): Promise<void> {
+    if ((await advanceNursery(state)) === 'ready') {
+      const result = await tryHatch();
+      if (result && !result.ok && result.offline) {
+        vscode.window.setStatusBarMessage('El huevo está listo: falta conexión para ver qué nace', 5000);
+      }
+    }
   }
 
   // Un encuentro normal, el de recompensa de un logro (sin cooldown, y se elige por su nivel)
@@ -257,6 +287,7 @@ export function activate(context: vscode.ExtensionContext) {
       if (gained > 0) {
         tracker.consume(document); // solo se descuentan si dieron monedas
         vscode.window.setStatusBarMessage(`+${gained} 🪙`, 3000);
+        void tickNursery();
 
         await checkAchievements();
         const reward = nextReward();
@@ -356,6 +387,10 @@ export function activate(context: vscode.ExtensionContext) {
       await clearFavorite(state);
       vscode.window.showInformationMessage('Ya no tienes Pokémon favorito.');
     }),
+
+    vscode.commands.registerCommand('pokemonCompanion.openNursery', () =>
+      openNursery(state, tryHatch)
+    ),
 
     vscode.commands.registerCommand('pokemonCompanion.syncNow', () =>
       sync.syncNow()

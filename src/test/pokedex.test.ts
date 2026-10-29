@@ -1,6 +1,7 @@
 import * as assert from 'assert';
 import { CapturedPokemon, GameState } from '../data/state';
-import { buildPokedex, speciesSpriteUrl } from '../game/pokedex';
+import { buildPokedex, parseSpeciesInfo, speciesSpriteUrl } from '../game/pokedex';
+import { typeName } from '../game/types';
 import { EMPTY_STATS } from '../game/stats';
 
 function state(captured: CapturedPokemon[], generationsUnlocked = 1): GameState {
@@ -72,5 +73,72 @@ suite('pokédex', () => {
     const dex = buildPokedex(state([caught(200)]));
     assert.strictEqual(dex.generations[1].caught, 1);
     assert.strictEqual(dex.caught, 0); // el total solo cuenta lo desbloqueado
+  });
+});
+
+suite('pokédex: ficha de cada especie', () => {
+  test('guarda los tipos (con su nombre en español), la fecha más antigua y los variocolores', () => {
+    const dex = buildPokedex(
+      state([
+        caught(25, { types: ['electric'], capturedAt: 3000 }),
+        caught(25, { capturedAt: 1000 }),
+        caught(25, { shiny: true, capturedAt: 2000 }),
+        caught(1),
+      ])
+    );
+    const [bulbasaur, pikachu] = [dex.generations[0].entries[0], dex.generations[0].entries[24]];
+
+    assert.deepStrictEqual(pikachu.types, [{ id: 'electric', name: 'eléctrico' }]);
+    assert.strictEqual(pikachu.firstCaughtAt, 1000);
+    assert.strictEqual(pikachu.count, 3);
+    assert.strictEqual(pikachu.shinyCount, 1);
+    assert.strictEqual(pikachu.shinySpriteUrl, speciesSpriteUrl(25, true));
+
+    // Una captura antigua no tiene tipos ni fecha: la ficha lo dice en vez de inventarlo
+    assert.deepStrictEqual(bulbasaur.types, []);
+    assert.strictEqual(bulbasaur.firstCaughtAt, null);
+    assert.strictEqual(bulbasaur.shinyCount, 0);
+  });
+
+  test('las especies sin capturar no llevan datos de ficha', () => {
+    const missing = buildPokedex(state([])).generations[0].entries[0];
+    assert.deepStrictEqual(missing.types, []);
+    assert.strictEqual(missing.firstCaughtAt, null);
+    assert.strictEqual(missing.shinyCount, 0);
+  });
+
+  test('typeName traduce los tipos y deja pasar los desconocidos', () => {
+    assert.strictEqual(typeName('fire'), 'fuego');
+    assert.strictEqual(typeName('psychic'), 'psíquico');
+    assert.strictEqual(typeName('stellar'), 'stellar');
+  });
+});
+
+suite('pokédex: descripción de la especie', () => {
+  const entry = (language: string, text: string) => ({ flavor_text: text, language: { name: language } });
+  const genus = (language: string, text: string) => ({ genus: text, language: { name: language } });
+
+  test('prefiere el español y la última entrada, y limpia los saltos de línea', () => {
+    const info = parseSpeciesInfo({
+      genera: [genus('en', 'Mouse Pokémon'), genus('es', 'Pokémon Ratón')],
+      flavor_text_entries: [
+        entry('es', 'Texto\nviejo.'),
+        entry('en', 'English text.'),
+        entry('es', 'Cuando varios\nde ellos\fse juntan,   se   cargan.'),
+      ],
+    });
+    assert.strictEqual(info.genus, 'Pokémon Ratón');
+    assert.strictEqual(info.description, 'Cuando varios de ellos se juntan, se cargan.');
+  });
+
+  test('sin español usa el inglés; sin nada, null', () => {
+    const english = parseSpeciesInfo({
+      genera: [genus('en', 'Mouse Pokémon')],
+      flavor_text_entries: [entry('en', 'English text.')],
+    });
+    assert.deepStrictEqual(english, { genus: 'Mouse Pokémon', description: 'English text.' });
+
+    const none = parseSpeciesInfo({ genera: [], flavor_text_entries: [entry('ja', 'テキスト')] });
+    assert.deepStrictEqual(none, { genus: null, description: null });
   });
 });

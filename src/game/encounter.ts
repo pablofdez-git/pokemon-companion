@@ -98,6 +98,10 @@ export function failedShakes(probability: number): number {
 export const SHINY_CHANCE = 0.02;
 
 // Solo puede salir variocolor si la API tiene su sprite
-export function rollShiny(hasShinySprite: boolean, chanceMultiplier = 1): boolean {
-  return hasShinySprite && Math.random() < SHINY_CHANCE * chanceMultiplier;
+export function rollShiny(
+  hasShinySprite: boolean,
+  chanceMultiplier = 1,
+  random: () => number = Math.random
+): boolean {
+  return hasShinySprite && random() < SHINY_CHANCE * chanceMultiplier;
 }

@@ -2,6 +2,7 @@ import { StateManager } from '../data/state';
 import { BallType, PREMIER_EVERY } from './items';
 import { GameObject } from './objects';
 import { sellPrice } from './economy';
+import { reservedCopies } from './nursery';
 
 export type PurchaseResult =
   | { ok: true; spent: number; premierGift: number }
@@ -88,6 +89,10 @@ export async function sellDuplicate(
       return;
     }
     if (copies.length === 0) {
+      return;
+    }
+    if (copies.length - 1 < reservedCopies(s, pokemonId)) {
+      result = { ok: false, reason: 'Esa copia está en la guardería: no se puede vender.' };
       return;
     }
 

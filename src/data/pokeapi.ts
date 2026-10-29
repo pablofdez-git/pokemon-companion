@@ -1,4 +1,5 @@
 import { EvolutionNode, EvolutionStep, nextEvolutions } from '../game/evolution';
+import { SpeciesInfo, parseSpeciesInfo } from '../game/pokedex';
 
 export interface PokemonData {
   id: number;
@@ -69,6 +70,22 @@ export async function fetchEvolutions(id: number): Promise<EvolutionStep[]> {
   const steps = nextEvolutions(chain.chain, id);
   evolutionCache.set(id, steps);
   return steps;
+}
+
+const speciesInfoCache = new Map<number, SpeciesInfo>();
+
+// Categoría y descripción de la Pokédex de una especie, en español si existe
+export async function fetchSpeciesInfo(id: number): Promise<SpeciesInfo> {
+  const cached = speciesInfoCache.get(id);
+  if (cached) {
+    return cached;
+  }
+  const species = await getJson<Parameters<typeof parseSpeciesInfo>[0]>(
+    `${BASE_URL}/pokemon-species/${id}`
+  );
+  const info = parseSpeciesInfo(species);
+  speciesInfoCache.set(id, info);
+  return info;
 }
 
 export async function fetchPokemon(id: number): Promise<PokemonData> {

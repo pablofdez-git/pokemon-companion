@@ -169,3 +169,24 @@ suite('combinar partidas sin base', () => {
     assert.deepStrictEqual(counts(merged.captured), { 1: 1, '25★': 1 });
   });
 });
+
+suite('combinar partidas: fecha y tipos de las capturas', () => {
+  test('se conserva la fecha más antigua y los tipos de cada especie', () => {
+    const base = game({ captured: [{ ...mon(1), capturedAt: 5000 }] });
+    const local = game({
+      captured: [{ ...mon(1), capturedAt: 5000 }, { ...mon(1), capturedAt: 9000 }],
+    });
+    const remote = game({
+      captured: [{ ...mon(1), capturedAt: 2000, types: ['grass'] }],
+    });
+    const merged = mergeStates(base, local, remote);
+    assert.strictEqual(merged.captured.length, 2);
+    assert.ok(merged.captured.every((c) => c.capturedAt === 2000));
+    assert.ok(merged.captured.every((c) => c.types?.[0] === 'grass'));
+  });
+
+  test('las capturas sin fecha siguen sin fecha', () => {
+    const merged = mergeStates(undefined, game({ captured: [mon(4)] }), game({ captured: [mon(4)] }));
+    assert.ok(merged.captured.every((c) => c.capturedAt === undefined));
+  });
+});

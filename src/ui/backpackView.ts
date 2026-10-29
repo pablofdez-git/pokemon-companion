@@ -4,6 +4,7 @@ import { cachedEvolutionIds, fetchEvolutions } from '../data/pokeapi';
 import { ACHIEVEMENTS, pendingRewards } from '../game/achievements';
 import { sellPrice } from '../game/economy';
 import { availableEvolutions } from '../game/evolution';
+import { isReady, parentNames, reservedCopies, savesNeeded } from '../game/nursery';
 import {
   PERK_TEXTS,
   activePerk,
@@ -193,6 +194,28 @@ function progressItem(progress: GenerationProgress): BackpackItem {
   return item;
 }
 
+// Línea de la guardería: la pareja y lo que falta para el huevo (clic para abrirla)
+function nurseryItem(state: GameState): BackpackItem {
+  const item = new BackpackItem('Guardería', vscode.TreeItemCollapsibleState.None);
+  item.iconPath = new vscode.ThemeIcon('home');
+  item.command = { command: 'pokemonCompanion.openNursery', title: 'Abrir guardería' };
+
+  const nursery = state.nursery;
+  if (!nursery) {
+    item.description = 'vacía';
+    item.tooltip =
+      'Deja dos repetidos (o cualquier Pokémon con un Ditto) y, tras unos guardados con monedas, nace un Pokémon que no tengas. Haz clic para elegir la pareja.';
+    return item;
+  }
+
+  const progress = isReady(nursery) ? 'huevo listo' : `${nursery.saves}/${savesNeeded(nursery)}`;
+  item.description = `${parentNames(state, nursery)} · ${progress}`;
+  item.tooltip = isReady(nursery)
+    ? 'El huevo está listo: eclosiona en el siguiente guardado con monedas (hace falta conexión). Haz clic para ver el estado.'
+    : 'Los guardados con monedas hacen avanzar el huevo. Haz clic para ver el estado o sacar a los Pokémon.';
+  return item;
+}
+
 // Línea con el Pokémon favorito y su efecto (clic para elegir otro)
 function favoriteItem(state: GameState): BackpackItem {
   const item = new BackpackItem('Favorito', vscode.TreeItemCollapsibleState.None);
@@ -258,6 +281,7 @@ function statsItems(stats: GameStats, shinies: number): BackpackItem[] {
     statItem('Huidas', formatNumber(stats.fled), 'run-all'),
     statItem('Balls lanzadas', formatNumber(stats.throws), 'circle-large-outline'),
     statItem('Evoluciones', formatNumber(stats.evolutions), 'arrow-circle-up'),
+    statItem('Huevos eclosionados', formatNumber(stats.eggs), 'home'),
     statItem('Variocolores', formatNumber(shinies), 'star-full'),
   ];
 }
@@ -363,6 +387,7 @@ export class BackpackProvider
       return [
         progressItem(progress),
         favoriteLine,
+        nurseryItem(game),
         new BackpackItem('Pokéballs', Expanded, 'balls'),
         new BackpackItem('Objetos', Expanded, 'objects'),
         achievementsLine,
@@ -441,6 +466,7 @@ export class BackpackProvider
           count > 1 ? `x${count}` : '',
           pokemon.shiny ? 'variocolor' : '',
           isFavorite(game, pokemon.id, Boolean(pokemon.shiny)) ? 'favorito' : '',
+          !pokemon.shiny && reservedCopies(game, pokemon.id) > 0 ? 'en la guardería' : '',
         ].filter(Boolean);
         if (details.length > 0) {
           item.description = details.join(' · ');

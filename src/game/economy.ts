@@ -80,6 +80,7 @@ export async function rewardForCapture(
       spriteUrl: shiny ? pokemon.shinySpriteUrl : pokemon.spriteUrl,
       captureRate: pokemon.captureRate,
       types: pokemon.types,
+      capturedAt: Date.now(),
       ...(shiny ? { shiny: true } : {}),
     });
     s.coins += coins;

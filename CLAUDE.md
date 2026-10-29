@@ -62,11 +62,13 @@ src/
     generations.ts        Tabla de generaciones y reglas de desbloqueo
     favorite.ts           Pokémon favorito: efecto pasivo según su tipo (PERK_BY_TYPE), elegir/quitar
     items.ts              Catálogo de balls (precio, regla, multiplicador según contexto)
+    nursery.ts            Guardería: parejas, huevo (advanceNursery), cría (pickHatchling / hatchEgg)
     objects.ts            Catálogo de objetos (Incienso, Pokéflauta, Moneda Amuleto, piedras) y sus efectos
     pokedex.ts            buildPokedex(): agrupa capturas por especie y generación (siluetas, shiny)
     shop.ts               buyBall / sellDuplicate
     stats.ts              GameStats (contadores) y racha de días: recordActivity, currentStreak
     typing.ts             Qué cuenta al escribir: sin espacios (countableChars) y sin teclas mantenidas (RepeatFilter)
+    types.ts              typeName(): nombre en español de cada tipo
     syncRules.ts          decideSync(): push / pull / conflict / none
     evolution.ts          nextEvolutions(), evolutionCost(), evolvePokemon()
     achievements.ts       Lista de logros, comprobación, recompensas pendientes y pickRewardPokemon()
@@ -80,6 +82,7 @@ src/
     encounterView.ts      runEncounter(): bucle de un encuentro completo
     evolution.ts          evolveFromBackpack(): QuickPick de evoluciones
     favorite.ts           chooseFavorite() / setFavoriteFor(): QuickPick y elección con el tipo
+    nursery.ts            openNursery(): elegir pareja o ver/sacar la actual; announceHatch()
     pokedexPanel.ts       WebviewPanel de la Pokédex (pestaña del editor, se refresca con onDidChange)
     achievementsPanel.ts  WebviewPanel de los Logros (misma estructura que la Pokédex)
 docs/guia/                Guía del entrenador en PDF (código fuente, ver más abajo)
@@ -95,7 +98,7 @@ media/
 
 ### Estado (`data/state.ts`)
 - Todo el progreso es un único objeto `GameState` guardado en `context.globalState` con la clave `pokemonCompanion.state`:
-  `coins`, `balls` (id → cantidad), `items` (objetos: id → cantidad), `incenseUntil` (ms; 0 = apagado), `captured` (lista de `CapturedPokemon`, con repetidos; las nuevas guardan `types`), `generationsUnlocked`, `updatedAt`, `stats`, `achievements`, `achievementsClaimed` y `favorite` (opcional).
+  `coins`, `balls` (id → cantidad), `items` (objetos: id → cantidad), `incenseUntil` (ms; 0 = apagado), `captured` (lista de `CapturedPokemon`, con repetidos; las nuevas guardan `types` y `capturedAt`), `generationsUnlocked`, `updatedAt`, `stats`, `achievements`, `achievementsClaimed`, `favorite` y `nursery` (ambos opcionales).
 - **Siempre se modifica con `state.update(s => { ... })`**: hace copia profunda, aplica el cambio, pone `updatedAt = Date.now()`, guarda y dispara `onDidChange`. La UI (barra de estado, mochila) y la sincronización se suscriben a ese evento.
 - `get()` normaliza partidas antiguas (campos que faltan, capturas guardadas en formato viejo). Los campos nuevos del estado deben ser opcionales o tener un valor por defecto aquí, para no romper partidas existentes ni las sincronizadas.
 - `replaceWith()` aplica una partida remota **sin tocar** `updatedAt`.
@@ -128,6 +131,9 @@ media/
 - `buildPokedex(state)` es pura y testeada: una entrada por especie de las generaciones desbloqueadas; las no capturadas llevan `name: null` y el sprite genérico de `speciesSpriteUrl(id)`, que el CSS pinta como silueta (`filter: brightness(0)`).
 - Panel único: `show()` lo crea o lo trae al frente. Protocolo: panel → `ready`; extensión → `update` con el `PokedexData` completo (también en cada `state.onDidChange`).
 - Se abre con `pokemonCompanion.openPokedex` (botón `$(book)` en `view/title` de la Mochila).
+- **Ficha de cada especie**: al pulsar (o Enter) una tarjeta capturada, `media/pokedex.js` abre un diálogo (`.overlay`, fuera de `#root` para que el repintado de la cuadrícula no lo borre; se cierra con Esc, con la X o pulsando fuera). Enseña sprite normal y/o variocolor, tipos (chips con color por tipo, clases `type-*`), categoría y descripción, veces capturado, veces variocolor y primera captura.
+- Protocolo de la ficha: panel → `detail` (`id`); extensión → `detail` con `types`, `genus`, `description` y `offline`. La pestaña no tiene acceso a internet (CSP), así que `PokedexPanel.sendDetail()` pide `fetchPokemon` (tipos) y `fetchSpeciesInfo` (categoría y descripción de `pokemon-species`, en español si existe, si no en inglés: `parseSpeciesInfo`, pura y testeada) y solo responde por especies que has capturado. Mientras llega se enseñan los tipos guardados al capturar; sin conexión sale un aviso en lugar de la descripción.
+- `PokedexEntry` lleva `shinyCount`, `shinySpriteUrl`, `types` (`TypeChip`) y `firstCaughtAt`. La fecha sale de `CapturedPokemon.capturedAt` (se apunta al capturar y al evolucionar; `mergeStates` conserva la más antigua de cada especie). **Las capturas anteriores a la 0.7.0 no tienen fecha ni tipos**: la ficha dice "No registrada" en vez de inventarla, y los tipos se piden a la PokéAPI.
 
 ### Estadísticas (`game/stats.ts`)
 - `GameState.stats` guarda contadores acumulados. Se apuntan donde ocurre cada cosa:
@@ -182,6 +188,16 @@ media/
 - Se elige con clic derecho en un Pokémon de la Mochila (`setFavorite`, oculto en la paleta) o con `chooseFavorite` (QuickPick); `clearFavorite` lo quita (también desde el clic derecho en la línea Favorito). La Mochila tiene una línea "Favorito" (`$(heart)`, `contextValue` `favorite` / `noFavorite`) con su efecto, y el Pokémon elegido lleva "favorito" en la descripción.
 - En `mergeStates` gana el lado que cambió de favorito desde la base; si cambiaron los dos, el de `updatedAt` más reciente.
 
+### Guardería (`game/nursery.ts`, `ui/nursery.ts`)
+- Dos Pokémon dejan un huevo: tras `NURSERY_SAVES[tier]` **guardados con monedas** (50 / 80 / 150 / 300 según la categoría) nace un Pokémon **que no tienes**, de la **misma categoría** que los padres. `state.nursery = { a, b, tier, saves }` (opcional).
+- **Pareja** (`eligiblePairs`): dos copias normales de la misma especie, o cualquier Pokémon con un **Ditto** (`DITTO_ID` 132; Ditto con Ditto no vale). Los variocolor no cuentan como padres. Los padres **no se gastan**: siguen en la mochila, pero `reservedCopies()` impide vender o evolucionar las copias reservadas (`sellDuplicate` y `evolvePokemon`).
+- **Categoría** (`tierForCaptureRate`, mismos rangos que las recompensas de logros: común, poco común, raro, legendario): la marca el `captureRate` de la especie (no el del Ditto), que se saca de la captura o de la PokéAPI al dejarla. Sube el coste en guardados con la rareza para que un Ditto y un solo legendario no den legendarios nuevos cada 50 guardados.
+- `advanceNursery()` suma uno desde el guardado con monedas (`tickNursery` en `extension.ts`); al llegar al total llama a `tryHatch()` → `hatchEgg()`. Si no hay conexión el huevo se queda listo y se reintenta en el siguiente guardado.
+- `pickHatchling(tier, candidatos)` mezcla las especies que no tienes (de las generaciones desbloqueadas) y las consulta por tandas de `HATCH_BATCH` hasta `HATCH_ROUNDS`; se para en la primera de la categoría. Si ninguna encaja, repite la especie de los padres (`isNew: false`); si no se pudo consultar ninguna, lanza error (sin conexión). Limitación: con muy pocas especies que falten en la categoría, el muestreo puede no dar con ellas y la cría sale repetida.
+- La cría se apunta como una captura (con `capturedAt` y `types`, y su tirada de variocolor con el efecto del favorito), suma `stats.eggs`, no da monedas y puede desbloquear generaciones.
+- UI: línea "Guardería" en la Mochila (`$(home)`, clic → comando `pokemonCompanion.openNursery`); los padres llevan "en la guardería" en su descripción. Vacía, el comando lista las parejas posibles; con pareja dentro ofrece ver el estado, intentar eclosionar (si está listo) o sacarlos (se pierde el huevo, con confirmación).
+- En `mergeStates` la guardería la decide quien la cambió desde la base (así un huevo que ya eclosionó en un ordenador no se queda esperando en el otro); con la misma pareja en los dos, el huevo más avanzado. `stats.eggs` se suma.
+
 ### Generaciones (`game/generations.ts`)
 - Para desbloquear la siguiente hay que tener `ceil(maxPokemonId(actual) × UNLOCK_FRACTION)` especies **distintas** (los repetidos no cuentan). Puede subir más de una de golpe.
 
@@ -209,7 +225,7 @@ media/
   - `normalizeState()` (`data/state.ts`) prepara las partidas remota y base antes de combinarlas.
 
 ## Contribuciones en `package.json`
-- Comandos: `chooseFavorite` y `clearFavorite` (paleta), `setFavorite` (oculto; menú contextual de los Pokémon de la Mochila), `useObject` (oculto; botón en línea en los objetos usables de la Mochila), `resetProgress`, `togglePause`, `openShop`, `openPokedex` y `openAchievements` (botones en la cabecera de la Mochila), `evolve` (oculto en la paleta; botón en línea en cada Pokémon de la mochila), `sellDuplicate` (oculto en la paleta; botón en línea en la mochila cuando el `contextValue` contiene `duplicatePokemon`), `syncNow`.
+- Comandos: `openNursery` (paleta y línea de la Mochila), `chooseFavorite` y `clearFavorite` (paleta), `setFavorite` (oculto; menú contextual de los Pokémon de la Mochila), `useObject` (oculto; botón en línea en los objetos usables de la Mochila), `resetProgress`, `togglePause`, `openShop`, `openPokedex` y `openAchievements` (botones en la cabecera de la Mochila), `evolve` (oculto en la paleta; botón en línea en cada Pokémon de la mochila), `sellDuplicate` (oculto en la paleta; botón en línea en la mochila cuando el `contextValue` contiene `duplicatePokemon`), `syncNow`.
 - Contenedor en la barra de actividad `pokemonCompanion` con las vistas `pokemonCompanion.encounter` (webview) y `pokemonCompanion.backpack` (árbol).
 - Ajustes: `pokemonCompanion.syncFolder` (scope `machine`), `encounterChance` y `encounterCooldownSeconds` (scope `application`).
 
@@ -246,13 +262,14 @@ Publicada en el Marketplace como `pablofdez.pokemon-companion`; la versión actu
 - 0.5.0: ajustes de equilibrio (probabilidad y cooldown de encuentros) y evoluciones.
 - 0.6.0: el botón de evolucionar solo en los que evolucionan, logros con recompensa y la interfaz sin emojis.
 - 0.6.1: mantener una tecla pulsada ya no da monedas ni encuentros, los espacios no cuentan y 1 moneda cada 15 caracteres.
+- 0.7.0: Premier Ball y objetos (Incienso, Pokéflauta, Moneda Amuleto, piedras), Pokémon favorito, ficha de la Pokédex y guardería.
 
 **Próximos pasos (en este orden, de uno en uno):**
-1. **[Hecho, sin publicar] Balls:** quitar la Repeat Ball y la Timer Ball (las que tenga una partida se devuelven en monedas). Añadir la **Premier Ball**: no se vende, se regala 1 por cada 10 Poké Balls de una misma compra. Captura ×1.25, entre la Poké Ball y la Super Ball.
-2. **[Hecho, sin publicar] Zona de Objetos** (sección nueva en la Mochila y en la tienda): Incienso, Moneda Amuleto, piedras evolutivas y Pokéflauta. Incienso 60 (×2 encuentros, 10 min), Pokéflauta 80 (llama al último que huyó, hasta 10 min), Moneda Amuleto 1500 (+10 % al guardar, única), piedras 100 (sustituyen a las monedas en las evoluciones con piedra; 5 % de que un capturado lleve una).
-3. **[Hecho, sin publicar] Pokémon favorito:** eliges uno de tus Pokémon y su tipo da un efecto pasivo pequeño (monedas, encuentros, captura, variocolor o piedras). Sin nada en pantalla que moleste: el efecto se ve en una línea de la Mochila.
-4. **Pokédex con más detalle:** tipos, descripción y fecha de captura de cada especie.
-5. **Guardería:** dejas dos repetidos y con el tiempo sale un huevo. Da otro uso a los repetidos, además de venderlos.
+1. **[Hecho en la 0.7.0] Balls:** quitar la Repeat Ball y la Timer Ball (las que tenga una partida se devuelven en monedas). Añadir la **Premier Ball**: no se vende, se regala 1 por cada 10 Poké Balls de una misma compra. Captura ×1.25, entre la Poké Ball y la Super Ball.
+2. **[Hecho en la 0.7.0] Zona de Objetos** (sección nueva en la Mochila y en la tienda): Incienso, Moneda Amuleto, piedras evolutivas y Pokéflauta. Incienso 60 (×2 encuentros, 10 min), Pokéflauta 80 (llama al último que huyó, hasta 10 min), Moneda Amuleto 1500 (+10 % al guardar, única), piedras 100 (sustituyen a las monedas en las evoluciones con piedra; 5 % de que un capturado lleve una).
+3. **[Hecho en la 0.7.0] Pokémon favorito:** eliges uno de tus Pokémon y su tipo da un efecto pasivo pequeño (monedas, encuentros, captura, variocolor o piedras). Sin nada en pantalla que moleste: el efecto se ve en una línea de la Mochila.
+4. **[Hecho en la 0.7.0] Pokédex con más detalle:** al pulsar una especie capturada se abre su ficha con tipos, descripción y fecha de captura (solo en las capturas nuevas).
+5. **[Hecho en la 0.7.0] Guardería:** dejas dos repetidos (o un Pokémon con un Ditto) y tras unos guardados con monedas nace un Pokémon que no tienes, de la misma categoría. Da otro uso a los repetidos, además de venderlos.
 6. **Traducción al inglés** (opcional): `vscode.l10n`, `package.nls.json` y `package.nls.es.json`. Todos los textos están escritos a mano en español en `src/` y `media/*.js`.
 
 **Descartado:** el *compañero Pokémon* (uno de los capturados visible en la barra de estado y en un panel lateral, con reacciones). Se implementó y se quitó por resultar un incordio; no hace falta volver a proponerlo.

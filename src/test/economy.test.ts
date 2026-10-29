@@ -63,6 +63,14 @@ suite('economía', () => {
     assert.deepStrictEqual(result.newGenerations, []);
   });
 
+  test('rewardForCapture apunta la fecha de captura', async () => {
+    const state = new StateManager(new FakeMemento());
+    const before = Date.now();
+    await rewardForCapture(state, pokemon(1), false);
+    const at = state.get().captured[0].capturedAt;
+    assert.ok(at !== undefined && at >= before && at <= Date.now());
+  });
+
   test('un variocolor da bonus y guarda su sprite', async () => {
     const state = new StateManager(new FakeMemento());
     const result = await rewardForCapture(state, pokemon(1), true);

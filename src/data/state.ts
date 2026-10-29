@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { Tier } from '../game/achievements';
 import { RETIRED_BALLS } from '../game/items';
 import { EMPTY_STATS, GameStats } from '../game/stats';
 
@@ -9,6 +10,7 @@ export interface CapturedPokemon {
   captureRate?: number; // dificultad; no existe en capturas antiguas
   shiny?: boolean;      // variocolor; no existe en capturas antiguas
   types?: string[];     // tipos en inglés (fire, water…); no existe en capturas antiguas
+  capturedAt?: number;  // momento (ms) en que lo conseguiste; no existe en capturas antiguas
 }
 
 // El Pokémon favorito: su primer tipo decide el efecto pasivo (ver game/favorite.ts)
@@ -16,6 +18,14 @@ export interface Favorite {
   id: number;
   shiny: boolean;
   type: string;
+}
+
+// Pareja en la guardería: sus copias se quedan en la mochila, pero no se pueden vender ni evolucionar
+export interface Nursery {
+  a: number;     // especie (nunca Ditto)
+  b: number;     // la misma especie, o Ditto
+  tier: Tier;    // categoría de la especie: decide cuánto tarda y de qué categoría es la cría
+  saves: number; // guardados con monedas desde que se dejaron
 }
 
 export interface GameState {
@@ -30,6 +40,7 @@ export interface GameState {
   achievements: string[];        // ids de los logros conseguidos
   achievementsClaimed: string[]; // ids de los logros cuya recompensa ya capturaste
   favorite?: Favorite;           // opcional: las partidas antiguas no lo tienen
+  nursery?: Nursery;             // opcional: hay pareja en la guardería
 }
 
 const KEY = 'pokemonCompanion.state';

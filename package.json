@@ -7,7 +7,7 @@
     "type": "git",
     "url": "https://github.com/pablofdez-git/pokemon-companion.git"
   },
-  "version": "0.6.1",
+  "version": "0.7.0",
   "icon": "media/icon.png",
   "license": "MIT",
   "pricing": "Free",
@@ -78,6 +78,10 @@
         "command": "pokemonCompanion.useObject",
         "title": "Usar",
         "icon": "$(play)"
+      },
+      {
+        "command": "pokemonCompanion.openNursery",
+        "title": "Ctrl+Catch: Abrir guardería"
       },
       {
         "command": "pokemonCompanion.chooseFavorite",

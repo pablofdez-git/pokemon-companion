@@ -1,5 +1,6 @@
 import { StateManager } from '../data/state';
 import { PokemonData } from '../data/pokeapi';
+import { reservedCopies } from './nursery';
 import { STONE_IDS, findObject } from './objects';
 import {
   GENERATIONS,
@@ -107,6 +108,10 @@ export async function evolvePokemon(
     if (copies.length === 0) {
       return;
     }
+    if (!shiny && copies.length - 1 < reservedCopies(s, fromId)) {
+      result = { ok: false, reason: 'Esa copia está en la guardería: no se puede evolucionar.' };
+      return;
+    }
 
     const cost = stone ? 0 : evolutionCost(target.captureRate);
     if (stone && (s.items[stone] ?? 0) <= 0) {
@@ -127,6 +132,7 @@ export async function evolvePokemon(
       spriteUrl: shiny ? target.shinySpriteUrl ?? target.spriteUrl : target.spriteUrl,
       captureRate: target.captureRate,
       types: target.types,
+      capturedAt: Date.now(),
       ...(shiny ? { shiny: true } : {}),
     });
     // Si evoluciona la última copia del favorito, él evoluciona también (y toma su tipo)

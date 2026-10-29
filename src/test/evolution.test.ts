@@ -109,6 +109,8 @@ suite('evoluciones', () => {
     assert.strictEqual(s.coins, 500 - cost);
     assert.strictEqual(s.stats.coinsSpent, cost);
     assert.strictEqual(s.stats.evolutions, 1);
+    // La evolución cuenta como conseguida ahora, para la ficha de la Pokédex
+    assert.ok(s.captured.find((c) => c.id === 5)?.capturedAt !== undefined);
   });
 
   test('un variocolor evoluciona a variocolor con su sprite', async () => {

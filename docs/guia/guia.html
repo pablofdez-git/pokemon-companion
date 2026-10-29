@@ -213,13 +213,14 @@
       <li><b>4</b> La mochila y la tienda</li>
       <li><b>5</b> Las Poké Balls</li>
       <li><b>6</b> Los objetos</li>
-      <li><b>7</b> La Pokédex y los logros</li>
-      <li><b>8</b> Evoluciones y estadísticas</li>
-      <li><b>9</b> Generaciones y colección</li>
-      <li><b>10</b> Ajustes, varios ordenadores y soluciones</li>
+      <li><b>7</b> La Pokédex, favorito y guardería</li>
+      <li><b>8</b> Los logros</li>
+      <li><b>9</b> Evoluciones y estadísticas</li>
+      <li><b>10</b> Generaciones y colección</li>
+      <li><b>11</b> Ajustes, varios ordenadores y soluciones</li>
     </ol>
   </div>
-  <div class="ver">Versión 0.6.1 &nbsp;·&nbsp; Extensión para Visual Studio Code &nbsp;·&nbsp; Proyecto de aficionados</div>
+  <div class="ver">Versión 0.7.0 &nbsp;·&nbsp; Extensión para Visual Studio Code &nbsp;·&nbsp; Proyecto de aficionados</div>
 </section>
 
 <!-- ================= 1. QUÉ ES ================= -->
@@ -289,7 +290,7 @@
 
     <h3>Sin Marketplace: con un archivo .vsix</h3>
     <p>Si no puedes usar el Marketplace (por ejemplo, un ordenador sin acceso), descarga el archivo <code>.vsix</code> de la última versión en la página de <em>Releases</em> del proyecto (<code>github.com/pablofdez-git/pokemon-companion/releases</code>) y cópialo al ordenador. Después, en el panel de extensiones, pulsa los tres puntos (<code>···</code>) de la esquina superior derecha, elige <strong>Instalar desde VSIX…</strong> (en inglés, <em>Install from VSIX…</em>) y selecciona el archivo. O desde la terminal, en la carpeta donde esté:</p>
-    <div style="background:var(--dark);color:#e8eaed;border-radius:1mm;padding:3mm 4mm;font-family:'DejaVu Sans Mono',Consolas,monospace;font-size:9pt;margin-bottom:3mm">code --install-extension pokemon-companion-0.6.1.vsix</div>
+    <div style="background:var(--dark);color:#e8eaed;border-radius:1mm;padding:3mm 4mm;font-family:'DejaVu Sans Mono',Consolas,monospace;font-size:9pt;margin-bottom:3mm">code --install-extension pokemon-companion-0.7.0.vsix</div>
 
     <div class="callout red">
       <div class="ct">Si algo falla</div>
@@ -354,7 +355,7 @@
         <p><strong>Progreso.</strong> La primera línea te dice cuántos Pokémon distintos te faltan para desbloquear la siguiente generación.</p>
         <p><strong>Pokéballs y Objetos.</strong> Todas las balls, con las que tienes de cada una, y los objetos que tengas (ver página 7). Pasa el ratón por encima para ver su dibujo grande y su regla.</p>
         <p><strong>Logros.</strong> Una línea con cuántos llevas (por ejemplo <em>5/32</em>) y si tienes recompensas pendientes. Al pulsarla se abre la pestaña de logros.</p>
-        <p><strong>Estadísticas.</strong> Una sección plegable con tu racha de días, caracteres escritos, monedas, encuentros, capturas y más (ver página 11).</p>
+        <p><strong>Estadísticas.</strong> Una sección plegable con tu racha de días, caracteres escritos, monedas, encuentros, capturas y más (ver página 12).</p>
         <p><strong>Pokémon capturados.</strong> Ordenados por número de Pokédex. Al pasar el ratón ves su sprite grande y cuántas veces lo has capturado. Los variocolor llevan una <span class="star">★</span>.</p>
         <p><strong>Botones de cada Pokémon.</strong> A la derecha de cada uno aparecen, según el caso, la flecha hacia arriba para <strong>evolucionarlo</strong> y el carrito para <strong>venderlo</strong>.</p>
       </div>
@@ -368,7 +369,7 @@
 
     <div class="callout yellow">
       <div class="ct">Consejo de entrenador</div>
-      <p>No gastes todo en balls caras: con las monedas también evolucionas Pokémon (página 11). Y si te quedas sin balls, el Pokémon que aparezca se irá; las <strong>recompensas de logros</strong> esperan a que tengas alguna.</p>
+      <p>No gastes todo en balls caras: con las monedas también evolucionas Pokémon (página 12). Y si te quedas sin balls, el Pokémon que aparezca se irá; las <strong>recompensas de logros</strong> esperan a que tengas alguna.</p>
     </div>
   </div>
   <div class="footer"><svg><use href="#pb"/></svg></div>
@@ -448,6 +449,7 @@
       <li>Una etiqueta <strong>xN</strong> indica los repetidos, y una <span class="star">★</span> que tienes su versión variocolor.</li>
       <li>Cada generación tiene su barra de progreso y su contador (por ejemplo <em>39/151</em>). Las que aún no has desbloqueado salen como <em>Bloqueada</em>.</li>
       <li>Los botones <strong>Todos</strong>, <strong>Capturados</strong> y <strong>Me faltan</strong> filtran la cuadrícula, y el filtro se recuerda.</li>
+      <li>Pulsa un Pokémon capturado para abrir su <strong>ficha</strong>: tipos, categoría, descripción, veces capturado, variocolor y fecha de la primera captura. La fecha solo existe en los capturados desde la 0.7.0. Se cierra con <em>Esc</em>.</li>
       <li>Se actualiza sola mientras está abierta: cada captura, venta o evolución se ve al momento.</li>
     </ul>
     <div class="callout blue">
@@ -458,7 +460,42 @@
   <div class="footer"><svg><use href="#pb"/></svg></div>
 </section>
 
-<!-- ================= 6b. LOGROS ================= -->
+<!-- ================= 6b. FAVORITO Y GUARDERÍA ================= -->
+<section class="page">
+  <div class="topbar"><svg><use href="#pb"/></svg> Ctrl+Catch &nbsp;·&nbsp; Guía del Entrenador</div>
+  <div class="content">
+    <h2 class="section"><svg><use href="#pb"/></svg> Pokémon favorito</h2>
+    <p>Haz <strong>clic derecho</strong> en un Pokémon de la Mochila y elige <em>Elegir como favorito</em> (o usa el comando <em>Ctrl+Catch: Elegir Pokémon favorito</em>). Su <strong>tipo</strong> te da un pequeño efecto pasivo, que no pone nada en pantalla: lo ves en la línea <strong>Favorito</strong> de la Mochila.</p>
+    <table class="tbl">
+      <tr><th style="width:62mm">Efecto</th><th>Tipos que lo dan</th></tr>
+      <tr><td>+5 % de monedas al guardar</td><td>Eléctrico, acero, normal</td></tr>
+      <tr><td>+20 % de monedas al capturar</td><td>Tierra, roca, dragón</td></tr>
+      <tr><td>+15 % de probabilidad de encuentro</td><td>Fuego, volador, bicho</td></tr>
+      <tr><td>+10 % de probabilidad de captura</td><td>Lucha, siniestro, veneno</td></tr>
+      <tr><td>Variocolor ×1,5 más probable</td><td>Psíquico, hada, fantasma</td></tr>
+      <tr><td>El doble de piedras al capturar</td><td>Planta, agua, hielo</td></tr>
+    </table>
+    <p class="muted">Si evolucionas su última copia, el favorito pasa a la evolución. Se quita desde el clic derecho en la línea Favorito.</p>
+
+    <h2 class="section" style="margin-top:6mm"><svg><use href="#pb"/></svg> La guardería</h2>
+    <p>Los repetidos tienen otro uso además de venderlos. Pulsa la línea <strong>Guardería</strong> de la Mochila y deja una pareja: <strong>dos copias del mismo Pokémon</strong>, o <strong>cualquier Pokémon con un Ditto</strong>. Cada guardado que da monedas hace avanzar el huevo, y al final nace un <strong>Pokémon que no tienes</strong>, de la <strong>misma categoría</strong> que los padres.</p>
+    <table class="tbl">
+      <tr><th>Categoría de los padres</th><th>Guardados con monedas</th></tr>
+      <tr><td>Común</td><td>50</td></tr>
+      <tr><td>Poco común</td><td>80</td></tr>
+      <tr><td>Raro</td><td>150</td></tr>
+      <tr><td>Legendario</td><td>300</td></tr>
+    </table>
+    <ul class="tight small">
+      <li>Los padres <strong>no se pierden</strong>: siguen en la Mochila, pero no se pueden vender ni evolucionar hasta que nazca el huevo.</li>
+      <li>La cría cuenta como captura (puede salir variocolor o desbloquear una generación), pero no da monedas.</li>
+      <li>Hace falta conexión para ver qué nace; sin ella, el huevo espera. Si sacas a los padres antes de tiempo, se pierde el huevo.</li>
+    </ul>
+  </div>
+  <div class="footer"><svg><use href="#pb"/></svg></div>
+</section>
+
+<!-- ================= 6c. LOGROS ================= -->
 <section class="page">
   <div class="topbar"><svg><use href="#pb"/></svg> Ctrl+Catch &nbsp;·&nbsp; Guía del Entrenador</div>
   <div class="content">
@@ -486,7 +523,7 @@
   <div class="footer"><svg><use href="#pb"/></svg></div>
 </section>
 
-<!-- ================= 6c. LISTA DE LOGROS ================= -->
+<!-- ================= 6d. LISTA DE LOGROS ================= -->
 <section class="page">
   <div class="topbar"><svg><use href="#pb"/></svg> Ctrl+Catch &nbsp;·&nbsp; Guía del Entrenador</div>
   <div class="content">
@@ -642,7 +679,7 @@
 
     <div class="callout yellow" style="margin-top:7mm">
       <div class="ct">¿Algo más?</div>
-      <p>Si encuentras un fallo o tienes una idea, puedes contarlo en la página del proyecto: <code>github.com/pablofdez-git/pokemon-companion/issues</code>. Esta guía se corresponde con la versión <strong>0.6.1</strong>; si instalas una más nueva, puede haber novedades que aún no aparezcan aquí.</p>
+      <p>Si encuentras un fallo o tienes una idea, puedes contarlo en la página del proyecto: <code>github.com/pablofdez-git/pokemon-companion/issues</code>. Esta guía se corresponde con la versión <strong>0.7.0</strong>; si instalas una más nueva, puede haber novedades que aún no aparezcan aquí.</p>
     </div>
     <p style="text-align:center;margin-top:12mm" class="muted">¡Buena caza, entrenador!</p>
   </div>

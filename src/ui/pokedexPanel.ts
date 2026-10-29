@@ -1,13 +1,24 @@
 import { randomBytes } from 'crypto';
 import * as vscode from 'vscode';
+import { fetchPokemon, fetchSpeciesInfo } from '../data/pokeapi';
 import { StateManager } from '../data/state';
-import { PokedexData, buildPokedex } from '../game/pokedex';
+import { PokedexData, TypeChip, buildPokedex } from '../game/pokedex';
+import { typeName } from '../game/types';
 
 // Mensajes de la extensión hacia el panel
-type ToPanel = { type: 'update'; pokedex: PokedexData };
+type ToPanel =
+  | { type: 'update'; pokedex: PokedexData }
+  | {
+      type: 'detail';
+      id: number;
+      types: TypeChip[] | null;     // null si no se pudo consultar
+      genus: string | null;
+      description: string | null;
+      offline: boolean;             // alguna consulta falló
+    };
 
 // Mensajes del panel hacia la extensión
-type FromPanel = { type: 'ready' };
+type FromPanel = { type: 'ready' } | { type: 'detail'; id: number };
 
 // Pokédex en una pestaña del editor: hay más sitio que en la barra lateral
 export class PokedexPanel implements vscode.Disposable {
@@ -43,6 +54,8 @@ export class PokedexPanel implements vscode.Disposable {
     panel.webview.onDidReceiveMessage((message: FromPanel) => {
       if (message.type === 'ready') {
         this.refresh();
+      } else if (message.type === 'detail') {
+        void this.sendDetail(message.id);
       }
     });
     panel.onDidDispose(() => {
@@ -50,6 +63,27 @@ export class PokedexPanel implements vscode.Disposable {
     });
 
     this.panel = panel;
+  }
+
+  // La pestaña no tiene acceso a internet: la ficha pide aquí el tipo y la descripción a la PokéAPI
+  private async sendDetail(id: number): Promise<void> {
+    // Solo de especies que has capturado
+    if (!Number.isInteger(id) || !this.state.get().captured.some((c) => c.id === id)) {
+      return;
+    }
+    const [pokemon, info] = await Promise.allSettled([fetchPokemon(id), fetchSpeciesInfo(id)]);
+    const message: ToPanel = {
+      type: 'detail',
+      id,
+      types:
+        pokemon.status === 'fulfilled'
+          ? pokemon.value.types.map((t) => ({ id: t, name: typeName(t) }))
+          : null,
+      genus: info.status === 'fulfilled' ? info.value.genus : null,
+      description: info.status === 'fulfilled' ? info.value.description : null,
+      offline: pokemon.status === 'rejected' || info.status === 'rejected',
+    };
+    void this.panel?.webview.postMessage(message);
   }
 
   private refresh(): void {
